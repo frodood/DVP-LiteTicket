@@ -1,0 +1,35 @@
+
+
+
+
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+
+var tagCategorySchema = new Schema({
+
+    name: { type: String, required: true},
+    tags: [{type: ObjectId, ref: 'Tag'}],
+    subcategory: this,
+    company: { type: Number, required: true },
+    tenant: { type: Number, required: true }
+});
+
+
+var tagSchema = new Schema({
+
+    name: { type: String, required: true},
+    description: String
+
+});
+
+
+
+
+var Tag = mongoose.model('Tag', tagSchema);
+var TagCategory = mongoose.model('TagCategory', tagCategorySchema);
+module.exports.Tag = Tag;
+module.exports.TagCategory =TagCategory;
+
+

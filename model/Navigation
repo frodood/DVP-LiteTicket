@@ -1,0 +1,24 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+var scopeSchema = new Schema({
+    scopeName: String,
+    feature: String,
+    actions: [String]
+});
+
+var resourceSchema = new Schema({
+    resourceName: String,
+    scopes: [scopeSchema]
+});
+
+var navigationSchema = new Schema({
+    navigationName: String,
+    navigationStatus: Boolean,
+    resources: [resourceSchema],
+    created_at: Date,
+    updated_at: Date
+});
+
+var Navigation = mongoose.model('Navigation', navigationSchema);
+module.exports = Navigation;

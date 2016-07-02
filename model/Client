@@ -1,0 +1,38 @@
+/**
+ * Created by a on 6/3/2016.
+ */
+
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+
+//read, write, all
+
+
+var claimsSchema = new Schema({
+
+    claim: { type: String, required: true},
+    actions: [String]
+
+})
+
+
+
+
+
+var clientSchema = new Schema({
+    name:{ type: String, required: true },
+    clientId:{ type: String, required: true, unique: true },
+    clientSecret: { type: String, required: true },
+    redirectURL: { type: String, required: true },
+    owner: { type: String, required: true },
+    claims: [claimsSchema]
+});
+
+
+
+
+var Client = mongoose.model('Client', clientSchema);
+module.exports = Client;
+

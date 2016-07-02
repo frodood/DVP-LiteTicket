@@ -1,0 +1,31 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+var consoleAccessLimitSchema = new Schema({
+    accessType: String,
+    accessLimit: Number
+});
+
+var scopeSchema = new Schema({
+    scopeName: String,
+    feature: String,
+    actions: [String],
+    limit: Number
+});
+
+var resourceSchema = new Schema({
+    resourceName: String,
+    scopes: [scopeSchema]
+});
+
+var packageSchema = new Schema({
+    packageName: { type: String, required: true, unique: true },
+    consoleAccessLimit: [consoleAccessLimitSchema],
+    resources: [resourceSchema],
+    consoles: [String],
+    veeryTask:[String],
+    price: String
+});
+
+var Package = mongoose.model('Package', packageSchema);
+module.exports = Package;

@@ -1,0 +1,21 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+
+var userGroupSchema = new Schema({
+
+    name: { type: String, required: true},
+    company: { type: Number, required: true },
+    tenant: { type: Number, required: true },
+    users: [{type: ObjectId,ref: 'User'}]
+
+
+});
+
+userGroupSchema.index({ company: 1, tenant: 1, name: 1}, { unique: true });
+
+var UserGroup = mongoose.model('UserGroup', userGroupSchema);
+
+module.exports.UserGroup = UserGroup;
+

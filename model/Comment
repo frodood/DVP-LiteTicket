@@ -1,0 +1,25 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+var commentSchema = new Schema({
+
+    body: { type: String, required: true},
+    body_type: { type: String, enum: ['html','text'], default:'text',required: true},
+    type: { type: String, required: true},
+    public: Boolean,
+    author: {type: ObjectId,ref: 'User'},
+    author_external: {type: ObjectId,ref: 'ExternalUser'},
+    attachments: [{type: ObjectId,ref: 'User'}],
+    channel: {type: String, enum: ['call', 'email', 'sms', 'facebook-post', 'facebook-chat', 'twitter','skype', 'api', 'web-widget'],default: 'api'},
+    created_at: {type:Date,default: Date.now,require:true},
+    meta_data: {}
+
+
+});
+
+
+
+var Comment = mongoose.model('Comment', commentSchema);
+module.exports.Comment = Comment;
+

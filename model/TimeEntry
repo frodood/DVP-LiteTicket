@@ -1,0 +1,22 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+var timeEntrySchema = new Schema({
+
+    user: {type: ObjectId,ref: 'User', required: true},
+    ticket: {type: ObjectId,ref: 'Ticket', required: true},
+    startTime: { type: String, required: true},
+    time_events: [{state: {type:String,enum:['start','stop'],default:'start'}, time:Date}],
+    note: { type: String, required: true},
+    running: Boolean,
+    time: Number
+
+});
+
+
+
+var TimeEntry = mongoose.model('TimeEntry', timeEntrySchema);
+module.exports.TimeEntry = TimeEntry;
+
+

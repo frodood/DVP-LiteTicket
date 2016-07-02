@@ -1,0 +1,19 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+var scopeSchema = new Schema({
+    scopeName: String,
+    feature: String,
+    actions: [String]
+});
+
+var resourceSchema = new Schema({
+    resourceName: { type: String, required: true, unique: true },
+    scopes: [scopeSchema],
+    created_at: Date,
+    updated_at: Date
+});
+
+var Resource = mongoose.model('Resource', resourceSchema);
+module.exports = Resource;

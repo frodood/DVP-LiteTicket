@@ -1,0 +1,54 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+var contactSchema = new Schema({
+    contact:String,
+    type:String,
+    display: String,
+    verified: Boolean
+}, {_id: false});
+
+
+var externalUserSchema = new Schema({
+    name: String,
+    title: String,
+    avatar: String,
+    birthday: Date,
+    gender: String,
+    address: {
+        zipcode: String,
+        number: String,
+        street: String,
+        city: String,
+        province: String,
+        country: String,
+    },
+    firstname: String,
+    lastname: String,
+    locale: String,
+    ssn:  String,
+    password: String,
+    phoneNumber: contactSchema,
+    email: contactSchema,
+    landnumber: contactSchema,
+    facebook: contactSchema,
+    twitter: contactSchema,
+    linkedin: contactSchema,
+    googleplus: contactSchema,
+    company: { type: Number, required: true },
+    tenant: { type: Number, required: true },
+    contacts: [contactSchema],
+    custom_fields: {},
+    created_at: Date,
+    updated_at: Date
+});
+
+
+
+
+
+
+var ExternalUser = mongoose.model('ExternalUser', externalUserSchema);
+module.exports = ExternalUser;
+

@@ -1,0 +1,29 @@
+/**
+ * Created by a on 6/3/2016.
+ */
+
+// grab the things we need
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+var consoleAccessLimitSchema = new Schema({
+    accessType: String,
+    accessLimit: Number,
+    currentAccess: [String]
+});
+
+var organisationSchema = new Schema({
+    ownerId:String,
+    companyName: String,
+    companyEnabled: Boolean,
+    id: Number,
+    tenant: Number,
+    packages: [String],
+    consoleAccessLimits: [consoleAccessLimitSchema],
+    created_at: Date,
+    updated_at: Date
+});
+
+var Organisation = mongoose.model('Organisation', organisationSchema);
+module.exports = Organisation;
+
