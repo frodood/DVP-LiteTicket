@@ -10,8 +10,8 @@ var ObjectId = Schema.ObjectId;
 var tagCategorySchema = new Schema({
 
     name: { type: String, required: true},
-    tags: [{type: ObjectId, ref: 'Tag'}],
-    subcategory: this,
+    tags: [{tag:{type: ObjectId, ref: 'Tag'}}],
+    subcategory:{type: ObjectId, ref: 'TagCategory'}
     company: { type: Number, required: true },
     tenant: { type: Number, required: true }
 });
@@ -20,6 +20,7 @@ var tagCategorySchema = new Schema({
 var tagSchema = new Schema({
 
     name: { type: String, required: true},
+    tags: {type: ObjectId, ref: 'Tag'}
     description: String
 
 });

@@ -1,0 +1,19 @@
+
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+var ticketFilterSchema = new Schema({
+
+field: { type: String, required: true},
+operator: { type: String, enum: ['is', 'less_than', 'greater_than','is_not','included','not_included', 'greater_than_or_equal','less_than_or_equal'],default:'is',required: true},
+value: { type: String, required: true}
+
+
+});
+
+
+
+var TicketFilter = mongoose.model('TicketFilter', ticketFilterSchema);
+module.exports.TicketFilter = TicketFilter;
+module.exports.ticketFilterSchema = ticketFilterSchema;

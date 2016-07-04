@@ -1,0 +1,33 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+var ticketStaticsSchema = new Schema({
+
+
+    ticket: {type: ObjectId,ref: 'Ticket', required: true},
+    groups: Number,
+    assignees: Number,
+    reopens: Number,
+    replies: Number,
+    last_assigned: Date,
+    last_updated: Date,
+    last_status_changed: Date,
+    last_commented: Date,
+    created_at: Date,
+    solved_at: Date,
+    waited_time: Number,
+    worked_time: Number,
+    resolution_time: Number,
+
+
+
+
+});
+
+
+
+var TicketStatics = mongoose.model('TicketStatics', ticketStaticsSchema);
+module.exports.TicketStatics = TicketStatics;
+
+

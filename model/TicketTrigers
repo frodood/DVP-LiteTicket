@@ -1,0 +1,23 @@
+var mongoose = require('mongoose');
+var ticketFilterSchema = require('./TicketFilter').ticketFilterSchema;
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+var ticketTriggersSchema = new Schema({
+
+    title: { type: String, required: true},
+    Active: Boolean,
+    created_at: {type:Date,default: Date.now,require:true},
+    updated_at: {type:Date,default: Date.now,require:true},
+    conditions: {all: [ticketFilterSchema], any: [ticketFilterSchema]}
+    actions: [{field: { type: String, required: true},  value: { type: String, required: true}}],
+    operations: [{field: { type: String, required: true},  value: {}}]
+});
+
+
+
+
+
+var Trigger = mongoose.model('Trigger', ticketTriggersSchema);
+module.exports.TimeEntry = Trigger;
+
