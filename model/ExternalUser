@@ -29,8 +29,8 @@ var externalUserSchema = new Schema({
     locale: String,
     ssn:  String,
     password: String,
-    phoneNumber: contactSchema,
-    email: contactSchema,
+    phoneNumber: { type: contactSchema, spare: true, unique: true },
+    email: { type: contactSchema, spare: true, unique: true },
     landnumber: contactSchema,
     facebook: contactSchema,
     twitter: contactSchema,
@@ -39,7 +39,7 @@ var externalUserSchema = new Schema({
     company: { type: Number, required: true },
     tenant: { type: Number, required: true },
     contacts: [contactSchema],
-    custom_fields: {},
+    custom_fields: [{field:{type:String, require: true},value:{}}],
     created_at: Date,
     updated_at: Date
 });

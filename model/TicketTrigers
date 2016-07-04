@@ -11,7 +11,7 @@ var ticketTriggersSchema = new Schema({
     updated_at: {type:Date,default: Date.now,require:true},
     conditions: {all: [ticketFilterSchema], any: [ticketFilterSchema]}
     actions: [{field: { type: String, required: true},  value: { type: String, required: true}}],
-    operations: [{field: { type: String, required: true},  value: {}}]
+    operations: [{name: { type: String, required: true}, field: { type: String, required: true},  value: {}}]
 });
 
 

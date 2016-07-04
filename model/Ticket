@@ -6,7 +6,7 @@ var ObjectId = Schema.ObjectId;
 
 
 var eventSchema = new Schema({
-    type: {type: String, enum : ['comment','status','notification'], default: 'comment', required: true},
+    type: {type: String, enum : ['comment','status','notification','reassign'], default: 'comment', required: true},
     body: {}
 });
 
@@ -17,6 +17,7 @@ var ticketSchema = new Schema({
     due_at: Date,
     type: {type: String, enum : ['question','complain','incident','action'], default: 'question', required: true},
     subject: { type: String, required: true, trim: true},
+    reference: { type: String, required: true, unique: true},
     description: { type: String, required: true, trim: true},
     priority: {type: String, enum : ['urgent','high','normal','low'], default: 'normal', required: true},
     status: {type: String, enum : ['new','open','progressing','parked','solved','closed'], default: 'new', required: true},
@@ -28,11 +29,12 @@ var ticketSchema = new Schema({
     tenant: { type: Number, required: true },
     collaborators: [{type: ObjectId,ref: 'User'}],
     attachments: [{type: ObjectId,ref: 'Attachment'}],
-    subtickets: [this],
-    channel: {type: String, enum: ['call', 'email', 'sms', 'facebook-post', 'facebook-chat', 'twitter','skype', 'api', 'web-widget'],default: 'api', required: true},
+    subtickets: [{type: ObjectId,ref: 'Ticket'}],
+    related_tickets: [{type: ObjectId,ref: 'Ticket'}],
+    channel: {type: String, enum: ['call', 'email', 'sms', 'facebook-post', 'facebook-chat', 'twitter','skype', 'api', 'web-widget'], default: 'api', required: true},
     tags: [String],
-    fields: [String],
-    sla: String,
+    custom_fields: [{field:{type:String, require: true},value:{}}],
+    sla: [{type: ObjectId,ref: 'SLA'}],
     comments: [{type: ObjectId,ref: 'Comment'}],
     events: [eventSchema]
 

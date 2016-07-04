@@ -1,0 +1,34 @@
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+
+var dynamicFieldSchema = new Schema({
+
+    field: { type: String, required: true},
+    type: { type: String, enum: ['text','date','number','boolean','multi_value'],required: true },
+    description: String,
+    title: { type: String, required: true},
+    active: Boolean,
+    require: Boolean,
+    values: [String]
+
+
+
+});
+
+
+var formMasterSchema = new Schema({
+
+    name: { type: String, enum: ['ticket','profile'], required: true},
+    company: { type: Number, required: true },
+    tenant: { type: Number, required: true },
+    Fields: [dynamicFieldSchema]
+
+
+});
+
+formMasterSchema.index({ company: 1, tenant: 1,form: 1}, { unique: true });
+var FormMaster = mongoose.model('FormMaster', formMasterSchema);
+module.exports.FormMaster = FormMaster;
+

@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 var ticketFilterSchema = require('./TicketFilter').ticketFilterSchema;
-
+var ticketMatrixSchema = require('./TicketFilter').ticketMatrixSchema;
 
 var slaSchema = new Schema({
 
@@ -13,7 +13,7 @@ var slaSchema = new Schema({
     company: { type: Number, required: true },
     tenant: { type: Number, required: true },
     filter: {all: [ticketFilterSchema], any: [ticketFilterSchema]}
-    matrix: [{priority: {type:String, enum: ['urgent','high','normal','low'], require:true} criteria:{type:String, enum: ['wait','response','update','resolution'],default:'wait'}, target: {type:Number, require:true}, on_fail: [{operations: [{field: { type: String, required: true},  value: {}}]}]}],
+    matrix: [ticketMatrixSchema],
     created_at: {type:Date,default: Date.now,require:true},
     updated_at: {type:Date,default: Date.now,require:true},
 

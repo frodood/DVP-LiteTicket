@@ -107,6 +107,11 @@ function CreateTicket(req, res){
         }
     });
 };
+function CreateSubTicket(req, res){};
+function GetSubTickets(req,res){};
+function AttachSubTicket(req, res){};
+function GetAttachTickets(req,res){};
+function DeAttachSubTicket(req,res){};
 function GetAllTicketsWithStatus(req,res){};
 function GetTicket(req,res){};
 function DeActivateTicket(req,res){};
@@ -119,30 +124,33 @@ function AddCommentToComment(req,res){};
 function ChangeStatus(req,res){};
 function AssignToUser(req,res){};
 function AssignToGroup(req,res){};
+function GetAllTicketsWithMatrix(req,res){};
+function GetAllTicketsInStatusWithMatrix(req,res){};
+function GetAllMyTickets(req,res){};
+function GetAllMyTicketsWithStatus(req,res){};
 
 
 module.exports.GetAllTickets = GetAllTickets;
 module.exports.CreateTicket = CreateTicket;
+module.exports.CreateSubTicket = CreateSubTicket;
+module.exports.GetSubTickets = GetSubTickets;
+module.exports.AttachSubTicket = AttachSubTicket;
+module.exports.DeAttachSubTicket = DeAttachSubTicket;
+module.exports.GetAttachTickets =GetAttachTickets;
 module.exports.GetAllTicketsWithStatus = GetAllTicketsWithStatus;
-module.exports.GetTicket= GetTicket;
+module.exports.GetTicket = GetTicket;
 module.exports.DeActivateTicket = DeActivateTicket;
 module.exports.PickTicket = PickTicket;
 module.exports.GetTicketAudit = GetTicketAudit;
 module.exports.UpdateTicket = UpdateTicket;
 module.exports.AddComment = AddComment;
-module.exports.AddAttachment= AddAttachment;
+module.exports.AddAttachment = AddAttachment;
 module.exports.AddCommentToComment = AddCommentToComment;
 module.exports.ChangeStatus = ChangeStatus;
-module.exports.AssignToUser =AssignToUser;
+module.exports.AssignToUser = AssignToUser;
 module.exports.AssignToGroup = AssignToGroup;
-
-
-
-
-
-
-
-
-
-
+module.exports.GetAllTicketsWithMatrix = GetAllTicketsWithMatrix;
+module.exports.GetAllTicketsInStatusWithMatrix = GetAllTicketsInStatusWithMatrix;
+module.exports.GetAllMyTickets = GetAllMyTickets;
+module.exports.GetAllMyTicketsWithStatus = GetAllMyTicketsWithStatus;
 

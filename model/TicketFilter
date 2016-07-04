@@ -13,7 +13,18 @@ value: { type: String, required: true}
 });
 
 
+var ticketMatrixSchema = new Schema({
+priority: {type:String, enum: ['urgent','high','normal','low'], require:true},
+criteria:{type:String, enum: ['wait','response','update','resolution'],default:'wait'},
+target: {type:Number, require:true},
+threshold: Number,
+on_fail: [{operations: [{field: { type: String, required: true},  value: {}}]}],
+on_threshold: [{operations: [{field: { type: String, required: true},  value: {}}]}]
+});
+
+
 
 var TicketFilter = mongoose.model('TicketFilter', ticketFilterSchema);
 module.exports.TicketFilter = TicketFilter;
 module.exports.ticketFilterSchema = ticketFilterSchema;
+module.exports.ticketMatrixSchema = ticketMatrixSchema;

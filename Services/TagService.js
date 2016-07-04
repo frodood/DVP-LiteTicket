@@ -7,18 +7,17 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 
 
 
-function CreateTagCategory(req, res){};
-function GetTagCategorys(req, res){};
-function GetTagCategory(req, res){};
-function DeleteTagCategory(req, res){};
-function AddTag(req, res){};
-function GetAllTagsInCategory(req, res){};
+function CreateTag(req, res){};
+function GetTags(req, res){};
+function GetTag(req, res){};
+function AttachTagsToTag(req, res){};
 function DeleteTag(req, res){};
+function DetachTagsFromTag(req,res){};
 
-module.exports.CreateTagCategory = CreateTagCategory;
-module.exports.GetTagCategorys = GetTagCategorys;
-module.exports.GetTagCategory = GetTagCategory;
-module.exports.DeleteTagCategory = DeleteTagCategory;
-module.exports.AddTag = AddTag;
-module.exports.GetAllTagsInCategory= GetAllTagsInCategory;
+
+module.exports.CreateTag = CreateTag;
+module.exports.GetTags = GetTags;
+module.exports.GetTag = GetTag;
+module.exports.AttachTagsToTag = AttachTagsToTag;
 module.exports.DeleteTag = DeleteTag;
+module.exports.DetachTagsFromTag = DetachTagsFromTag;
