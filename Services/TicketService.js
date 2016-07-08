@@ -12,6 +12,9 @@ var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
 module.exports.CreateTicket = function (req, res) {
 
     logger.debug("DVP-LiteTicket.CreateTicket Internal method ");
@@ -338,20 +341,16 @@ module.exports.CreateSubTicket = function (req, res) {
                         res.end(jsonString);
                     }
                     else {
-                        Ticket.update({company: company, tenant: tenant, id: req.params.id},{
-                            $push: {
-                                sub_tickets: {
-                                    $each: [obj._doc._id.toString()]
+                        Ticket.findOneAndUpdate({company: company, tenant: tenant, id:ObjectId(req.params.id)},
+                            {$addToSet: {sub_tickets: obj._doc._id}}
+                            , function (err, rOrg) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Parent.", false, undefined);
+                                } else {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, obj._doc);
                                 }
-                            }
-                        }, function (err, rOrg) {
-                            if (err) {
-                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Parent.", false, undefined);
-                            } else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, obj._doc);
-                            }
-                            res.end(jsonString);
-                        });
+                                res.end(jsonString);
+                            });
                     }
 
                 });
