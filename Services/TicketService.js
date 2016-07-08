@@ -338,7 +338,7 @@ module.exports.CreateSubTicket = function (req, res) {
                         res.end(jsonString);
                     }
                     else {
-                        Ticket.updateOne({company: company, tenant: tenant, id: req.params.id},{
+                        Ticket.update({company: company, tenant: tenant, id: req.params.id},{
                             $push: {
                                 sub_tickets: {
                                     $each: [obj._doc._id.toString()]
