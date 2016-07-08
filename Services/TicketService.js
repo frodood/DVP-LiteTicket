@@ -335,24 +335,25 @@ module.exports.CreateSubTicket = function (req, res) {
                     jsonString = messageFormatter.FormatMessage(new Error("Invalid Parent ID."), "Sub-Ticket Saved Successfully.Without Mapping To Parent.", false, ticket);
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
+                        res.end(jsonString);
                     }
                     else {
                         Ticket.findOneAndUpdate({company: company, tenant: tenant, id: req.params.id}, {
                             $push: {
                                 sub_tickets: {
-                                    $each: [obj.insertedId]
+                                    $each: [obj._doc._id.toString()]
                                 }
                             }
                         }, function (err, rOrg) {
                             if (err) {
                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Parent.", false, undefined);
                             } else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, ticket);
+                                jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, obj._doc);
                             }
                             res.end(jsonString);
                         });
                     }
-                    res.end(jsonString);
+
                 });
             } else {
 
