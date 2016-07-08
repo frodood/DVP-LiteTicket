@@ -20,9 +20,6 @@ var ticketStaticsSchema = new Schema({
     worked_time: Number,
     resolution_time: Number,
 
-
-
-
 });
 
 
