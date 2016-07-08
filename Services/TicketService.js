@@ -1,14 +1,14 @@
 var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
-var Ticket = require('../model/Ticket').Ticket;
-var TicketEvent = require('../model/Ticket').TicketEvent;
-var User = require('../model/User');
-var UserGroup = require('../model/UserGroup');
-var Attachment = require('../model/Attachment').Attachment;
-var Tag = require('../model/Tag').Tag;
-var TimeEntry = require('../model/TimeEntry').TimeEntry;
-var Comment = require('../model/TimeEntry').Comment;
-var TicketStatics = require('../model/TicketMetrix').TicketStatics;
+var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
+var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
+var User = require('dvp-mongomodels/model/User');
+var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var Attachment = require('dvp-mongomodels/model/Attachment').Attachment;
+var Tag = require('dvp-mongomodels/model/Tag').Tag;
+var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
+var Comment = require('dvp-mongomodels/model/TimeEntry').Comment;
+var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 
