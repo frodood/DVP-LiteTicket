@@ -11,7 +11,6 @@ var tagCategorySchema = new Schema({
 
     name: { type: String, required: true},
     tags: [{tag:{type: ObjectId, ref: 'Tag'}}],
-    subcategory: {type: ObjectId, ref: 'TagCategory'},
     company: { type: Number, required: true },
     tenant: { type: Number, required: true }
 });

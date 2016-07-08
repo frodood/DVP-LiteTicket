@@ -82,6 +82,11 @@ server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resou
 server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({resource:"ticket", action:"write"}), ticketService.AssignToGroup);
 
 
+
+server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
+server.get('/DVP/API/:version/Ticket/:id/MergeTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetMergeTickets);
+
+
 server.post('/DVP/API/:version/Ticket/:id/SubTicket',authorization({resource:"ticket", action:"write"}), ticketService.CreateSubTicket);
 server.get('/DVP/API/:version/Ticket/:id/SubTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetSubTickets);
 server.get('/DVP/API/:version/Ticket/:id/RelatedTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetAttachTickets);
@@ -94,7 +99,7 @@ server.del('/DVP/API/:version/Ticket/:id/RelatedTicket',authorization({resource:
 server.post('/DVP/API/:version/Tag', authorization({resource:"tags", action:"write"}), tagService.CreateTag);
 server.get('/DVP/API/:version/Tags', authorization({resource:"tags", action:"read"}), tagService.GetTags);
 server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"read"}), tagService.GetTag);
-server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"read"}), tagService.DeleteTag);
+server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"delete"}), tagService.DeleteTag);
 server.post('/DVP/API/:version/Tag/:id/Attach/Tag', authorization({resource:"tags", action:"read"}), tagService.AttachTagsToTag);
 server.del('/DVP/API/:version/Tag/:id/Detach/Tag/:tagid', authorization({resource:"tags", action:"read"}), tagService.DetachTagsFromTag);
 

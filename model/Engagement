@@ -1,0 +1,38 @@
+
+
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var ObjectId = Schema.ObjectId;
+
+
+var engagementSessionSchema = new Schema({
+
+    engagement_id: {type: String, require: true, unique: true},
+    channel: {type: String, enum: ['call', 'email', 'sms', 'facebook-post', 'facebook-chat', 'twitter','skype', 'api', 'web-widget'],default: 'api'},
+    channel_from: {type:String, require: true},
+    channel_to: {type:String, require: true},
+    data: [String],
+    created_at: {type:Date,default: Date.now,require:true},
+    updated_at: {type:Date,default: Date.now,require:true}
+
+
+
+});
+
+var engagementSchema = new Schema({
+
+   profile: {type: ObjectId,ref: 'ExternalProfile'},
+   created_at: {type:Date,default: Date.now,require:true},
+   updated_at: {type:Date,default: Date.now,require:true}
+   engagements: [type: ObjectId,ref: 'EngagementSession']
+
+});
+
+
+
+var Comment = mongoose.model('Comment', commentSchema);
+module.exports.Comment = Comment;
+
+
+var EngagementSession = mongoose.model('EngagementSession', engagementSessionSchema);
+module.exports.EngagementSession = EngagementSession;

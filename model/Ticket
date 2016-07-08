@@ -15,6 +15,7 @@ var ticketSchema = new Schema({
     created_at: {type:Date,default: Date.now,require:true},
     updated_at: {type:Date,default: Date.now,require:true},
     due_at: Date,
+    active: Boolean,
     type: {type: String, enum : ['question','complain','incident','action'], default: 'question', required: true},
     subject: { type: String, required: true, trim: true},
     reference: { type: String, required: true, unique: true},
@@ -29,14 +30,16 @@ var ticketSchema = new Schema({
     tenant: { type: Number, required: true },
     collaborators: [{type: ObjectId,ref: 'User'}],
     attachments: [{type: ObjectId,ref: 'Attachment'}],
-    subtickets: [{type: ObjectId,ref: 'Ticket'}],
+    sub_tickets: [{type: ObjectId,ref: 'Ticket'}],
     related_tickets: [{type: ObjectId,ref: 'Ticket'}],
-    channel: {type: String, enum: ['call', 'email', 'sms', 'facebook-post', 'facebook-chat', 'twitter','skype', 'api', 'web-widget'], default: 'api', required: true},
+    merged_tickets: [{type: ObjectId,ref: 'Ticket'}],
+    engagement_session: {type: String, ref: 'EngagementSession'},
     tags: [String],
     custom_fields: [{field:{type:String, require: true},value:{}}],
     sla: [{type: ObjectId,ref: 'SLA'}],
     comments: [{type: ObjectId,ref: 'Comment'}],
-    events: [eventSchema]
+    events: [eventSchema],
+    SLAViolated: Boolean
 
 });
 
