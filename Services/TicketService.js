@@ -78,6 +78,7 @@ module.exports.UpdateTicket = function(req, res) {
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
+
     var jsonString;
     Ticket.findOne({company: company, tenant: tenant, id: req.params.id}, function (err, ticket) {
         if (err) {
