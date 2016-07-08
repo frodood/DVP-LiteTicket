@@ -1,14 +1,14 @@
 var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
-var Ticket = require('../model/Ticket').Ticket;
-var TicketEvent = require('../model/Ticket').TicketEvent;
-var User = require('../model/User');
-var UserGroup = require('../model/UserGroup');
-var Attachment = require('../model/Attachment').Attachment;
-var Tag = require('../model/Tag').Tag;
-var TimeEntry = require('../model/TimeEntry').TimeEntry;
-var Comment = require('../model/TimeEntry').Comment;
-var TicketStatics = require('../model/TicketMetrix').TicketStatics;
+var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
+var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
+var User = require('dvp-mongomodels/model/User');
+var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var Attachment = require('dvp-mongomodels/model/Attachment').Attachment;
+var Tag = require('dvp-mongomodels/model/Tag').Tag;
+var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
+var Comment = require('dvp-mongomodels/model/TimeEntry').Comment;
+var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 
@@ -32,7 +32,6 @@ module.exports.CreateTicket = function (req, res) {
                 var ticket = Ticket({
                     created_at: Date.now(),
                     updated_at: Date.now(),
-                    due_at: Date,
                     active: true,
                     type: req.body.type,
                     subject: req.body.subject,
@@ -45,7 +44,6 @@ module.exports.CreateTicket = function (req, res) {
                     company: company,
                     tenant: tenant,
                     attachments: req.body.attachments,
-                    sub_tickets: req.body.sub_tickets,
                     related_tickets: req.body.related_tickets,
                     merged_tickets: req.body.merged_tickets,
                     engagement_session: req.body.engagement_session,
@@ -55,11 +53,12 @@ module.exports.CreateTicket = function (req, res) {
                     comments: req.body.comments,
                     SLAViolated: false
                 });
-
-                jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, ticket);
                 ticket.save(function (err, client) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
                     }
                     res.end(jsonString);
                 });
@@ -72,7 +71,7 @@ module.exports.CreateTicket = function (req, res) {
     });
 };
 
-module.exports.UpdateTicket = function(req, res) {
+module.exports.UpdateTicket = function (req, res) {
 
     logger.debug("DVP-LiteTicket.UpdateTicket Internal method ");
 
@@ -112,7 +111,7 @@ module.exports.UpdateTicket = function(req, res) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
                     }
-                    else{
+                    else {
                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, rUser);
                     }
                     res.end(jsonString);
@@ -180,6 +179,82 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
     });
 };
 
+module.exports.GetAllTicketsBy = function (req, res) {
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    var searchBy = req.params.searchBy;
+    var searchValue = req.params.searchValue;
+    if (searchBy == "assignee") {
+        Ticket.find({company: company, tenant: tenant, assignee: searchValue}, function (err, tickets) {
+            if (err) {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee Successful", true, tickets);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
+
+                }
+            }
+            res.end(jsonString);
+        });
+    }
+    else if (searchBy == "submitter") {
+        Ticket.find({company: company, tenant: tenant, submitter: searchValue}, function (err, tickets) {
+            if (err) {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With submitter Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With submitter Successful", true, tickets);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
+
+                }
+            }
+            res.end(jsonString);
+        });
+    }
+    else if (searchBy == "assignee_group") {
+        Ticket.find({company: company, tenant: tenant, assignee_group: searchValue}, function (err, tickets) {
+            if (err) {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee_group Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee_group Successful", true, tickets);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
+
+                }
+            }
+            res.end(jsonString);
+        });
+    }
+    else {
+        jsonString = messageFormatter.FormatMessage(new Error("Invalid Search Category."), "Invalid Search Category.", false, undefined);
+        res.end(jsonString);
+    }
+
+};
+
 function GetAllTicketsWithMatrix(req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -236,7 +311,6 @@ module.exports.CreateSubTicket = function (req, res) {
                 var ticket = Ticket({
                     created_at: Date.now(),
                     updated_at: Date.now(),
-                    due_at: Date,
                     active: true,
                     type: req.body.type,
                     subject: req.body.subject,
@@ -249,7 +323,6 @@ module.exports.CreateSubTicket = function (req, res) {
                     company: company,
                     tenant: tenant,
                     attachments: req.body.attachments,
-                    sub_tickets: req.body.sub_tickets,
                     related_tickets: req.body.related_tickets,
                     merged_tickets: req.body.merged_tickets,
                     engagement_session: req.body.engagement_session,
@@ -306,9 +379,31 @@ function MergeTicket(req, res) {
 };
 function GetMergeTicket(req, res) {
 };
-function GetTicket(req, res) {
+
+module.exports.GetTicket = function (req, res) {
+    logger.debug("DVP-LiteTicket.DeActivateTicket Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.findOne({company: company, tenant: tenant, id: req.params.id}, function (err, ticket) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+            }
+        }
+    })
 };
-function DeActivateTicket(req, res) {
+
+module.exports.DeActivateTicket = function (req, res) {
     logger.debug("DVP-LiteTicket.DeActivateTicket Internal method ");
 
     var company = parseInt(req.user.company);
@@ -331,19 +426,52 @@ function DeActivateTicket(req, res) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To DeActivate Ticket", false, undefined);
                     }
-                    else{
+                    else {
                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket DeActivated", true, rUser);
                     }
                     res.end(jsonString);
                 });
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To DeActivate Ticket", false, undefined);
             }
         }
         res.end(jsonString);
     });
 };
+
+module.exports.GetTicketsByTimeRange = function (req, res) {
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.find({
+        company: company,
+        tenant: tenant,
+        "created_at": {"$gte": req.params.fromDate, "$lt": req.params.toDate}
+    }, function (err, tickets) {
+        //db.posts.find( //query today up to tonight  {"created_on": {"$gte": new Date(2012, 7, 14), "$lt": new Date(2012, 7, 15)}})
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Tickets By TimeRange Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get Tickets By TimeRange Successful", true, tickets);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+
 function PickTicket(req, res) {
 };
 function GetTicketAudit(req, res) {
@@ -366,7 +494,30 @@ function GetAllTicketsInStatusWithMatrix(req, res) {
 };
 function GetAllMyTickets(req, res) {
 };
-function GetAllMyTicketsWithStatus(req, res) {
+
+module.exports.GetAllMyTicketsWithStatus = function (req, res) {
+
+    logger.debug("DVP-LiteTicket.GetAllMyTicketsWithStatus Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.find({company: company, tenant: tenant, status: req.params.status}, function (err, tickets) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+            }
+        }
+    })
+
 };
 
 
@@ -377,8 +528,7 @@ module.exports.AttachSubTicket = AttachSubTicket;
 module.exports.DeAttachSubTicket = DeAttachSubTicket;
 module.exports.GetAttachTickets = GetAttachTickets;
 
-module.exports.GetTicket = GetTicket;
-module.exports.DeActivateTicket = DeActivateTicket;
+
 module.exports.PickTicket = PickTicket;
 module.exports.GetTicketAudit = GetTicketAudit;
 
@@ -391,5 +541,6 @@ module.exports.AssignToGroup = AssignToGroup;
 module.exports.GetAllTicketsWithMatrix = GetAllTicketsWithMatrix;
 module.exports.GetAllTicketsInStatusWithMatrix = GetAllTicketsInStatusWithMatrix;
 module.exports.GetAllMyTickets = GetAllMyTickets;
-module.exports.GetAllMyTicketsWithStatus = GetAllMyTicketsWithStatus;
+
+
 

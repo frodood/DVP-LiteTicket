@@ -64,6 +64,7 @@ mongoose.connect(connectionstring);
 
 server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicket);
 server.get('/DVP/API/:version/Tickets', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
+server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
 server.get('/DVP/API/:version/Tickets/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
 server.get('/DVP/API/:version/TicketsWithMatrix', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithMatrix);
 server.get('/DVP/API/:version/TicketsWithMatrix/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsInStatusWithMatrix);
@@ -80,7 +81,7 @@ server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/Comment', authorizat
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
 server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({resource:"ticket", action:"write"}), ticketService.AssignToGroup);
-
+server.get('/DVP/API/:version/Tickets/:searchBy/:searchValue', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
 
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
