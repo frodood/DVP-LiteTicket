@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
-var formMaster = require('../model/FormMaster').FormMaster;
+var formMaster = require('dvp-mongomodels/model/FormMaster').FormMaster;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 
