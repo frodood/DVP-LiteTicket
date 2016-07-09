@@ -71,7 +71,7 @@ server.get('/DVP/API/:version/TicketsWithMatrix/:status', authorization({resourc
 server.get('/DVP/API/:version/MyTickets', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
 server.get('/DVP/API/:version/MyTickets/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
-server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"delete"}), ticketService.DeActivateTicket);
+server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.DeActivateTicket);
 server.put('/DVP/API/:version/Ticket/:id/pick', authorization({resource:"ticket", action:"write"}), ticketService.PickTicket);
 server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketAudit);
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
@@ -81,7 +81,8 @@ server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/Comment', authorizat
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
 server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({resource:"ticket", action:"write"}), ticketService.AssignToGroup);
-server.get('/DVP/API/:version/Tickets/:searchBy/:searchValue', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
+server.get('/DVP/API/:version/Tickets/:FieldName/:FieldValue', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
+server.get('/DVP/API/:version/TicketSearch/:SearchBy/:SearchValue', authorization({resource:"ticket", action:"read"}), ticketService.TicketSearch);
 
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
