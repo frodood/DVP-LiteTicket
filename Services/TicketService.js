@@ -510,6 +510,37 @@ module.exports.GetTicketsByTimeRange = function (req, res) {
 };
 
 
+
+module.exports.SearchTickets = function (req, res) {
+    logger.debug("DVP-TicketService.SearchTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.find({$text : { $search : req.params.text } , company: company, tenant: tenant},{ score : { $meta: "textScore" } }).sort({ score : { $meta : 'textScore' } })
+        .exec(function(err, tickets) {
+            if (err) {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Tickets Failed", false, undefined);
+
+            }else {
+
+                if (tickets) {
+
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get Tickets Successful", true, tickets);
+
+                }else{
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No External Users Found", false, undefined);
+
+                }
+            }
+
+            res.end(jsonString);
+        });
+};
+
+
 function PickTicket(req, res) {
 };
 function GetTicketAudit(req, res) {
