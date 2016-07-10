@@ -60,7 +60,7 @@ function GetForms(req, res){
 
         }else {
 
-            if (users) {
+            if (forms) {
 
 
                 jsonString = messageFormatter.FormatMessage(err, "Get Forms Successful", true, forms);
@@ -170,7 +170,7 @@ function RemoveDynamicField(req, res){
     var jsonString;
 
 
-    FormMaster.findOneAndUpdate({name: req.params.name,company: company, tenant: tenant},{ $pull: { 'fields': {'field':req.params.field} } }, function(err, fields) {
+    FormMaster.findOneAndUpdate({name: req.params.name,company: company, tenant: tenant},{ $pull: { 'fields': {'_id':req.params.field} } }, function(err, fields) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Remove Dynamic Fields Failed", false, undefined);
@@ -196,7 +196,19 @@ function UpdateDynamicField(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    FormMaster.findOne({name: req.params.name,company: company, tenant: tenant}, function(err, form) {
+
+
+
+    FormMaster.update({name: req.params.name,company: company, tenant: tenant, 'fields._id' : req.params.field}, {
+        $set:{
+        "fields.$.field":req.body.field,
+        "fields.$.type": req.body.type,
+        "fields.$.description": req.body.description,
+        "fields.$.title":  req.body.title,
+        "fields.$.active":  req.body.activw,
+        "fields.$.require":  req.body.require,
+        "fields.$.values": req.body.values
+    }},{upsert:true},function(err, form) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, undefined);
@@ -204,41 +216,9 @@ function UpdateDynamicField(req, res){
 
         }else{
 
-            if(form, req.body) {
-                var userObj;
-                jsonString = messageFormatter.FormatMessage(err, "Get Form Successful", true, form);
+            jsonString = messageFormatter.FormatMessage(undefined, "Update Field successful", true, form);
+            res.end(jsonString);
 
-
-                var field = form.fields.id(req.params.field);
-                if(field){
-
-                    field = req.body;
-                }
-
-                form.save(function (err, fields) {
-                    if (err) {
-
-                        jsonString = messageFormatter.FormatMessage(err, "Update Field Failed", false, undefined);
-
-                    }else{
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "Update Field successful", false, undefined);
-
-                    }
-
-                    res.end(jsonString);
-                });
-
-
-
-
-
-            }else{
-
-                jsonString = messageFormatter.FormatMessage(undefined, "No Form found", false, undefined);
-                res.end(jsonString);
-
-            }
 
         }
 

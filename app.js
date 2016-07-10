@@ -169,9 +169,9 @@ server.post('/DVP/API/:version/FormMaster', authorization({resource:"forms", act
 server.get('/DVP/API/:version/FormMasters', authorization({resource:"forms", action:"read"}), formMaster.GetForms);
 server.get('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"read"}), formMaster.GetForm);
 server.del('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"delete"}), formMaster.DeleteForm);
-server.post('/DVP/API/:version/ForMaster/:name/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicField);
-server.del('/DVP/API/:version/ForMaster/:id/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicField);
-server.put('/DVP/API/:version/ForMaster/:id/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
+server.post('/DVP/API/:version/FormMaster/:name/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicField);
+server.del('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicField);
+server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
 
 
 
