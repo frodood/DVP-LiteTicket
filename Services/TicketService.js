@@ -7,7 +7,7 @@ var UserGroup = require('dvp-mongomodels/model/UserGroup');
 var Attachment = require('dvp-mongomodels/model/Attachment').Attachment;
 var Tag = require('dvp-mongomodels/model/Tag').Tag;
 var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
-var Comment = require('dvp-mongomodels/model/TimeEntry').Comment;
+var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
@@ -546,12 +546,248 @@ function PickTicket(req, res) {
 function GetTicketAudit(req, res) {
 };
 
-function AddComment(req, res) {
+module.exports.AddComment = function (req, res) {
+    logger.info("DVP-LiteTicket.AddComment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.findById(req.params.id, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if(ticket){
+                User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (user) {
+                            var comment = Comment({
+                                body: req.body.body,
+                                body_type: req.body.body_type,
+                                type: req.body.type,
+                                public: req.body.public,
+                                author: user.id,
+                                author_external: req.body.author_external,
+                                attachments: req.body.attachments,
+                                channel: req.body.channel,
+                                channel_from: req.body.channel_from,
+                                engagement_session: req.body.engagement_session,
+                                created_at: Date.now(),
+                                meta_data: req.body.meta_data
+                            });
+
+                            comment.save(function (err, obj) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (obj.id) {
+                                        Ticket.findOneAndUpdate({company: company, tenant: tenant, id: ObjectId(req.params.id)},
+                                            {$addToSet: {comments: obj.id}}
+                                            , function (err, rOrg) {
+                                                if (err) {
+                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                                } else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                }
+                                                res.end(jsonString);
+                                            });
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+
+                            });
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+            }
+            else{
+                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+
 };
-function AddAttachment(req, res) {
+
+module.exports.AddAttachment = function (req, res) {
+    logger.info("DVP-LiteTicket.AddAttachment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Ticket.findById(req.params.id, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if(ticket){
+                User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+
+                        if (user) {
+
+                            var attachment = Attachment({
+                                file: req.body.file,
+                                url: req.body.url,
+                                type: req.body.type,
+                                size: req.body.size
+                            });
+
+                            attachment.save(function (err, obj) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Save Attachment.", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (obj.id) {
+                                        Ticket.findOneAndUpdate({company: company, tenant: tenant, id: ObjectId(req.params.id)},
+                                            {$addToSet: {attachments: obj.id}}
+                                            , function (err, rOrg) {
+                                                if (err) {
+                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                                } else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Attachment Successfully Map To Ticket", true, obj);
+                                                }
+                                                res.end(jsonString);
+                                            });
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+
+                            });
+                        } else {
+
+                            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+            }
+            else{
+                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+
 };
-function AddCommentToComment(req, res) {
+
+module.exports.AddCommentToComment = function (req, res) {
+    logger.info("DVP-LiteTicket.AddCommentToComment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Comment.findById(req.params.commentid, function (err, comment) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (comment){
+                Ticket.findById(req.params.id, function (err, ticket) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if(ticket){
+                            User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (user) {
+                                        var comment = Comment({
+                                            body: req.body.body,
+                                            body_type: req.body.body_type,
+                                            type: req.body.type,
+                                            public: req.body.public,
+                                            author: user.id,
+                                            author_external: req.body.author_external,
+                                            attachments: req.body.attachments,
+                                            channel: req.body.channel,
+                                            channel_from: req.body.channel_from,
+                                            engagement_session: req.body.engagement_session,
+                                            created_at: Date.now(),
+                                            meta_data: req.body.meta_data
+                                        });
+
+                                        comment.save(function (err, obj) {
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
+                                                res.end(jsonString);
+                                            }
+                                            else {
+                                                if (obj.id) {
+                                                    Comment.findOneAndUpdate({id: ObjectId(req.params.id)},
+                                                        {$addToSet: {sub_comment: obj.id}}
+                                                        , function (err, rOrg) {
+                                                            if (err) {
+                                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
+                                                            } else {
+                                                                jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+                                                            }
+                                                            res.end(jsonString);
+                                                        });
+                                                }
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
+                                                    res.end(jsonString);
+                                                }
+                                            }
+
+                                        });
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+                            });
+                        }
+                        else{
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+            }
+            else{
+                jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+                res.end(jsonString);
+            }
+        }
+
+    });
 };
+
 function ChangeStatus(req, res) {
 };
 function AssignToUser(req, res) {
@@ -735,9 +971,7 @@ module.exports.GetAttachTickets = GetAttachTickets;
 module.exports.PickTicket = PickTicket;
 module.exports.GetTicketAudit = GetTicketAudit;
 
-module.exports.AddComment = AddComment;
-module.exports.AddAttachment = AddAttachment;
-module.exports.AddCommentToComment = AddCommentToComment;
+
 module.exports.ChangeStatus = ChangeStatus;
 module.exports.AssignToUser = AssignToUser;
 module.exports.AssignToGroup = AssignToGroup;
