@@ -56,16 +56,75 @@ function RemoveTagCategory(req, res){
     });
 
 };
+function GetTagCategory(req, res){
+
+    logger.debug("DVP-LiteTicket.GetTagCategory Internal method ");
+
+    var jsonString;
+    var tagId=req.params.id;
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    TagCategory.find({_id:tagId,company:company,tenant:tenant},function (errPickTagCategory,PickTagCategory) {
+
+        if(errPickTagCategory)
+        {
+            jsonString=messageFormatter.FormatMessage(errPickTagCategory, "Picking tag category failed", false, undefined);
+        }
+        else
+        {
+            jsonString=messageFormatter.FormatMessage(undefined, "Picking tag category succeeded", true, PickTagCategory);
+        }
+        res.end(jsonString);
+    });
+
+};
+function GetTagCategories(req, res){
+
+    logger.debug("DVP-LiteTicket.GetTagCategories Internal method ");
+
+    var jsonString;
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    TagCategory.find({company:company,tenant:tenant},function (errAllTagCats,resAllTagCats) {
+
+        if(errAllTagCats)
+        {
+            jsonString=messageFormatter.FormatMessage(errAllTagCats, "Picking All tag categories failed", false, undefined);
+        }
+        else
+        {
+            if(resAllTagCats.length>0)
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "Picking All tag categories succeeded", true, resAllTagCats);
+            }
+            else
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "No tag categories found", false, resAllTagCats)
+            }
+
+        }
+        res.end(jsonString);
+    });
+
+};
 
 
 function CreateTag(req, res){
 
     logger.debug("DVP-LiteTicket.CreateTagCategory Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
     var jsonString;
+
     var tag = Tag({
         name:req.body.name,
-        description:req.body.description
+        description:req.body.description,
+        company:company,
+        tenant:tenant
 
     });
 
@@ -86,9 +145,12 @@ function GetTags(req, res){
 
     logger.debug("DVP-LiteTicket.GetTags Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
     var jsonString;
 
-    Tag.find(function (errAllTags,resAllTags) {
+    Tag.find({company:company,tenant:tenant},function (errAllTags,resAllTags) {
 
         if(errAllTags)
         {
@@ -117,8 +179,10 @@ function GetTag(req, res){
 
     var jsonString;
     var tagId=req.params.id;
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
 
-    Tag.find({_id:tagId},function (errPickTag,PickTag) {
+    Tag.find({_id:tagId,company:company,tenant:tenant},function (errPickTag,PickTag) {
 
         if(errPickTag)
         {
@@ -136,9 +200,11 @@ function DeleteTag(req, res){
 
     logger.debug("DVP-LiteTicket.DeleteTag Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    Tag.findOneAndRemove({_id:req.params.id}, function (errTagRemove,resTagRemove) {
+    Tag.findOneAndRemove({_id:req.params.id,company:company,tenant:tenant}, function (errTagRemove,resTagRemove) {
         if(errTagRemove)
         {
             jsonString=messageFormatter.FormatMessage(errTagRemove, "Tag category deletion failed", false, undefined);
@@ -157,9 +223,11 @@ function AttachTagsToTag(req, res){
 
     logger.debug("DVP-LiteTicket.AttachTagsToTag Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    Tag.findOneAndUpdate({_id:req.params.tagid}, {
+    Tag.findOneAndUpdate({_id:req.params.tagid,company:company,tenant:tenant}, {
 
         $addToSet :{tags : req.params.id}
 
@@ -184,11 +252,16 @@ function CreateTagsToTag(req, res){
 
     logger.debug("DVP-LiteTicket.CreateTagsToTag Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
     var jsonString;
 
     var newTag = Tag({
         name:req.body.name,
-        description:req.body.description
+        description:req.body.description,
+        company:company,
+        tenant:tenant
+
     });
 
     newTag.save(function (errSubTag,resSubTag) {
@@ -202,14 +275,7 @@ function CreateTagsToTag(req, res){
         else
         {
             Tag.findOneAndUpdate({_id:req.params.id}, {
-
                 $addToSet :{tags : resSubTag._doc._id}
-                /*$push:{
-                 tags:
-                 {
-                 $each:[newTag._id]
-                 }
-                 }*/
 
             },function(errAttachTag,resAttachTag)
             {
@@ -235,10 +301,12 @@ function DetachTagsFromTag(req,res){
     logger.debug("DVP-LiteTicket.DetachTagsFromTag Internal method ");
 
     var jsonString;
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
     var parentTagId=req.params.tagid;
     var childTagId=req.params.id;
 
-    Tag.findOneAndUpdate({_id:parentTagId},{"$pull":{tags:childTagId}}, function (errDetachTag,resDetachTag) {
+    Tag.findOneAndUpdate({_id:parentTagId,company:company,tenant:tenant},{"$pull":{tags:childTagId}}, function (errDetachTag,resDetachTag) {
 
         if(errDetachTag)
         {
@@ -250,56 +318,6 @@ function DetachTagsFromTag(req,res){
         }
         res.end(jsonString);
 
-    });
-
-};
-
-function GetTagCategory(req, res){
-
-    logger.debug("DVP-LiteTicket.GetTagCategory Internal method ");
-
-    var jsonString;
-    var tagId=req.params.id;
-
-    TagCategory.find({_id:tagId},function (errPickTagCategory,PickTagCategory) {
-
-        if(errPickTagCategory)
-        {
-            jsonString=messageFormatter.FormatMessage(errPickTagCategory, "Picking tag category failed", false, undefined);
-        }
-        else
-        {
-            jsonString=messageFormatter.FormatMessage(undefined, "Picking tag category succeeded", true, PickTagCategory);
-        }
-        res.end(jsonString);
-    });
-
-};
-function GetTagCategories(req, res){
-
-    logger.debug("DVP-LiteTicket.GetTagCategories Internal method ");
-
-    var jsonString;
-
-    TagCategory.find(function (errAllTagCats,resAllTagCats) {
-
-        if(errAllTagCats)
-        {
-            jsonString=messageFormatter.FormatMessage(errAllTagCats, "Picking All tag categories failed", false, undefined);
-        }
-        else
-        {
-            if(resAllTagCats.length>0)
-            {
-                jsonString=messageFormatter.FormatMessage(undefined, "Picking All tag categories succeeded", true, resAllTagCats);
-            }
-            else
-            {
-                jsonString=messageFormatter.FormatMessage(undefined, "No tag categories found", false, resAllTagCats)
-            }
-
-        }
-        res.end(jsonString);
     });
 
 };
@@ -342,7 +360,7 @@ function DetachTagsFromCategory(req,res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    TagCategory.findOneAndUpdate({_id:CaregoryId,company:company,tenant:tenant},{"$pull":{tags:TagId}},function(errDetachCatToTag,resDetachCatToTag)
+    TagCategory.findOneAndUpdate({_id:CaregoryId,company:company,tenant:tenant},{$pull:{tags:TagId}},function(errDetachCatToTag,resDetachCatToTag)
     {
         if(errDetachCatToTag)
         {
