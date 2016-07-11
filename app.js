@@ -97,13 +97,13 @@ server.del('/DVP/API/:version/Ticket/:id/RelatedTicket',authorization({resource:
 
 /////////////////////////////////////////////Tags///////////////////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/Tag', authorization({resource:"tags", action:"write"}), tagService.CreateTag);
-server.get('/DVP/API/:version/Tags', authorization({resource:"tags", action:"read"}), tagService.GetTags);
-server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"read"}), tagService.GetTag);
-server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"delete"}), tagService.DeleteTag);
-server.post('/DVP/API/:version/Tag/:id/Attach/Tag', authorization({resource:"tags", action:"read"}), tagService.CreateTagsToTag);
-server.put('/DVP/API/:version/Tag/:id/Attach/Tag/:tagid', authorization({resource:"tags", action:"read"}), tagService.AttachTagsToTag);
-server.del('/DVP/API/:version/Tag/:id/Detach/Tag/:tagid', authorization({resource:"tags", action:"read"}), tagService.DetachTagsFromTag);
+server.post('/DVP/API/:version/Tag', authorization({resource:"ticket", action:"write"}), tagService.CreateTag);
+server.get('/DVP/API/:version/Tags', authorization({resource:"ticket", action:"read"}), tagService.GetTags);
+server.get('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"read"}), tagService.GetTag);
+server.del('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"delete"}), tagService.DeleteTag);
+server.post('/DVP/API/:version/Tag/:id/Attach/Tag', authorization({resource:"ticket", action:"read"}), tagService.CreateTagsToTag);
+server.put('/DVP/API/:version/Tag/:id/Attach/Tag/:tagid', authorization({resource:"ticket", action:"read"}), tagService.AttachTagsToTag);
+server.del('/DVP/API/:version/Tag/:id/Detach/Tag/:tagid', authorization({resource:"ticket", action:"read"}), tagService.DetachTagsFromTag);
 
 /////////////////////////////////////////////Tag Category///////////////////////////////////////////////////////////////////////////////////////////////
 server.put('/DVP/API/:version/TagCategory/:id/Attach/Tag/:tagid', authorization({resource:"tags", action:"read"}), tagService.AttachTagsToCategory);

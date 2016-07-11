@@ -63,7 +63,7 @@ function CreateTag(req, res){
     var jsonString;
     var tag = Tag({
         name:req.body.name,
-        description:re.body.description
+        description:req.body.description
 
     });
 
@@ -188,11 +188,12 @@ function CreateTagsToTag(req, res){
 
     var newTag = Tag({
         name:req.body.name,
-        description:res.body.description
+        description:req.body.description
     });
 
-    newTag.save()(function (errSubTag,resSubTag) {
+    newTag.save(function (errSubTag,resSubTag) {
 
+        console.log("New ID "+newTag._id);
         if(errSubTag)
         {
             jsonString=messageFormatter.FormatMessage(errSubTag, "Sub Tags creation failed", false, undefined);
