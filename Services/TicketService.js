@@ -11,7 +11,9 @@ var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
-
+var triggerWorker = require('../Workers/TriggerWorker');
+var deepcopy = require("deepcopy");
+var diff = require('deep-diff').diff;
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
@@ -33,9 +35,18 @@ module.exports.CreateTicket = function (req, res) {
 
             if (user) {
 
+                var time = Date.now();
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message" :  req.user.iss +" Created Ticket",
+                        "time" : time
+                    }
+                });
+
                 var ticket = Ticket({
-                    created_at: Date.now(),
-                    updated_at: Date.now(),
+                    created_at: time,
+                    updated_at: time,
                     active: true,
                     is_sub_ticket: false,
                     type: req.body.type,
@@ -56,7 +67,8 @@ module.exports.CreateTicket = function (req, res) {
                     tags: req.body.tags,
                     custom_fields: req.body.custom_fields,
                     comments: req.body.comments,
-                    SLAViolated: false
+                    SLAViolated: false,
+                    events: [tEvent]
                 });
                 ticket.save(function (err, client) {
                     if (err) {
@@ -64,6 +76,7 @@ module.exports.CreateTicket = function (req, res) {
                     }
                     else {
                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
+                        ExecuteTrigger(client.id, "change_status", "new");
                     }
                     res.end(jsonString);
                 });
@@ -173,7 +186,6 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
             res.end(jsonString);
         });
 };
-
 
 module.exports.GetAllTicketsWithMatrix = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
@@ -544,25 +556,35 @@ module.exports.DeActivateTicket = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Ticket.findById(req.params.id, function (err, ticket) {
+    Ticket.findOne({_id: req.params.id,company: company,
+        tenant: tenant}, function (err, ticket) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
             res.end(jsonString);
         }
         else {
-            if (ticket) {
-                Ticket.findOneAndUpdate({
-                    _id: req.params.id,
-                    company: company,
-                    tenant: tenant
-                }, {active: false}, function (err, rUser) {
+            if (ticket ) {
+                var time = Date.now();
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message" :  req.user.iss +" Deactivate Ticket",
+                        "time" : time
+                    }
+                });
+
+                ticket.updated_at = time;
+                ticket.events.push(tEvent);
+
+                ticket.update(ticket, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To DeActivate Ticket", false, undefined);
                     }
                     else {
                         if (rUser) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket DeActivated", true, undefined);
+                            ExecuteTrigger(req.params.id, "change_status", "closed");
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, undefined);
@@ -607,21 +629,29 @@ module.exports.PickTicket = function (req, res) {
 
                         } else {
                             if (user) {
-                                ticket.assignee_group = [];
+
+                                var assigneeGroup = deepcopy(ticket.assignee_group);
+                                var time = Date.now();
+                                ticket.assignee_group = undefined;
                                 ticket.assignee = user.id;
                                 ticket.updated_at = Date.now();
+                                var tEvent = TicketEvent({
+                                    type: 'status',
+                                    body: {
+                                        "message" :  req.user.iss +" Pick Ticket From Group "+assigneeGroup,
+                                        "time" : time
+                                    }
+                                });
+                                ticket.events.push(tEvent);
 
-                                Ticket.findOneAndUpdate({
-                                    _id: req.params.id,
-                                    company: company,
-                                    tenant: tenant
-                                }, ticket, function (err, rUser) {
+                                ticket.update(ticket, function (err, rUser) {
                                     if (err) {
                                         jsonString = messageFormatter.FormatMessage(err, "Fail Pick Ticket", false, undefined);
                                     }
                                     else {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
+                                            ExecuteTrigger(req.params.id, "change_assignee", undefined);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -667,7 +697,11 @@ module.exports.UpdateTicket = function (req, res) {
         }
         else {
             if (ticket) {
-                ticket.updated_at = Date.now();
+
+                var oldTicket = deepcopy(ticket);
+
+                var time = Date.now();
+                ticket.updated_at = time;
                 ticket.subject = req.body.subject;
                 ticket.description = req.body.description;
                 ticket.priority = req.body.priority;
@@ -678,15 +712,23 @@ module.exports.UpdateTicket = function (req, res) {
                 ticket.merged_tickets = req.body.merged_tickets;
                 ticket.engagement_session = req.body.engagement_session;
                 ticket.channel = req.body.channel;
-                ticket.tags = req.body.tags;
+                /*ticket.tags = req.body.tags;*/
                 ticket.custom_fields = req.body.custom_fields;
                 ticket.comments = req.body.comments;
 
-                Ticket.findOneAndUpdate({
-                    _id: req.params.id,
-                    company: company,
-                    tenant: tenant
-                }, ticket, function (err, rUser) {
+                var differences = diff(oldTicket, ticket);
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message" :  req.user.iss +" made changes",
+                        "time" : time,
+                        "differences":differences
+                    }
+                });
+                ticket.events.push(tEvent);
+
+                ticket.update(ticket, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
                     }
@@ -716,7 +758,7 @@ module.exports.AddComment = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Ticket.findById(req.params.id, function (err, ticket) {
+    Ticket.findOne({_id:req.params.id,company: company, tenant: tenant}, function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
             res.end(jsonString);
@@ -752,18 +794,28 @@ module.exports.AddComment = function (req, res) {
                                 }
                                 else {
                                     if (obj.id) {
-                                        Ticket.findOneAndUpdate({
-                                                company: company,
-                                                tenant: tenant,
-                                                _id: req.params.id
-                                            },
-                                            {$addToSet: {comments: obj.id}}
+
+
+                                        var time = Date.now();
+                                        ticket.updated_at = time;
+                                        ticket.comments.push(obj.id);
+                                        var tEvent = TicketEvent({
+                                            type: 'status',
+                                            body: {
+                                                "message" :  req.user.iss +" Make Comment "+obj.id,
+                                                "time" : time
+                                            }
+                                        });
+                                        ticket.events.push(tEvent);
+
+                                        ticket.update(ticket
                                             , function (err, rOrg) {
                                                 if (err) {
                                                     jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
                                                 } else {
                                                     if (rOrg) {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+
                                                     }
                                                     else {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
@@ -804,7 +856,7 @@ module.exports.AddAttachment = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    Ticket.findById(req.params.id, function (err, ticket) {
+    Ticket.findOne({_id:req.params.id,company: company, tenant: tenant}, function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
             res.end(jsonString);
@@ -833,12 +885,20 @@ module.exports.AddAttachment = function (req, res) {
                                 }
                                 else {
                                     if (obj.id) {
-                                        Ticket.findOneAndUpdate({
-                                                company: company,
-                                                tenant: tenant,
-                                                _id: req.params.id
-                                            },
-                                            {$addToSet: {attachments: obj.id}}
+
+                                        var time = Date.now();
+                                        ticket.updated_at = time;
+                                        ticket.attachments.push(obj.id);
+                                        var tEvent = TicketEvent({
+                                            type: 'status',
+                                            body: {
+                                                "message" :  req.user.iss +" Add Attachment "+obj.id,
+                                                "time" : time
+                                            }
+                                        });
+                                        ticket.events.push(tEvent);
+
+                                        ticket.update(ticket
                                             , function (err, rOrg) {
                                                 if (err) {
                                                     jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
@@ -892,7 +952,8 @@ module.exports.AddCommentToComment = function (req, res) {
         }
         else {
             if (comment) {
-                Ticket.findById(req.params.id, function (err, ticket) {
+                Ticket.findOne({_id:req.params.id,company: company,
+                    tenant: tenant}, function (err, ticket) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
                         res.end(jsonString);
@@ -910,6 +971,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                 }
                                 else {
                                     if (user) {
+
                                         var comment = Comment({
                                             body: req.body.body,
                                             body_type: req.body.body_type,
@@ -932,7 +994,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                             }
                                             else {
                                                 if (obj.id) {
-                                                    Comment.findOneAndUpdate({_id: req.params.id},
+                                                    Comment.findOneAndUpdate({_id: req.params.commentid},
                                                         {$addToSet: {sub_comment: obj.id}}
                                                         , function (err, rOrg) {
                                                             if (err) {
@@ -947,6 +1009,25 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             }
                                                             res.end(jsonString);
                                                         });
+
+
+                                                    var time = Date.now();
+                                                    ticket.updated_at = time;
+                                                    var tEvent = TicketEvent({
+                                                        type: 'status',
+                                                        body: {
+                                                            "message" :  req.user.iss +" Make Comment To Comment "+obj.id,
+                                                            "time" : time
+                                                        }
+                                                    });
+                                                    ticket.events.push(tEvent);
+                                                    ticket.update(ticket,function(ex,nTick){
+                                                        if (err) {
+                                                            jsonString = messageFormatter.FormatMessage(err, "Ticket Updated Fail", false, undefined);
+                                                        } else {
+                                                            jsonString = messageFormatter.FormatMessage(err, "Ticket Updated", true, undefined);
+                                                        }
+                                                    })
                                                 }
                                                 else {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
@@ -995,9 +1076,19 @@ module.exports.ChangeStatus = function (req, res) {
             }
             else {
                 if (ticket) {
-                    ticket.updated_at = Date.now();
+
                     ticket.status = req.body.status;
 
+                    var time = Date.now();
+                    ticket.updated_at = time;
+                    var tEvent = TicketEvent({
+                        type: 'status',
+                        body: {
+                            "message" :  req.user.iss +" Status Update ",
+                            "time" : time
+                        }
+                    });
+                    ticket.events.push(tEvent);
 
                     /* A.find(
                      {id : { $in: ticket.sub_tickets.map(function(o){ return ObjectId(o); })}}
@@ -1018,17 +1109,15 @@ module.exports.ChangeStatus = function (req, res) {
                             }
                             else {
                                 if (docs && (ticket.sub_tickets.length == docs.length)) {
-                                    Ticket.findOneAndUpdate({
-                                        _id: req.params.id,
-                                        company: company,
-                                        tenant: tenant
-                                    }, ticket, function (err, rUser) {
+
+                                    ticket.update(ticket, function (err, rUser) {
                                         if (err) {
                                             jsonString = messageFormatter.FormatMessage(err, "Fail Update Status.", false, undefined);
                                         }
                                         else {
                                             if (rUser) {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                                ExecuteTrigger(req.params.id, "change_status", undefined);
                                             }
                                             else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -1046,6 +1135,7 @@ module.exports.ChangeStatus = function (req, res) {
 
                     }
                     else {
+
                         Ticket.findOneAndUpdate({
                             _id: req.params.id,
                             company: company,
@@ -1103,12 +1193,28 @@ module.exports.AssignToUser = function (req, res) {
                         else {
                             if (ticket) {
 
-                                ticket.update({$set: {assignee_group: undefined,assignee: user.id  }}, function (err, obj) {
+                                var oldTicket = deepcopy(ticket);
+                                var time = Date.now();
+                                ticket.updated_at = time;
+                                var tEvent = TicketEvent({
+                                    type: 'status',
+                                    body: {
+                                        "message" :  req.user.iss +" Ticket Assign To "+req.params.user,
+                                        "time" : time
+                                    }
+                                });
+                                ticket.events.push(tEvent);
+
+                                ticket.assignee_group = undefined;
+                                ticket.assignee = user.id ;
+
+                                ticket.update(ticket, function (err, obj) {
                                     if (err) {
                                         jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
                                     }
                                     if(obj){
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
+                                        ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
                                     }
                                     else{
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -1157,13 +1263,28 @@ module.exports.AssignToGroup = function(req, res) {
                         }
                         else {
                             if (ticket) {
+                                var oldTicket = deepcopy(ticket);
+                                var time = Date.now();
+                                ticket.updated_at = time;
+                                var tEvent = TicketEvent({
+                                    type: 'status',
+                                    body: {
+                                        "message" :  req.user.iss +" Ticket Assign To "+req.params.user,
+                                        "time" : time
+                                    }
+                                });
+                                ticket.events.push(tEvent);
 
-                                ticket.update({$set: {assignee_group: group.id ,assignee: undefined}}, function (err, obj) {
+                                ticket.assignee_group = group.id;
+                                ticket.assignee = undefined ;
+
+                                ticket.update(ticket, function (err, obj) {
                                     if (err) {
                                         jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
                                     }
                                     if(obj){
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To Group.", true, undefined);
+                                        ExecuteTrigger(req.params.id, "change_assignee_groups", oldTicket.assignee_group);
                                     }
                                     else{
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -1474,9 +1595,19 @@ module.exports.CreateSubTicket = function (req, res) {
 
                     if (user) {
 
+                        var time = Date.now();
+                        var tEvent = TicketEvent({
+                            type: 'status',
+                            body: {
+                                "message" :  req.user.iss +" Create Sub Ticket",
+                                "time" : time
+                            }
+                        });
+
+
                         var ticket = Ticket({
-                            created_at: Date.now(),
-                            updated_at: Date.now(),
+                            created_at: time,
+                            updated_at: time,
                             active: true,
                             is_sub_ticket: true,
                             type: req.body.type,
@@ -1497,7 +1628,8 @@ module.exports.CreateSubTicket = function (req, res) {
                             tags: req.body.tags,
                             custom_fields: req.body.custom_fields,
                             comments: req.body.comments,
-                            SLAViolated: false
+                            SLAViolated: false,
+                            events: [tEvent]
                         });
 
                         ticket.save(function (err, obj) {
@@ -1589,6 +1721,43 @@ module.exports.GetAttachTickets = GetAttachTickets;
 
 
 module.exports.GetTicketAudit = GetTicketAudit;
+
+
+function ExecuteTriggerAsync(ticketId, eventType, data) {
+    var deferred = q.defer ();
+
+    try{
+
+        triggerWorker.ExecuteTrigger(ticketId, eventType, data , function(reply){
+            deferred.resolve(reply);
+        })
+    }
+    catch(ex){
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteTriggerAsync Internal method."+ticketId+" "+eventType+" "+data, jsonString, ex);
+    }
+
+    /*setTimeout(function() {
+        deferred.resolve('hello world');
+    }, 500);*/
+
+    return deferred.promise;
+}
+function ExecuteTrigger(ticketId, eventType, data){
+    try{
+        logger.info("DVP-LiteTicket.ExecuteTrigger Internal method."+ticketId+" "+eventType+" "+data);
+        ExecuteTriggerAsync(ticketId, eventType, data).then(function(val) {
+            logger.info("DVP-LiteTicket.ExecuteTrigger Internal method. reply : "+val);
+        });
+    }
+    catch(ex){
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteTrigger Internal method."+ticketId+" "+eventType+" "+data, jsonString, ex);
+    }
+
+}
+
+
 
 
 

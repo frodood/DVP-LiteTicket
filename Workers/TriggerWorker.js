@@ -1,6 +1,6 @@
 //https://www.npmjs.com/package/json-query
-var Trigger = require('../model/TicketTrigers').Trigger;
-var Ticket = require('../model/Ticket').Ticket;
+var Trigger = require('dvp-mongomodels/model/TicketTrigers').Trigger;
+var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var EventEmitter = require('events').EventEmitter;
 
 function numSort(a, b) {
