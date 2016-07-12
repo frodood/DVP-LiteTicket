@@ -7,9 +7,12 @@ var ticketTriggersSchema = new Schema({
 
     title: { type: String, required: true},
     Active: Boolean,
+    priority: { type: Number, required: true },
     created_at: {type:Date,default: Date.now,require:true},
     updated_at: {type:Date,default: Date.now,require:true},
-    conditions: {all: [ticketFilterSchema], any: [ticketFilterSchema]}
+    company: { type: Number, required: true },
+    tenant: { type: Number, required: true },
+    conditions: {all: [ticketFilterSchema], any: [ticketFilterSchema]},
     actions: [{field: { type: String, required: true},  value: { type: String, required: true}}],
     operations: [{name: { type: String, required: true}, field: { type: String, required: true},  value: {}}]
 });
@@ -19,5 +22,5 @@ var ticketTriggersSchema = new Schema({
 
 
 var Trigger = mongoose.model('Trigger', ticketTriggersSchema);
-module.exports.TimeEntry = Trigger;
+module.exports.Trigger = Trigger;
 
