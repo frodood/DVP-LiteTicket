@@ -137,7 +137,7 @@ function MatchTriggers(obj, triggers){
     return (e);
 }
 
-function ExecuteTrigger(ticketId, callback){
+function ExecuteTrigger(ticketId, eventType, data, callback){
     if(ticketId) {
         Ticket.findOne({_id: ticketId}, function (err, tResult) {
             if (err) {
