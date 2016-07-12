@@ -740,7 +740,7 @@ module.exports.AddComment = function (req, res) {
                                 attachments: req.body.attachments,
                                 channel: req.body.channel,
                                 channel_from: req.body.channel_from,
-                                engagement_session: ObjectId(req.body.engagement_session),
+                                engagement_session: req.body.engagement_session,
                                 created_at: Date.now(),
                                 meta_data: req.body.meta_data
                             });
@@ -920,7 +920,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                             attachments: req.body.attachments,
                                             channel: req.body.channel,
                                             channel_from: req.body.channel_from,
-                                            engagement_session: ObjectId(req.body.engagement_session),
+                                            engagement_session: req.body.engagement_session,
                                             created_at: Date.now(),
                                             meta_data: req.body.meta_data
                                         });
@@ -1492,7 +1492,7 @@ module.exports.CreateSubTicket = function (req, res) {
                             attachments: req.body.attachments,
                             related_tickets: req.body.related_tickets,
                             merged_tickets: req.body.merged_tickets,
-                            engagement_session: ObjectId(req.body.engagement_session),
+                            engagement_session: req.body.engagement_session,
                             channel: req.body.channel,
                             tags: req.body.tags,
                             custom_fields: req.body.custom_fields,
