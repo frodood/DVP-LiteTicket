@@ -4,13 +4,46 @@
 
 var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
-var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
-var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
-var User = require('dvp-mongomodels/model/User');
+var TimeEntry = require('../model/TimeEntry').TimeEntry;
+var Ticket = require('../model/Ticket').Ticket;
+var User = require('../model/User');
+var Trigger = require('../model/TicketTrigers').Trigger;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 
-function CreateTrigger(req, res){};
+function CreateTrigger(req, res){
+    var data = Trigger({
+        title: "triger1",
+        Active: true,
+        created_at: Date.now(),
+        updated_at: Date.now(),
+        company: 103,
+        tenant: 1,
+        conditions: {all: [
+            {
+                field: "status",
+                operator: "is",
+                value: "new"
+            },
+            {
+                field: "priority",
+                operator: "is",
+                value: "high"
+            }
+        ], any: [
+            {
+                field: "tags",
+                operator: "included",
+                value: "SMS"
+            }
+        ]},
+        actions: [{field: "status",  value: "open"}],
+        operations: [{name: "SendMessage", field: "requester"}]
+    });
+    data.save(function(err, triger){
+        console.log(triger);
+    });
+}
 function GetTriggers(req, res){};
 function GetTrigger(req, res){};
 function DeleteTrigger(req, res){};
