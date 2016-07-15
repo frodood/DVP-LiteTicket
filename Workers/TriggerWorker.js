@@ -248,6 +248,7 @@ function MatchTriggers(obj, triggers){
 }
 
 function ExecuteTrigger(ticketId, triggerEvent, data, callback){
+    var jsonString;
     if(ticketId) {
         Ticket.findOne({_id: ticketId}, function (err, tResult) {
             if (err) {
@@ -296,8 +297,12 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                 Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function(err, utResult){
                                                     if(err){
                                                         console.log("Update ticket Failed: "+ err);
+                                                        jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
+                                                        callback(jsonString);
                                                     }else{
                                                         console.log("Update ticket Success: "+ utResult);
+                                                        jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
+                                                        callback(jsonString);
                                                     }
                                                 });
                                             });
