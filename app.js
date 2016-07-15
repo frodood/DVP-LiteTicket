@@ -15,6 +15,7 @@ var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
+var ardsService =  require('./Workers/PickAgent.js');
 
 
 var server = restify.createServer({
@@ -204,12 +205,18 @@ server.del('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
 
 
+/////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 server.listen(port, function () {
-
+    ardsService.RegisterWithArds(function(isSuccess){
+        logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
+    });
     logger.info("DVP-LiteTicket.main Server %s listening at %s", server.name, server.url);
-
 });
 
 

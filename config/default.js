@@ -31,15 +31,15 @@ module.exports = {
   "Host":
   {
     "resource": "cluster",
-    "vdomain": "localhost",
-    "domain": "localhost",
+    "vdomain": "127.0.0.1",
+    "domain": "127.0.0.1",
     "port": "3636",
     "version": "1.0"
   },
 
   "LBServer" : {
 
-    "ip": "localhost",
+    "ip": "127.0.0.1",
     "port": "3434"
 
   },
@@ -64,7 +64,10 @@ module.exports = {
       "sipuserendpointserviceVersion": "1.0.0.0",
       "clusterconfigserviceHost": "clusterconfig.104.131.67.21.xip.io",
       "clusterconfigservicePort": "8831",
-      "clusterconfigserviceVersion": "1.0.0.0"
+      "clusterconfigserviceVersion": "1.0.0.0",
+      "ardsServiceHost": "ardsliteservice.104.131.67.21.xip.io",
+      "ardsServicePort": "8828",
+      "ardsServiceVersion": "1.0.0.0"
     }
 
 
