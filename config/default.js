@@ -64,7 +64,10 @@ module.exports = {
       "sipuserendpointserviceVersion": "1.0.0.0",
       "clusterconfigserviceHost": "clusterconfig.104.131.67.21.xip.io",
       "clusterconfigservicePort": "8831",
-      "clusterconfigserviceVersion": "1.0.0.0"
+      "clusterconfigserviceVersion": "1.0.0.0",
+      "routingServiceHost": "ardsliteroutingengine.104.131.67.21.xip.io",
+      "routingServicePort": "8828",
+      "routingServiceVersion": "1.0.0.0"
     }
 
 
