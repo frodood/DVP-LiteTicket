@@ -1,8 +1,8 @@
-//https://www.npmjs.com/package/json-query
-var Trigger = require('../model/TicketTrigers').Trigger;
-var Ticket = require('../model/Ticket').Ticket;
-var User = require('../model/User');
-var UserGroup = require('../model/UserGroup');
+
+var User = require('dvp-mongomodels/model/User');
+var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var Trigger = require('dvp-mongomodels/model/TicketTrigers').Trigger;
+var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var EventEmitter = require('events').EventEmitter;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var util = require('util');

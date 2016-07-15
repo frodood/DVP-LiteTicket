@@ -64,13 +64,19 @@ mongoose.connect(connectionstring);
 
 
 server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicket);
-server.get('/DVP/API/:version/Tickets', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
-server.get('/DVP/API/:version/Tickets/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
-server.get('/DVP/API/:version/TicketsWithMatrix', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithMatrix);
+server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
+server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
+server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
+server.get('/DVP/API/:version/TicketsWithMatrix/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithMatrix);
 server.get('/DVP/API/:version/TicketsWithMatrix/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsInStatusWithMatrix);
-server.get('/DVP/API/:version/MyTickets', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
-server.get('/DVP/API/:version/MyTickets/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
+server.get('/DVP/API/:version/Tickets/Channel/:Channel/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByChannel);
+server.get('/DVP/API/:version/Tickets/Requester/:Requester/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByRequester);
+server.get('/DVP/API/:version/Tickets/Priority/:Priority/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriority);
+server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllGroupTickets);
+server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
+server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
+server.get('/DVP/API/:version/Ticket/:id/Details', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketWithDetails);
 server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"delete"}), ticketService.DeActivateTicket);
 server.put('/DVP/API/:version/Ticket/:id/pick', authorization({resource:"ticket", action:"write"}), ticketService.PickTicket);
 server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketAudit);
@@ -81,7 +87,9 @@ server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/Comment', authorizat
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
 server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({resource:"ticket", action:"write"}), ticketService.AssignToGroup);
-
+server.get('/DVP/API/:version/Tickets/:FieldName/:FieldValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
+server.get('/DVP/API/:version/TicketSearch/:SearchBy/:SearchValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.TicketSearch);
+server.get('/DVP/API/:version/TicketSearch/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.SearchTickets);
 
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
@@ -97,14 +105,24 @@ server.del('/DVP/API/:version/Ticket/:id/RelatedTicket',authorization({resource:
 
 /////////////////////////////////////////////Tags///////////////////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/Tag', authorization({resource:"tags", action:"write"}), tagService.CreateTag);
-server.get('/DVP/API/:version/Tags', authorization({resource:"tags", action:"read"}), tagService.GetTags);
-server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"read"}), tagService.GetTag);
-server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tags", action:"delete"}), tagService.DeleteTag);
-server.post('/DVP/API/:version/Tag/:id/Attach/Tag', authorization({resource:"tags", action:"read"}), tagService.AttachTagsToTag);
-server.del('/DVP/API/:version/Tag/:id/Detach/Tag/:tagid', authorization({resource:"tags", action:"read"}), tagService.DetachTagsFromTag);
+
+server.post('/DVP/API/:version/TagCategory', authorization({resource:"ticket", action:"write"}), tagService.CreateTagCategory);
+server.get('/DVP/API/:version/TagCategory/:id', authorization({resource:"ticket", action:"read"}), tagService.GetTagCategory);
+server.get('/DVP/API/:version/TagCategories', authorization({resource:"ticket", action:"read"}), tagService.GetTagCategories);
+server.del('/DVP/API/:version/TagCategory/:id', authorization({resource:"ticket", action:"write"}), tagService.RemoveTagCategory);
 
 
+server.post('/DVP/API/:version/Tag', authorization({resource:"ticket", action:"write"}), tagService.CreateTag);
+server.get('/DVP/API/:version/Tags', authorization({resource:"ticket", action:"read"}), tagService.GetTags);
+server.get('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"read"}), tagService.GetTag);
+server.del('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"write"}), tagService.DeleteTag);
+server.post('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"write"}), tagService.CreateTagsToTag);
+server.put('/DVP/API/:version/Tag/:id/AttachTo/:tagid', authorization({resource:"ticket", action:"write"}), tagService.AttachTagsToTag);
+server.del('/DVP/API/:version/Tag/:id/DetachFrom/:tagid', authorization({resource:"ticket", action:"write"}), tagService.DetachTagsFromTag);
+
+/////////////////////////////////////////////Tag Category///////////////////////////////////////////////////////////////////////////////////////////////
+server.put('/DVP/API/:version/Tag/:id/AttachToCategory/:cid', authorization({resource:"ticket", action:"write"}), tagService.AttachTagsToCategory);
+server.put('/DVP/API/:version/Tag/:id/DetachFromCategory/:cid', authorization({resource:"ticket", action:"write"}), tagService.DetachTagsFromCategory);
 
 
 
@@ -166,11 +184,11 @@ server.del('/DVP/API/:version/Trigger/:id/Operation/:field', authorization({reso
 /////////////////////////////////////////////////////////////formMaster/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/FormMaster', authorization({resource:"forms", action:"write"}), formMaster.CreateForm);
 server.get('/DVP/API/:version/FormMasters', authorization({resource:"forms", action:"read"}), formMaster.GetForms);
-server.get('/DVP/API/:version/FormMaster/:id', authorization({resource:"forms", action:"read"}), formMaster.GetForm);
-server.del('/DVP/API/:version/FormMaster/:id', authorization({resource:"forms", action:"delete"}), formMaster.DeleteForm);
-server.post('/DVP/API/:version/ForMaster/:id/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicField);
-server.del('/DVP/API/:version/ForMaster/:id/field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicField);
-server.put('/DVP/API/:version/ForMaster/:id/field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
+server.get('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"read"}), formMaster.GetForm);
+server.del('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"delete"}), formMaster.DeleteForm);
+server.post('/DVP/API/:version/FormMaster/:name/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicField);
+server.del('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicField);
+server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
 
 
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////

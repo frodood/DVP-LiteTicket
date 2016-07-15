@@ -6,9 +6,9 @@ var config = require('config');
 var restClientHandler = require('./RestClient.js');
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var deepcopy = require('deepcopy');
-var Ticket = require('../model/Ticket').Ticket;
-var TicketEvent = require('../model/Ticket').TicketEvent;
-var User = require('../model/User');
+var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
+var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
+var User = require('dvp-mongomodels/model/User');
 var TriggerWorker = require('./TriggerWorker.js');
 var util = require('util');
 
