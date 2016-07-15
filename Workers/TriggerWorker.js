@@ -10,7 +10,7 @@ var PickAgent = require('./PickAgent.js');
 var restClientHandler = require('./RestClient.js');
 
 function numSort(a, b) {
-    return a - b;
+    return a.priority - b.priority;
 }
 
 function UniqueObjectArray(array, field) {
@@ -309,7 +309,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                         }
 
                                         if(triggerToExecute.operations.length > 0){
-                                            for(var j = 0; i < triggerToExecute.operations.length; i++){
+                                            for(var j = 0; j < triggerToExecute.operations.length; j++){
                                                 var operationToExecute = triggerToExecute.operations[j];
 
                                                 //TODO : Replace switch with npm architect

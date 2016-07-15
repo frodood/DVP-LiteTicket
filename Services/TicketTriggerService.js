@@ -12,38 +12,39 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 
 
 function CreateTrigger(req, res){
+
+
+    logger.info("DVP-LiteTicket.CreateTrigger Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
     var data = Trigger({
-        title: "triger1",
-        Active: true,
+        title: req.body.title,
+        Active: req.body.active,
+        priority: req.body.priority,
         created_at: Date.now(),
         updated_at: Date.now(),
-        company: 103,
-        tenant: 1,
-        conditions: {all: [
-            {
-                field: "status",
-                operator: "is",
-                value: "new"
-            },
-            {
-                field: "priority",
-                operator: "is",
-                value: "high"
-            }
-        ], any: [
-            {
-                field: "tags",
-                operator: "included",
-                value: "SMS"
-            }
-        ]},
-        actions: [{field: "status",  value: "open"}],
-        operations: [{name: "SendMessage", field: "requester"}]
+        company: company,
+        tenant: tenant,
+        conditions: req.body.conditions,
+        actions: req.body.actions,
+        operations: req.body.operations
     });
-    data.save(function(err, triger){
-        console.log(triger);
+
+    data.save(function(err, trigger){
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Trigger create failed", false, undefined);
+        }
+        else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Trigger saved successfully", true, trigger);
+        }
+        res.end(jsonString);
     });
 }
+
 function GetTriggers(req, res){};
 function GetTrigger(req, res){};
 function DeleteTrigger(req, res){};
