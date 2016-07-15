@@ -27,13 +27,34 @@ var DoPost = function (companyInfo, serviceurl, postData, callback) {
     });
 };
 
-var DoGet = function (companyInfo, serviceurl, postData, callback) {
+var DoPut = function (companyInfo, serviceurl, postData, callback) {
     var jsonStr = JSON.stringify(postData);
-    //var httpUrl = util.format('%s? %s', serviceurl, jsonStr);
     var accessToken = util.format("bearer %s", config.Services.accessToken);
+    var options = {
+        url: serviceurl,
+        method: 'PUT',
+        headers: {
+            'content-type': 'application/json',
+            'authorization': accessToken,
+            'companyinfo': companyInfo
+        },
+        body: jsonStr
+    };
+    request.put(options, function optionalCallback(err, httpResponse, body) {
+        if (err) {
+            console.log('upload failed:', err);
+        }
+        console.log('Server returned: %j', body);
+        callback(err, httpResponse, body);
+    });
+};
+
+var DoGet = function (companyInfo, serviceurl, callback) {
+   var accessToken = util.format("bearer %s", config.Services.accessToken);
     console.log('RouteRequest:: %s', serviceurl);
     var options = {
         url: serviceurl,
+        method: 'GET',
         headers: {
             'content-type': 'application/json',
             'authorization': accessToken,
@@ -54,6 +75,7 @@ var DoDelete = function (companyInfo, serviceurl, callback) {
     console.log('DeleteRequest:: %s', serviceurl);
     var options = {
         url: serviceurl,
+        method: 'DELETE',
         headers: {
             'content-type': 'application/json',
             'authorization': accessToken,
@@ -71,5 +93,6 @@ var DoDelete = function (companyInfo, serviceurl, callback) {
 
 
 module.exports.DoPost = DoPost;
+module.exports.DoPut = DoPut;
 module.exports.DoGet = DoGet;
 module.exports.DoDelete = DoDelete;

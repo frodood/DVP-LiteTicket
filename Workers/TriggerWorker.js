@@ -6,6 +6,8 @@ var UserGroup = require('../model/UserGroup');
 var EventEmitter = require('events').EventEmitter;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var util = require('util');
+var PickAgent = require('./PickAgent.js');
+var restClientHandler = require('./RestClient.js');
 
 function numSort(a, b) {
     return a - b;
@@ -312,12 +314,34 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                     case "SendMessage":
                                                         break;
                                                     case "PickAgent":
+                                                        var attributeIds = operationToExecute.value;
+                                                        PickAgent.AddRequest(tResult.tenant, tResult.company, tResult.id, attributeIds, 1, "", function(){});
                                                         break;
                                                     case "SendEmail":
                                                         break;
                                                     case "SendNotification":
                                                         break;
                                                     case "InvokeService":
+                                                        var internalAccessToken = util.format("%d:%d", tResult.tenant, tResult.company);
+                                                        var reqUrl = operationToExecute.field;
+                                                        var reqData = operationToExecute.value.data;
+                                                        var reqMethod = operationToExecute.value.method;
+                                                        switch (reqMethod){
+                                                            case "POST":
+                                                                restClientHandler.DoPost(internalAccessToken, reqUrl, reqData, function(){});
+                                                                break;
+                                                            case "PUT":
+                                                                restClientHandler.DoPut(internalAccessToken, reqUrl, reqData, function(){});
+                                                                break;
+                                                            case "GET":
+                                                                restClientHandler.DoGet(internalAccessToken, reqUrl, function(){});
+                                                                break;
+                                                            case "DELETE":
+                                                                restClientHandler.DoDelete(internalAccessToken, reqUrl, function(){});
+                                                                break;
+                                                            default :
+                                                                break;
+                                                        }
                                                         break;
                                                     default :
                                                         break;

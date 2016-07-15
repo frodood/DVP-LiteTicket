@@ -63,9 +63,9 @@ module.exports = {
         "clusterconfigserviceHost": "SYS_CLUSTERCONFIG_HOST",
         "clusterconfigservicePort": "SYS_CLUSTERCONFIG_PORT",
         "clusterconfigserviceVersion": "SYS_CLUSTERCONFIG_VERSION",
-        "routingServiceHost": "SYS_ARDSLITEROUTINGENGINE_HOST",
-        "routingServicePort": "SYS_ARDSLITEROUTINGENGINE_PORT",
-        "routingServiceVersion": "SYS_ARDSLITEROUTINGENGINE_VERSION"
+        "ardsServiceHost": "SYS_ARDSLITESERVICE_HOST",
+        "ardsServicePort": "SYS_ARDSLITESERVICE_PORT",
+        "ardsServiceVersion": "SYS_ARDSLITESERVICE_VERSION"
     }
 };
 
