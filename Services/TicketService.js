@@ -932,7 +932,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                             }
                                             else {
                                                 if (obj.id) {
-                                                    Comment.findOneAndUpdate({_id: req.params.id},
+                                                    Comment.findOneAndUpdate({_id: req.params.commentid},
                                                         {$addToSet: {sub_comment: obj.id}}
                                                         , function (err, rOrg) {
                                                             if (err) {
