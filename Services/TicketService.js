@@ -174,7 +174,6 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
         });
 };
 
-
 module.exports.GetAllTicketsWithMatrix = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -709,6 +708,265 @@ module.exports.UpdateTicket = function (req, res) {
 
     });
 };
+
+
+module.exports.AddCommentByEngagement = function(req, res){
+
+
+
+    logger.info("DVP-LiteTicket.AddCommentByEngagement Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.findOne({company: company, tenant: tenant, engagement_session: req.params.engagementid}, function (err, ticket) {
+        if (err) {
+
+
+
+            //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
+            Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
+                if (err) {
+                    jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+                    res.end(jsonString);
+                }
+                else {
+                    if (comment) {
+                                    User.findOne({
+                                        username: req.user.iss,
+                                        company: company,
+                                        tenant: tenant
+                                    }, function (err, user) {
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                                            res.end(jsonString);
+                                        }
+                                        else {
+                                            if (user) {
+                                                var comment = Comment({
+                                                    body: req.body.body,
+                                                    body_type: req.body.body_type,
+                                                    type: req.body.type,
+                                                    public: req.body.public,
+                                                    author: user.id,
+                                                    author_external: req.body.author_external,
+                                                    attachments: req.body.attachments,
+                                                    channel: req.body.channel,
+                                                    channel_from: req.body.channel_from,
+                                                    engagement_session: req.body.engagement_session,
+                                                    created_at: Date.now(),
+                                                    meta_data: req.body.meta_data
+                                                });
+
+                                                comment.save(function (err, obj) {
+                                                    if (err) {
+                                                        jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
+                                                        res.end(jsonString);
+                                                    }
+                                                    else {
+                                                        if (obj.id) {
+                                                            Comment.findOneAndUpdate({_id: req.params.commentid},
+                                                                {$addToSet: {sub_comment: obj.id}}
+                                                                , function (err, rOrg) {
+                                                                    if (err) {
+                                                                        jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
+                                                                    } else {
+                                                                        if (rOrg) {
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+                                                                        }
+                                                                        else {
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
+                                                                        }
+                                                                    }
+                                                                    res.end(jsonString);
+                                                                });
+                                                        }
+                                                        else {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
+                                                            res.end(jsonString);
+                                                        }
+                                                    }
+
+                                                });
+                                            }
+                                            else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                                                res.end(jsonString);
+                                            }
+                                        }
+                                    });
+
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+                        res.end(jsonString);
+                    }
+                }
+
+            });
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            //jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            //res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+                User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (user) {
+                            var comment = Comment({
+                                body: req.body.body,
+                                body_type: req.body.body_type,
+                                type: req.body.type,
+                                public: req.body.public,
+                                author: user.id,
+                                author_external: req.body.author_external,
+                                attachments: req.body.attachments,
+                                channel: req.body.channel,
+                                channel_from: req.body.channel_from,
+                                engagement_session: req.body.engagement_session,
+                                created_at: Date.now(),
+                                meta_data: req.body.meta_data
+                            });
+
+                            comment.save(function (err, obj) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (obj.id) {
+                                        Ticket.findOneAndUpdate({
+                                                company: company,
+                                                tenant: tenant,
+                                                engagement_session: req.params.engagementid
+                                            },
+                                            {$addToSet: {comments: obj.id}}
+                                            , function (err, rOrg) {
+                                                if (err) {
+                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                                } else {
+                                                    if (rOrg) {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                    }
+                                                    else {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                    }
+                                                }
+                                                res.end(jsonString);
+                                            });
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+
+                            });
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+            }
+            else {
+                //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
+                Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (comment) {
+                            User.findOne({
+                                username: req.user.iss,
+                                company: company,
+                                tenant: tenant
+                            }, function (err, user) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (user) {
+                                        var comment = Comment({
+                                            body: req.body.body,
+                                            body_type: req.body.body_type,
+                                            type: req.body.type,
+                                            public: req.body.public,
+                                            author: user.id,
+                                            author_external: req.body.author_external,
+                                            attachments: req.body.attachments,
+                                            channel: req.body.channel,
+                                            channel_from: req.body.channel_from,
+                                            engagement_session: req.body.engagement_session,
+                                            created_at: Date.now(),
+                                            meta_data: req.body.meta_data
+                                        });
+
+                                        comment.save(function (err, obj) {
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
+                                                res.end(jsonString);
+                                            }
+                                            else {
+                                                if (obj.id) {
+                                                    Comment.findOneAndUpdate({engagement_session: req.params.engagementid},
+                                                        {$addToSet: {sub_comment: obj.id}}
+                                                        , function (err, rOrg) {
+                                                            if (err) {
+                                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
+                                                            } else {
+                                                                if (rOrg) {
+                                                                    jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+                                                                }
+                                                                else {
+                                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
+                                                                }
+                                                            }
+                                                            res.end(jsonString);
+                                                        });
+                                                }
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
+                                                    res.end(jsonString);
+                                                }
+                                            }
+
+                                        });
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+                            });
+
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+
+                });
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            }
+        }
+    });
+
+
+}
 
 module.exports.AddComment = function (req, res) {
     logger.info("DVP-LiteTicket.AddComment Internal method ");
