@@ -31,7 +31,12 @@ module.exports.CreateTicket = function (req, res) {
 
         } else {
 
+            var userid = undefined;
             if (user) {
+
+                userid = user.id;
+
+            }
 
                 var ticket = Ticket({
                     created_at: Date.now(),
@@ -44,8 +49,8 @@ module.exports.CreateTicket = function (req, res) {
                     description: req.body.description,
                     priority: req.body.priority,
                     status: "new",
-                    requester: req.body.requesterId,
-                    submitter: user.id,
+                    requester: req.body.requester,
+                    submitter: userid,
                     company: company,
                     tenant: tenant,
                     attachments: req.body.attachments,
@@ -67,11 +72,8 @@ module.exports.CreateTicket = function (req, res) {
                     }
                     res.end(jsonString);
                 });
-            } else {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
-                res.end(jsonString);
-            }
+
         }
     });
 };
