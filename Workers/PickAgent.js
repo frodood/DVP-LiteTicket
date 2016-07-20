@@ -55,7 +55,7 @@ function AddRequest(tenant, company, sessionId, attributeId, priority, otherInfo
         ServerType:"TICKETSERVER",
         RequestType:"TICKET",
         SessionId:sessionId,
-        Attributes:[attributeId],
+        Attributes:attributeId,
         RequestServerId:serverId,
         Priority:priority,
         ResourceCount:1,
@@ -63,7 +63,7 @@ function AddRequest(tenant, company, sessionId, attributeId, priority, otherInfo
     };
 
     var addReqUrl = util.format("http://%s/DVP/API/%s/ARDS/request", config.Services.ardsServiceHost, config.Services.ardsServiceVersion);
-    if (validator.isIP(config.Services.routingServiceHost)) {
+    if (validator.isIP(config.Services.ardsServiceHost)) {
         addReqUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/request", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion);
     }
     restClientHandler.DoPost(internalAccessToken, addReqUrl, ardsRequest, function (err, res1, result) {
@@ -79,9 +79,9 @@ function AddRequest(tenant, company, sessionId, attributeId, priority, otherInfo
 }
 
 function RemoveRequest(tenant, company, sessionId, reason, callback){
-    var internalAccessToken = util.format("%d:%d", tenant, company);
+    var internalAccessToken = util.format("%s:%s", tenant, company);
     var addReqRemoveUrl = util.format("http://%s/DVP/API/%s/ARDS/request/%s/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, sessionId, reason);
-    if (validator.isIP(config.Services.routingServiceHost)) {
+    if (validator.isIP(config.Services.ardsServiceHost)) {
         addReqRemoveUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/request/%s/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, sessionId, reason);
     }
     restClientHandler.DoDelete(internalAccessToken, addReqRemoveUrl, function (err, res1, result) {
@@ -99,7 +99,7 @@ function RemoveRequest(tenant, company, sessionId, reason, callback){
 function RejectRequest(tenant, company, sessionId, reason, callback){
     var internalAccessToken = util.format("%d:%d", tenant, company);
     var addReqRemoveUrl = util.format("http://%s/DVP/API/%s/ARDS/request/%s/reject/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, sessionId, reason);
-    if (validator.isIP(config.Services.routingServiceHost)) {
+    if (validator.isIP(config.Services.ardsServiceHost)) {
         addReqRemoveUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/request/%s/reject/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, sessionId, reason);
     }
     restClientHandler.DoDelete(internalAccessToken, addReqRemoveUrl, function (err, res1, result) {
@@ -112,6 +112,61 @@ function RejectRequest(tenant, company, sessionId, reason, callback){
             callback(true);
         }
     });
+}
+
+function UpdateSlotState(company, tenant, previousUserId, newUserId, ticketId){
+    var internalAccessToken = util.format("%d:%d", tenant, company);
+    if(previousUserId){
+        User.findOne({_id: previousUserId, company: company, tenant: tenant}, function (err, preUser) {
+            if (err) {
+                console.log("Get preUser Failed");
+            } else {
+                if(preUser && preUser.resourceid){
+                    var preUserData = {RequestType:"TICKET", State:"Available", Reason:"", OtherInfo:""};
+                    var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
+                    if (validator.isIP(config.Services.ardsServiceHost)) {
+                        preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
+                    }
+                    restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            console.log("Update preUser Success");
+                        }
+                    });
+                }else{
+                    console.log("preUser Not match with resource");
+                }
+            }
+        });
+    }
+
+    if(newUserId){
+        User.findOne({_id: newUserId, company: company, tenant: tenant}, function (err, newUser) {
+            if (err) {
+                console.log("Get preUser Failed");
+            } else {
+                if(newUser && newUser.resourceid){
+                    var preUserData = {RequestType:"TICKET", State:"Connected", Reason:"", OtherInfo:""};
+                    var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
+                    if (validator.isIP(config.Services.ardsServiceHost)) {
+                        preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
+                    }
+                    restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            console.log("Update newUser Success");
+                        }
+                    });
+                }else{
+                    console.log("newUser Not match with resource");
+                }
+            }
+        });
+    }
 }
 
 function ArdsCallback(req, res){
@@ -134,7 +189,7 @@ function ArdsCallback(req, res){
                         else {
                             if (ticket) {
 
-                                var oldTicket = deepcopy(ticket);
+                                var oldTicket = deepcopy(ticket.toJSON());
                                 var time = Date.now();
                                 ticket.updated_at = time;
                                 var tEvent = TicketEvent({
@@ -156,12 +211,12 @@ function ArdsCallback(req, res){
                                         res.end(jsonString);
                                     }
                                     if(obj){
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
                                         res.writeHead(200, {'Content-Type': 'application/json; charset=utf-8'});
                                         res.end(jsonString);
                                         RemoveRequest(ardsResponse.Tenant, ardsResponse.Company,ardsResponse.SessionID, "NONE", function(){
 
                                         });
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
                                         TriggerWorker.ExecuteTrigger(ticket.id, "change_assignee", oldTicket.assignee);
                                     }
                                     else{
@@ -203,3 +258,4 @@ function ArdsCallback(req, res){
 module.exports.RegisterWithArds = RegisterWithArds;
 module.exports.AddRequest = AddRequest;
 module.exports.ArdsCallback = ArdsCallback;
+module.exports.UpdateSlotState = UpdateSlotState;

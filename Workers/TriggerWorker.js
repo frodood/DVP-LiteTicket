@@ -7,6 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var util = require('util');
 var PickAgent = require('./PickAgent.js');
+var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
 
 function numSort(a, b) {
@@ -249,6 +250,7 @@ function MatchTriggers(obj, triggers){
 
 function ExecuteTrigger(ticketId, triggerEvent, data, callback){
     var jsonString;
+
     if(ticketId) {
         Ticket.findOne({_id: ticketId}, function (err, tResult) {
             if (err) {
@@ -256,6 +258,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                 callback(jsonString);
             } else {
                 if (tResult) {
+                    if(triggerEvent === "change_assignee"){
+                        PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                    }
                     Trigger.find({$and:[{company:tResult.company}, {tenant:tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                         if (err) {
                             jsonString = messageFormatter.FormatMessage(err, "Find Trigger Failed", false, undefined);
@@ -320,11 +325,12 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                         break;
                                                     case "PickAgent":
                                                         var attributeIds = operationToExecute.value;
-                                                        PickAgent.AddRequest(tResult.tenant, tResult.company, tResult.id, attributeIds, 1, "", function(){});
+                                                        PickAgent.AddRequest(tResult.tenant, tResult.company, tResult.id, attributeIds, "1", "", function(){});
                                                         break;
                                                     case "SendEmail":
                                                         break;
                                                     case "SendNotification":
+                                                        DvpNotification.SendNotification(tResult, operationToExecute.field, operationToExecute.value);
                                                         break;
                                                     case "InvokeService":
                                                         var internalAccessToken = util.format("%d:%d", tResult.tenant, tResult.company);
