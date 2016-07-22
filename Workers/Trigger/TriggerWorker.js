@@ -1,3 +1,6 @@
+/**
+ * Created by Heshan.i on 7/22/2016.
+ */
 
 var User = require('dvp-mongomodels/model/User');
 var UserGroup = require('dvp-mongomodels/model/UserGroup');
