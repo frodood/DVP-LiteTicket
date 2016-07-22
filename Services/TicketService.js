@@ -872,7 +872,6 @@ module.exports.PickTicket = function (req, res) {
     });
 };
 
-
 module.exports.GetTicketAudit = function (req, res) {
     logger.info("DVP-LiteTicket.GetTicketAudit Internal method ");
 
@@ -958,7 +957,7 @@ module.exports.UpdateTicket = function (req, res) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, rUser);
                         }
                         else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, rUser);
                         }
                     }
                     res.end(jsonString);
@@ -2586,16 +2585,12 @@ module.exports.AddTicketToCase = function (req, res) {
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
-    var jsonString;
 
-    Case.findOne({
-        company: company,
-        tenant: tenant,
-        active: true,
-        _id: req.params.id
-    }, function (err, caseData) {
+    var jsonString;
+    Case.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, caseData) {
         if (err) {
-            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Case", false, undefined);
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail Find Case", false, undefined);
             res.end(jsonString);
         }
         else {
@@ -2604,39 +2599,248 @@ module.exports.AddTicketToCase = function (req, res) {
                 var tEvent = TicketEvent({
                     type: 'status',
                     body: {
-                        "message": req.user.iss + " Delete Case",
-                        "time": time
+                        "message": req.user.iss + " Add Ticket To Case "+req.params.ticketid,
+                        "time": time,
+                        "differences": {}
                     }
                 });
+
                 caseData.update({
                     "$set": {
-                        "updated_at": Date.now(),
-                        "active": false
+                        "updated_at": Date.now()
                     },
-                    "$addToSet": {"events": tEvent}
+                    "$addToSet": {"events": tEvent,"related_tickets":req.params.ticketid}
                 }, function (err, rUser) {
                     if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "Fail To Delete Case", false, undefined);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Case.", false, undefined);
                     }
                     else {
                         if (rUser) {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Delete Case", true, undefined);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Add Ticket To Case.", true, rUser);
                         }
                         else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Data.", false, undefined);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Case ID.", false, rUser);
                         }
                     }
                     res.end(jsonString);
                 });
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Case ID.", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Case", false, undefined);
+                res.end(jsonString);
+            }
+        }
+
+    });
+};
+
+module.exports.RemoveTicketFromCase = function (req, res) {
+    logger.info("DVP-LiteTicket.RemoveTicketFromCase Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    Case.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, caseData) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail Find Case", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (caseData) {
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " Remove Ticket From Case "+req.params.ticketid,
+                        "time": time,
+                        "differences": {}
+                    }
+                });
+
+                caseData.update({
+                    "$set": {
+                        "updated_at": Date.now()
+                    },
+                    "$addToSet": {"events": tEvent},
+                    "$pull": {"related_tickets": req.params.ticketid}
+                }, function (err, rUser) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Remove Ticket.", false, undefined);
+                    }
+                    else {
+                        if (rUser) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Remove Ticket.", true, rUser);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Case ID.", false, rUser);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Case", false, undefined);
+                res.end(jsonString);
+            }
+        }
+
+    });
+};
+
+/* -----------------------------Case--------------------------------------------------*/
+
+/*to Facebook App*/
+module.exports.CreateTicketWithComment = function (req, res) {
+
+    logger.info("DVP-LiteTicket.CreateTicket Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var time = new Date().toISOString();
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " Created Ticket",
+                        "time": time
+                    }
+                });
+
+                var ticket = Ticket({
+                    created_at: Date.now(),
+                    updated_at: Date.now(),
+                    active: true,
+                    is_sub_ticket: false,
+                    type: req.body.type,
+                    subject: req.body.subject,
+                    reference: req.body.reference,
+                    description: req.body.description,
+                    priority: req.body.priority,
+                    status: "new",
+                    submitter: user.id,
+                    company: company,
+                    tenant: tenant,
+                    attachments: req.body.attachments,
+                    related_tickets: req.body.related_tickets,
+                    merged_tickets: req.body.merged_tickets,
+                    engagement_session: req.body.engagement_session,
+                    channel: req.body.channel,
+                    tags: req.body.tags,
+                    custom_fields: req.body.custom_fields,
+                    comments: req.body.comments,
+                    SLAViolated: false,
+                    events: [tEvent],
+                    requester: undefined
+                });
+
+                if (req.body.requesterId)
+                    ticket.requester = req.body.requesterId;
+
+                ticket.save(function (err, client) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if(req.body.comments){
+                            var createTicketTasks = [];
+                            req.body.comments.forEach(function(com){
+
+                                createTicketTasks.push(function(callBack){
+                                    var comment = Comment({
+                                        body: com.body,
+                                        body_type: com.body_type,
+                                        type: com.type,
+                                        public: com.public,
+                                        author: author,
+                                        author_external: com.author_external,
+                                        attachments: com.attachments,
+                                        channel: com.channel,
+                                        channel_from: com.channel_from,
+                                        engagement_session: ObjectId(req.body.engagement_session),
+                                        created_at: new Date().toISOString(),
+                                        meta_data: com.meta_data
+                                    });
+
+                                    comment.save(function (err, obj) {
+                                        if (!err) {
+                                            if (obj.id) {
+                                                var time = new Date().toISOString();
+                                                ticket.updated_at = time;
+                                                ticket.comments.push(obj.id);
+                                                var tEvent = TicketEvent({
+                                                    type: 'status',
+                                                    body: {
+                                                        "message": req.user.iss + " Make Comment " + obj.id,
+                                                        "time": time
+                                                    }
+                                                });
+                                                ticket.events.push(tEvent);
+
+                                                ticket.update(ticket
+                                                    , function (err, rOrg) {
+                                                        if (err) {
+                                                            callBack(err,undefined);
+                                                        } else {
+                                                            callBack(undefined,rOrg);
+                                                        }
+                                                    });
+                                            }
+                                            else {
+                                                callBack(new Error("Invalid Data"),undefined);
+                                            }
+                                        }
+                                    });
+
+                                });
+
+                            });
+
+                            if (createTicketTasks.length > 0) {
+                                async.parallel(createTicketTasks,
+                                    function (err, results) {
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Fail To Complete Process.", false, undefined);
+                                            res.end(jsonString);
+                                        }
+                                        else{
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Process Complete.", true, results);
+                                            res.end(jsonString);
+                                        }
+                                    });
+                            }
+                        }
+                        else{
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket create Sucess.", true, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                 res.end(jsonString);
             }
         }
     });
 };
-/* -----------------------------Case--------------------------------------------------*/
+
+
+/*to Facebook App*/
 
 
 
