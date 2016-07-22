@@ -40,7 +40,7 @@ module.exports = {
   "LBServer" : {
 
     "ip": "127.0.0.1",
-    "port": "3434"
+    "port": "3636"
 
   },
 
@@ -65,9 +65,12 @@ module.exports = {
       "clusterconfigserviceHost": "clusterconfig.104.131.67.21.xip.io",
       "clusterconfigservicePort": "8831",
       "clusterconfigserviceVersion": "1.0.0.0",
-      "ardsServiceHost": "ardsliteservice.104.131.67.21.xip.io",
+      "ardsServiceHost": "127.0.0.1",
       "ardsServicePort": "8828",
-      "ardsServiceVersion": "1.0.0.0"
+      "ardsServiceVersion": "1.0.0.0",
+      "notificationServiceHost": "notificationservice.104.131.67.21.xip.io",
+      "notificationServicePort": "8089",
+      "notificationServiceVersion": "1.0.0.0"
     }
 
 

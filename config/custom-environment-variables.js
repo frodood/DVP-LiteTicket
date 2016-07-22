@@ -65,7 +65,10 @@ module.exports = {
         "clusterconfigserviceVersion": "SYS_CLUSTERCONFIG_VERSION",
         "ardsServiceHost": "SYS_ARDSLITESERVICE_HOST",
         "ardsServicePort": "SYS_ARDSLITESERVICE_PORT",
-        "ardsServiceVersion": "SYS_ARDSLITESERVICE_VERSION"
+        "ardsServiceVersion": "SYS_ARDSLITESERVICE_VERSION",
+        "notificationServiceHost": "SYS_NOTIFICATIONSERVICE_HOST",
+        "notificationServicePort": "SYS_NOTIFICATIONSERVICE_PORT",
+        "notificationServiceVersion": "SYS_NOTIFICATIONSERVICE_VERSION"
     }
 };
 

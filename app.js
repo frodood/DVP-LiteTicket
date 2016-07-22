@@ -15,7 +15,7 @@ var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
-var ardsService =  require('./Workers/PickAgent.js');
+var ardsService =  require('./Workers/Trigger/PickAgent.js');
 
 
 var server = restify.createServer({
@@ -157,11 +157,11 @@ server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:
 server.post('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.CreateSLA);
 server.get('/DVP/API/:version/SLAs', authorization({resource:"sla", action:"read"}), slaService.GetSLAs);
 server.get('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"read"}), slaService.GetSLA);
-server.put('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
+server.put('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
 server.del('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"delete"}), slaService.DeleteSLA);
 server.put('/DVP/API/:version/SLA/:id/Matrix', authorization({resource:"sla", action:"write"}), slaService.AddMatrix);
-server.get('/DVP/API/:version/SLA/:id/Matrixs', authorization({resource:"sla", action:"read"}), slaService.GetMatrixs);
-server.del('/DVP/API/:version/SLA/:id/Matrix/matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
+server.get('/DVP/API/:version/SLA/:id/Matrices', authorization({resource:"sla", action:"read"}), slaService.GetMatrices);
+server.del('/DVP/API/:version/SLA/:id/Matrix/:matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
 server.put('/DVP/API/:version/SLA/:id/Filter/All', authorization({resource:"sla", action:"write"}), slaService.AddFilterAll);
 server.get('/DVP/API/:version/SLA/:id/Filters/All', authorization({resource:"sla", action:"read"}), slaService.GetFiltersAll);
 server.del('/DVP/API/:version/SLA/:id/Filter/All/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAll);
