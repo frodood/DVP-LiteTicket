@@ -197,15 +197,13 @@ function UpdateDynamicField(req, res){
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-
-
-    FormMaster.update({name: req.params.name,company: company, tenant: tenant, 'fields._id' : req.params.field}, {
+    FormMaster.update({name: req.params.name, company: company, tenant: tenant, 'fields.field' : req.params.field}, {
         $set:{
         "fields.$.field":req.body.field,
         "fields.$.type": req.body.type,
         "fields.$.description": req.body.description,
         "fields.$.title":  req.body.title,
-        "fields.$.active":  req.body.activw,
+        "fields.$.active":  req.body.active,
         "fields.$.require":  req.body.require,
         "fields.$.values": req.body.values
     }},{upsert:true},function(err, form) {
@@ -219,14 +217,9 @@ function UpdateDynamicField(req, res){
             jsonString = messageFormatter.FormatMessage(undefined, "Update Field successful", true, form);
             res.end(jsonString);
 
-
         }
 
-
     });
-
-
-
 
 };
 
