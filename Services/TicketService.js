@@ -14,7 +14,7 @@ var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConf
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
-var triggerWorker = require('../Workers/TriggerWorker');
+var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
 

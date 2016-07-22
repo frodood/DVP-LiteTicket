@@ -15,7 +15,7 @@ var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
-var ardsService =  require('./Workers/PickAgent.js');
+var ardsService =  require('./Workers/Trigger/PickAgent.js');
 
 
 var server = restify.createServer({
