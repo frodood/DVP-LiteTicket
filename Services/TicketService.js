@@ -86,6 +86,41 @@ module.exports.CreateTicket = function (req, res) {
                     else {
                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
                         ExecuteTrigger(client.id, "change_status", "new");
+
+                        ////////////////////////////////////////add note to engagement session async//////////////////////////
+                        try {
+                            EngagementSession.findOneAndUpdate({
+                                engagement_id: req.body.engagement_session,
+                                company: company,
+                                tenant: tenant
+                            }, {
+                                $addToSet: {
+                                    notes: {
+                                        body: '#TID ' + ticket.reference,
+                                        author: req.user.iss,
+                                        created_at: Date.now(),
+                                    }
+                                }
+                            }, function (err, notes) {
+                                if (err) {
+
+                                    logger.error("Append Note To EngagementSession Failed", err);
+
+                                } else {
+
+                                    logger.debug("Append Note To EngagementSession Success");
+
+                                }
+
+                            });
+                        }catch(excep){
+
+                            logger.error("Append Note To EngagementSession Failed", excep);
+                        }
+
+
+
+                        //////////////////////////////////////////////////////////////////////////////////////////////////////
                     }
                     res.end(jsonString);
                 });
@@ -972,7 +1007,6 @@ module.exports.UpdateTicket = function (req, res) {
     });
 };
 
-
 module.exports.AddCommentByEngagement = function(req, res){
 
 
@@ -1230,7 +1264,6 @@ module.exports.AddCommentByEngagement = function(req, res){
 
 
 }
-
 
 module.exports.AddComment = function (req, res) {
     logger.info("DVP-LiteTicket.AddComment Internal method ");
@@ -2182,7 +2215,6 @@ module.exports.GetMergeTickets = function (req, res) {
     });
 };
 
-
 module.exports.CreateSubTicket = function (req, res) {
 
     logger.info("DVP-LiteTicket.CreateSubTicket Internal method ");
@@ -3014,6 +3046,46 @@ module.exports.CreateTicketWithComment = function (req, res) {
                         res.end(jsonString);
                     }
                     else {
+
+
+
+                        ////////////////////////////////////////add note to engagement session async//////////////////////////
+                        try {
+                            EngagementSession.findOneAndUpdate({
+                                engagement_id: req.body.engagement_session,
+                                company: company,
+                                tenant: tenant
+                            }, {
+                                $addToSet: {
+                                    notes: {
+                                        body: '#TID ' + ticket.reference,
+                                        author: req.user.iss,
+                                        created_at: Date.now(),
+                                    }
+                                }
+                            }, function (err, notes) {
+                                if (err) {
+
+                                    logger.error("Append Note To EngagementSession Failed", err);
+
+                                } else {
+
+                                    logger.debug("Append Note To EngagementSession Success");
+
+                                }
+
+                            });
+                        }catch(excep){
+
+                            logger.error("Append Note To EngagementSession Failed", excep);
+                        }
+
+
+
+                        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
                         if(req.body.comments){
                             var createTicketTasks = [];
                             req.body.comments.forEach(function(com){
