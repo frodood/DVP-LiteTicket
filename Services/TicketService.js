@@ -15,10 +15,12 @@ var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConf
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
+var slaWorker = require('../Workers/SLA/SLAWorker.js');
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
 
 var q = require('q');
+
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
@@ -86,6 +88,7 @@ module.exports.CreateTicket = function (req, res) {
                     else {
                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
                         ExecuteTrigger(client.id, "change_status", "new");
+                        ExecuteSla(client.id, undefined);
                     }
                     res.end(jsonString);
                 });
@@ -2328,6 +2331,41 @@ function ExecuteTrigger(ticketId, eventType, data) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteTrigger Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+    }
+
+}
+
+function ExecuteSlaAsync(ticketId, previousPriority) {
+    var deferred = q.defer();
+
+    try {
+
+        slaWorker.ExecuteSLA(ticketId, previousPriority, function (reply) {
+            deferred.resolve(reply);
+        })
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteSlaAsync Internal method." + ticketId, jsonString, ex);
+    }
+
+    /*setTimeout(function() {
+     deferred.resolve('hello world');
+     }, 500);*/
+
+    return deferred.promise;
+}
+function ExecuteSla(ticketId, previousPriority) {
+    try {
+
+        logger.info("DVP-LiteTicket.ExecuteSla Internal method." + ticketId);
+        ExecuteSlaAsync(ticketId, previousPriority).then(function (val) {
+            logger.info("DVP-LiteTicket.ExecuteSla Internal method. reply : " + val);
+        });
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteSla Internal method." + ticketId, jsonString, ex);
     }
 
 }

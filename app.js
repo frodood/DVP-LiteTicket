@@ -16,6 +16,7 @@ var util = require('util');
 var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
 var ardsService =  require('./Workers/Trigger/PickAgent.js');
+var scheduleWorker = require('./Workers/SLA/SLAWorker.js');
 
 
 var server = restify.createServer({
@@ -208,6 +209,10 @@ server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);
+
+
+/////////////////////////////////////////////////////////////scheduleWorkerService/////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"sla", action:"write"}), scheduleWorker.ScheduleCallback);
 
 
 
