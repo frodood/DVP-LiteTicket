@@ -208,6 +208,25 @@ server.del('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
 
 
+
+
+///////////////////////////////////////////////////////////////form submission////////////////////////////////////////////////////////
+
+server.post('/DVP/API/:version/FormSubmission', authorization({resource:"forms", action:"write"}), formMaster.CreateFormSubmission);
+server.get('/DVP/API/:version/FormSubmissions', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmissions);
+server.get('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmission);
+server.del('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.DeleteFormSubmission);
+server.post('/DVP/API/:version/FormSubmission/:reference/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicFieldSubmission);
+server.del('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicFieldSubmission);
+server.put('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicFieldSubmission);
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);
 
