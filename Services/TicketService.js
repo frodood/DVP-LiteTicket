@@ -1019,8 +1019,6 @@ module.exports.AddCommentByEngagement = function(req, res){
     Ticket.findOne({company: company, tenant: tenant, engagement_session: req.params.engagementid}, function (err, ticket) {
         if (err) {
 
-
-
             //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
             Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
                 if (err) {
@@ -1278,6 +1276,7 @@ module.exports.AddComment = function (req, res) {
         }
         else {
             if (ticket) {
+                
                 User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
@@ -1351,6 +1350,7 @@ module.exports.AddComment = function (req, res) {
                         }
                     }
                 });
+
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
