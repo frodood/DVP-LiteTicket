@@ -12,6 +12,7 @@ var util = require('util');
 var PickAgent = require('./PickAgent.js');
 var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
+var SlaWorker = require('../SLA/SLAWorker.js');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -306,6 +307,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                 if (tResult) {
                     if(triggerEvent === "change_assignee"){
                         PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                    }else if(triggerEvent === "change_status"){
+                        SlaWorker.UpdateSLAWhenStateChange(tResult);
                     }
                     Trigger.find({$and:[{company:tResult.company}, {tenant:tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                         if (err) {
