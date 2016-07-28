@@ -17,11 +17,27 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
-
+var format = require('stringformat');
+var config = require('config');
 var q = require('q');
-
+var amqp = require('amqp');
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
+
+
+////////////////////////////rabbitmq//////////////////////////////////////////////////////
+var queueHost = format('amqp://{0}:{1}@{2}:{3}',config.RabbitMQ.user,config.RabbitMQ.password,config.RabbitMQ.ip,config.RabbitMQ.port);
+var queueConnection = amqp.createConnection({
+    url: queueHost
+});
+queueConnection.on('ready', function () {
+
+    logger.info("Coonection with the queue is OK");
+
+});
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 module.exports.CreateTicket = function (req, res) {
 
@@ -1016,6 +1032,15 @@ module.exports.AddCommentByEngagement = function(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
+    var author = req.user.iss;
+
+    try {
+        if (req.body.author)
+            author = req.body.author;
+    }catch(exx){
+
+    }
+
     Ticket.findOne({company: company, tenant: tenant, engagement_session: req.params.engagementid}, function (err, ticket) {
         if (err) {
 
@@ -1028,7 +1053,7 @@ module.exports.AddCommentByEngagement = function(req, res){
                 else {
                     if (comment) {
                         User.findOne({
-                            username: req.user.iss,
+                            username: author,
                             company: company,
                             tenant: tenant
                         }, function (err, user) {
@@ -1269,6 +1294,7 @@ module.exports.AddComment = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
+
     Ticket.findOne({_id: req.params.id, company: company, tenant: tenant}, function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
@@ -1276,7 +1302,7 @@ module.exports.AddComment = function (req, res) {
         }
         else {
             if (ticket) {
-                
+
                 User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
@@ -1284,6 +1310,8 @@ module.exports.AddComment = function (req, res) {
                     }
                     else {
                         if (user) {
+
+
                             var comment = Comment({
                                 body: req.body.body,
                                 body_type: req.body.body_type,
@@ -1306,6 +1334,36 @@ module.exports.AddComment = function (req, res) {
                                 }
                                 else {
                                     if (obj.id) {
+
+
+
+                                        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                        var queueName;
+
+                                        var message = {
+                                            "from": req.body.channel_from,
+                                            "to": req.body.channel_to,
+                                            "body": req.body.body,
+                                            "comment":comment._id,
+                                            "company": company,
+                                            "tenant": tenant
+                                        }
+
+                                        if (req.body.channel == 'twitter') {
+                                            queueName = 'TWEETOUT';
+                                        } else if (req.body.channel == 'sms') {
+                                            queueName = 'SMSOUT';
+                                        } else {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                            res.end(jsonString);
+                                            return;
+                                        }
+
+                                        queueConnection.publish(queueName, message, {
+                                            contentType: 'application/json'
+                                        });
+
+                                        /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
                                         var time = new Date().toISOString();
@@ -1343,6 +1401,7 @@ module.exports.AddComment = function (req, res) {
                                 }
 
                             });
+
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
@@ -1360,6 +1419,25 @@ module.exports.AddComment = function (req, res) {
     });
 
 
+};
+
+module.exports.UpdateComment = function (req, res) {
+    logger.info("DVP-LiteTicket.UpdateComment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Comment.findOneAndUpdate({_id: req.params.id}, req.body, function (err, comment) {
+
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Comment Update Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Comment Update successfully", true, comment);
+            res.end(jsonString);
+        }
+    });
 };
 
 module.exports.AddAttachment = function (req, res) {
@@ -1453,10 +1531,10 @@ module.exports.AddAttachment = function (req, res) {
 
 module.exports.AddCommentToComment = function (req, res) {
     logger.info("DVP-LiteTicket.AddCommentToComment Internal method ");
-
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
+
 
     Comment.findById(req.params.commentid, function (err, comment) {
         if (err) {
@@ -1487,6 +1565,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                 else {
                                     if (user) {
 
+
                                         var comment = Comment({
                                             body: req.body.body,
                                             body_type: req.body.body_type,
@@ -1509,6 +1588,36 @@ module.exports.AddCommentToComment = function (req, res) {
                                             }
                                             else {
                                                 if (obj.id) {
+
+
+                                                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                    var queueName;
+
+                                                    var message = {
+                                                        "from": req.body.channel_from,
+                                                        "to": req.body.channel_to,
+                                                        "body": req.body.body,
+                                                        "comment":comment._id,
+                                                        "company": company,
+                                                        "tenant": tenant
+                                                    }
+
+                                                    if (req.body.channel == 'twitter') {
+                                                        queueName = 'TWEETOUT';
+                                                    } else if (req.body.channel == 'sms') {
+                                                        queueName = 'SMSOUT';
+                                                    } else {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                                        res.end(jsonString);
+                                                        return;
+                                                    }
+
+                                                    queueConnection.publish(queueName, message, {
+                                                        contentType: 'application/json'
+                                                    });
+
+                                                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
                                                     Comment.findOneAndUpdate({_id: req.params.commentid},
                                                         {$addToSet: {sub_comment: obj.id}}
                                                         , function (err, rOrg) {
@@ -1556,6 +1665,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                                         res.end(jsonString);
                                     }
+
                                 }
                             });
                         }
@@ -1573,6 +1683,8 @@ module.exports.AddCommentToComment = function (req, res) {
         }
 
     });
+
+
 };
 
 module.exports.ChangeStatus = function (req, res) {
