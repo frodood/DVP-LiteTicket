@@ -17,11 +17,14 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
-
+var async = require("async");
 var q = require('q');
+var reference = require('dvp-common/Reference/ReferenceGen');
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
+
+
 
 module.exports.CreateTicket = function (req, res) {
 
@@ -49,46 +52,52 @@ module.exports.CreateTicket = function (req, res) {
                     }
                 });
 
-                var ticket = Ticket({
-                    created_at: Date.now(),
-                    updated_at: Date.now(),
-                    active: true,
-                    is_sub_ticket: false,
-                    type: req.body.type,
-                    subject: req.body.subject,
-                    reference: req.body.reference,
-                    description: req.body.description,
-                    priority: req.body.priority,
-                    status: "new",
-                    submitter: user.id,
-                    company: company,
-                    tenant: tenant,
-                    attachments: req.body.attachments,
-                    related_tickets: req.body.related_tickets,
-                    merged_tickets: req.body.merged_tickets,
-                    engagement_session: req.body.engagement_session,
-                    channel: req.body.channel,
-                    tags: req.body.tags,
-                    custom_fields: req.body.custom_fields,
-                    comments: req.body.comments,
-                    SLAViolated: false,
-                    events: [tEvent],
-                    requester: undefined
+                reference.generate(1,3,function(done, id){
+
+                    var ticket = Ticket({
+                        created_at: Date.now(),
+                        updated_at: Date.now(),
+                        active: true,
+                        is_sub_ticket: false,
+                        type: req.body.type,
+                        subject: req.body.subject,
+                        reference: id,
+                        description: req.body.description,
+                        priority: req.body.priority,
+                        status: "new",
+                        submitter: user.id,
+                        company: company,
+                        tenant: tenant,
+                        attachments: req.body.attachments,
+                        related_tickets: req.body.related_tickets,
+                        merged_tickets: req.body.merged_tickets,
+                        engagement_session: req.body.engagement_session,
+                        channel: req.body.channel,
+                        tags: req.body.tags,
+                        custom_fields: req.body.custom_fields,
+                        comments: req.body.comments,
+                        SLAViolated: false,
+                        events: [tEvent],
+                        requester: undefined
+                    });
+
+                    if (req.body.requesterId)
+                        ticket.requester = req.body.requesterId;
+
+                    ticket.save(function (err, client) {
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
+                            ExecuteTrigger(client.id, "change_status", "new");
+                        }
+                        res.end(jsonString);
+                    });
+
                 });
 
-                if (req.body.requesterId)
-                    ticket.requester = req.body.requesterId;
 
-                ticket.save(function (err, client) {
-                    if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
-                    }
-                    else {
-                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
-                        ExecuteTrigger(client.id, "change_status", "new");
-                    }
-                    res.end(jsonString);
-                });
 
             } else {
 
@@ -2264,6 +2273,62 @@ module.exports.DeAttachTicket = function (req, res) {
     });
 };
 
+module.exports.AppendEngagement = function (req, res) {
+    logger.info("DVP-LiteTicket.AppendEngagement Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.findOne({_id: req.params.id, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                var time = new Date().toISOString();
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " Append Engagement " + req.params.id,
+                        "time": time
+                    }
+                });
+
+                ticket.update({
+                    "$set": {
+                        "updated_at": time,
+                        "engagement_session":req.params.EngagementId
+                    },
+                    "$addToSet": {"events": tEvent}
+
+                }, function (err, rOrg) {
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Fail To Append Engagement to Ticket.", false, undefined);
+                        } else {
+                            if (rOrg) {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Append Engagement To Ticket", true, obj);
+
+                            }
+                            else {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, obj);
+                            }
+                        }
+                        res.end(jsonString);
+                    });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+
+};
+
 module.exports.BulkStatusUpdate = function (req, res) {
     logger.info("DVP-LiteTicket.DeAttachTicket Internal method ");
 
@@ -2707,7 +2772,52 @@ module.exports.CreateTicketWithComment = function (req, res) {
 
         } else {
 
+            var saveCommentTasks = [];
             if (user) {
+                if(req.body.fbComments){
+                    req.body.fbComments.forEach(function(userComment){
+
+                        saveCommentTasks.push(function(callBack){
+                            var comment = Comment({
+                                body: userComment.message,
+                                body_type: "text",
+                                type: "Facebook Comment",
+                                public: true,
+                                author: user.id,
+                                /*author_external: com.author_external,
+                                attachments: com.attachments,*/
+                                channel: "facebook-post",
+                                channel_from: userComment.id,
+                                engagement_session: ObjectId(req.body.engagement_session),
+                                created_at: new Date().toISOString(),
+                                meta_data: userComment.from
+                            });
+
+                            comment.save(function (err, obj) {
+                                if(obj)
+                                {
+                                    ticket.comments = obj.id;
+                                    ticket.save(function (err, tikObj) {
+                                        callBack(err,tikObj);
+                                    });
+                                }
+                                else{
+                                    callBack(err,obj);
+                                }
+
+                            });
+
+                        });
+                    });
+                }
+                else{
+                    saveCommentTasks.push(function(callBack){
+                        ticket.save(function (err, tikObj) {
+                            callBack(err,tikObj);
+                        });
+
+                    });
+                }
 
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
@@ -2739,7 +2849,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     channel: req.body.channel,
                     tags: req.body.tags,
                     custom_fields: req.body.custom_fields,
-                    comments: req.body.comments,
                     SLAViolated: false,
                     events: [tEvent],
                     requester: undefined
@@ -2748,87 +2857,25 @@ module.exports.CreateTicketWithComment = function (req, res) {
                 if (req.body.requesterId)
                     ticket.requester = req.body.requesterId;
 
-                ticket.save(function (err, client) {
-                    if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
-                        res.end(jsonString);
-                    }
-                    else {
-                        if(req.body.comments){
-                            var createTicketTasks = [];
-                            req.body.comments.forEach(function(com){
 
-                                createTicketTasks.push(function(callBack){
-                                    var comment = Comment({
-                                        body: com.body,
-                                        body_type: com.body_type,
-                                        type: com.type,
-                                        public: com.public,
-                                        author: author,
-                                        author_external: com.author_external,
-                                        attachments: com.attachments,
-                                        channel: com.channel,
-                                        channel_from: com.channel_from,
-                                        engagement_session: ObjectId(req.body.engagement_session),
-                                        created_at: new Date().toISOString(),
-                                        meta_data: com.meta_data
-                                    });
-
-                                    comment.save(function (err, obj) {
-                                        if (!err) {
-                                            if (obj.id) {
-                                                var time = new Date().toISOString();
-                                                ticket.updated_at = time;
-                                                ticket.comments.push(obj.id);
-                                                var tEvent = TicketEvent({
-                                                    type: 'status',
-                                                    body: {
-                                                        "message": req.user.iss + " Make Comment " + obj.id,
-                                                        "time": time
-                                                    }
-                                                });
-                                                ticket.events.push(tEvent);
-
-                                                ticket.update(ticket
-                                                    , function (err, rOrg) {
-                                                        if (err) {
-                                                            callBack(err,undefined);
-                                                        } else {
-                                                            callBack(undefined,rOrg);
-                                                        }
-                                                    });
-                                            }
-                                            else {
-                                                callBack(new Error("Invalid Data"),undefined);
-                                            }
-                                        }
-                                    });
-
-                                });
-
-                            });
-
-                            if (createTicketTasks.length > 0) {
-                                async.parallel(createTicketTasks,
-                                    function (err, results) {
-                                        if (err) {
-                                            jsonString = messageFormatter.FormatMessage(err, "Fail To Complete Process.", false, undefined);
-                                            res.end(jsonString);
-                                        }
-                                        else{
-                                            jsonString = messageFormatter.FormatMessage(undefined, "Process Complete.", true, results);
-                                            res.end(jsonString);
-                                        }
-                                    });
+                if (saveCommentTasks.length > 0) {
+                    async.parallel(saveCommentTasks,
+                        function (err, results) {
+                            if (err) {
+                                jsonString = messageFormatter.FormatMessage(err, "Fail To Complete Process.", false, undefined);
+                                res.end(jsonString);
                             }
-                        }
-                        else{
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket create Sucess.", true, undefined);
-                            res.end(jsonString);
-                        }
-                    }
+                            else{
+                                jsonString = messageFormatter.FormatMessage(undefined, "Process Complete.", true, results);
+                                res.end(jsonString);
 
-                });
+                            }
+                        });
+                }
+                else{
+                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Complete Process.No Task", false, undefined);
+                    res.end(jsonString);
+                }
 
             } else {
 
