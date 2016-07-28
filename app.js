@@ -190,10 +190,10 @@ server.get('/DVP/API/:version/Trigger/:id/Filters/Any', authorization({resource:
 server.del('/DVP/API/:version/Trigger/:id/Filter/Any/:filterid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveFilterAny);
 server.put('/DVP/API/:version/Trigger/:id/Action', authorization({resource:"triggers", action:"write"}), triggrService.AddAction);
 server.get('/DVP/API/:version/Trigger/:id/Actions', authorization({resource:"triggers", action:"read"}), triggrService.GetActions);
-server.del('/DVP/API/:version/Trigger/:id/Action/:field', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveAction);
+server.del('/DVP/API/:version/Trigger/:id/Action/:actionid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveAction);
 server.put('/DVP/API/:version/Trigger/:id/Operation', authorization({resource:"triggers", action:"write"}), triggrService.AddOperations);
 server.get('/DVP/API/:version/Trigger/:id/Operations', authorization({resource:"triggers", action:"read"}), triggrService.GetOperations);
-server.del('/DVP/API/:version/Trigger/:id/Operation/:field', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
+server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
 
 
 
