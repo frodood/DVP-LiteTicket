@@ -318,11 +318,11 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                     });
                 }
             }else if(previousPriority && previousPriority != priority && previousPriority === matrix.priority){
-                var cronTargetDeleteUrl = util.format("http://%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerVersion, util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria));
-                var cronThresholdDeleteUrl = util.format("http://%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerVersion, util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria));
+                var cronTargetDeleteUrl = util.format("http://%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerVersion, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria)));
+                var cronThresholdDeleteUrl = util.format("http://%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerVersion, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria)));
                 if (validator.isIP(config.Services.scheduleWorkerHost)) {
-                    cronTargetDeleteUrl = util.format("http://%s:%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerPort, config.Services.scheduleWorkerVersion, util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria));
-                    cronThresholdDeleteUrl = util.format("http://%s:%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerPort, config.Services.scheduleWorkerVersion, util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria));
+                    cronTargetDeleteUrl = util.format("http://%s:%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerPort, config.Services.scheduleWorkerVersion, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria)));
+                    cronThresholdDeleteUrl = util.format("http://%s:%s/DVP/API/%s/Cron/Reference/%s", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerPort, config.Services.scheduleWorkerVersion, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria)));
                 }
 
                 RestClient.DoDelete(internalAccessToken, cronTargetDeleteUrl, function (err, res1, result) {
@@ -379,10 +379,10 @@ function UpdateSLAWhenStateChange(ticket){
                     for(var i = 0; i < sla.matrix.length; i++) {
                         var matrix = sla.matrix[i];
                         if(criteriaToDelete.indexOf(matrix.criteria) > -1){
-                            var delOnFailedUrl = util.format("%s/%s", cronDeleteUrl, util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticket.id, matrix.criteria));
+                            var delOnFailedUrl = util.format("%s/%s", cronDeleteUrl, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticket.id, matrix.criteria)));
                             RestClient.DoDelete(internalAccessToken, delOnFailedUrl, function (err, res1, result) {});
                             if(matrix.threshold){
-                                var delOnThresholdUrl = util.format("%s/%s", cronDeleteUrl, util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticket.id, matrix.criteria));
+                                var delOnThresholdUrl = util.format("%s/%s", cronDeleteUrl, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticket.id, matrix.criteria)));
                                 RestClient.DoDelete(internalAccessToken, delOnThresholdUrl, function (err, res1, result) {});
                             }
                         }
@@ -418,11 +418,11 @@ function UpdateSLAWhenFirstComment(ticketId){
                             for (var i = 0; i < sla.matrix.length; i++) {
                                 var matrix = sla.matrix[i];
                                 if (matrix.criteria === "update") {
-                                    var delOnFailedUrl = util.format("%s/%s", cronDeleteUrl, util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticket.id, matrix.criteria));
+                                    var delOnFailedUrl = util.format("%s/%s", cronDeleteUrl, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticket.id, matrix.criteria)));
                                     RestClient.DoDelete(internalAccessToken, delOnFailedUrl, function (err, res1, result) {
                                     });
                                     if (matrix.threshold) {
-                                        var delOnThresholdUrl = util.format("%s/%s", cronDeleteUrl, util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticket.id, matrix.criteria));
+                                        var delOnThresholdUrl = util.format("%s/%s", cronDeleteUrl, encodeURIComponent(util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticket.id, matrix.criteria)));
                                         RestClient.DoDelete(internalAccessToken, delOnThresholdUrl, function (err, res1, result) {
                                         });
                                     }

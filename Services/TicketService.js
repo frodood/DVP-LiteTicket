@@ -1777,6 +1777,7 @@ module.exports.ChangeStatus = function (req, res) {
                             else {
                                 if (rUser) {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                    ExecuteTrigger(req.params.id, "change_status", undefined);
                                 }
                                 else {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
