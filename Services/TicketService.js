@@ -2731,6 +2731,26 @@ module.exports.AppendEngagement = function (req, res) {
 
 };
 
+module.exports.GetTicketsByEngagementId = function (req, res) {
+    logger.info("DVP-LiteTicket.GetTicketsByEngagementId Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.find({engagement_session: req.params.EngagementId, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            jsonString = messageFormatter.FormatMessage(undefined, "GetTicketsByEngagementId.", true, ticket);
+            res.end(jsonString);
+        }
+    });
+
+
+};
+
 module.exports.BulkStatusUpdate = function (req, res) {
     logger.info("DVP-LiteTicket.DeAttachTicket Internal method ");
 
