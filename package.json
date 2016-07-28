@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/DuoSoftware/DVP-LiteTicket#readme",
   "dependencies": {
+    "amqp": "^0.2.6",
     "config": "^1.21.0",
     "cors": "^2.7.1",
     "deep-diff": "^0.3.4",
@@ -33,6 +34,7 @@
     "request": "^2.69.0",
     "restify": "^4.1.1",
     "restify-jwt": "^0.4.0",
+    "stringformat": "0.0.5",
     "validator": "^4.1.0"
   }
 }
