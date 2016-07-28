@@ -17,15 +17,15 @@
   },
   "homepage": "https://github.com/DuoSoftware/DVP-LiteTicket#readme",
   "dependencies": {
-    "async": "^2.0.1",
+    "amqp": "^0.2.6",
     "config": "^1.21.0",
     "cors": "^2.7.1",
     "deep-diff": "^0.3.4",
     "deepcopy": "^0.6.3",
-    "dvp-common": "^0.1.7",
     "dvp-dbmodels": "^0.2.4",
-    "dvp-mongomodels": "^1.4.4",
+    "dvp-mongomodels": "^1.5.8",
     "json-query": "^2.1.0",
+    "moment": "^2.14.1",
     "mongoose": "^4.5.3",
     "mongoose-unique-validator": "^1.0.2",
     "node-uuid": "^1.4.7",
@@ -33,6 +33,9 @@
     "request": "^2.69.0",
     "restify": "^4.1.1",
     "restify-jwt": "^0.4.0",
-    "validator": "^4.1.0"
+    "stringformat": "0.0.5",
+    "validator": "^4.1.0",
+    "async": "^2.0.1",
+    "dvp-common": "^0.1.7"
   }
 }

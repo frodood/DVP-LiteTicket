@@ -16,6 +16,7 @@ var util = require('util');
 var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
 var ardsService =  require('./Workers/Trigger/PickAgent.js');
+var scheduleWorker = require('./Workers/SLA/SLAWorker.js');
 
 
 var server = restify.createServer({
@@ -65,6 +66,7 @@ mongoose.connect(connectionstring);
 
 server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicket);
 server.post('/DVP/API/:version/Ticket/Comments',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicketWithComment);
+server.put('/DVP/API/:version/Ticket/Comment/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateComment);
 server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
 server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
@@ -90,6 +92,7 @@ server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", act
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
+server.put('/DVP/API/:version/TicketByEngagement/:engagementid/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByEngagement);
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/Status/Bulk', authorization({resource:"ticket", action:"write"}), ticketService.BulkStatusUpdate);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
@@ -110,7 +113,6 @@ server.post('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization
 server.del('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"delete"}), ticketService.DeAttachTicket);
 
 server.del('/DVP/API/:version/Ticket/:id/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.AppendEngagement);
-
 
 ///////////////////////////////Case////////////////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"write"}), ticketService.AddCaseConfiguration);
@@ -161,11 +163,11 @@ server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:
 server.post('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.CreateSLA);
 server.get('/DVP/API/:version/SLAs', authorization({resource:"sla", action:"read"}), slaService.GetSLAs);
 server.get('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"read"}), slaService.GetSLA);
-server.put('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
+server.put('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
 server.del('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"delete"}), slaService.DeleteSLA);
 server.put('/DVP/API/:version/SLA/:id/Matrix', authorization({resource:"sla", action:"write"}), slaService.AddMatrix);
-server.get('/DVP/API/:version/SLA/:id/Matrices', authorization({resource:"sla", action:"read"}), slaService.GetMatrices);
-server.del('/DVP/API/:version/SLA/:id/Matrix/:matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
+server.get('/DVP/API/:version/SLA/:id/Matrixs', authorization({resource:"sla", action:"read"}), slaService.GetMatrices);
+server.del('/DVP/API/:version/SLA/:id/Matrix/matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
 server.put('/DVP/API/:version/SLA/:id/Filter/All', authorization({resource:"sla", action:"write"}), slaService.AddFilterAll);
 server.get('/DVP/API/:version/SLA/:id/Filters/All', authorization({resource:"sla", action:"read"}), slaService.GetFiltersAll);
 server.del('/DVP/API/:version/SLA/:id/Filter/All/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAll);
@@ -190,10 +192,10 @@ server.get('/DVP/API/:version/Trigger/:id/Filters/Any', authorization({resource:
 server.del('/DVP/API/:version/Trigger/:id/Filter/Any/:filterid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveFilterAny);
 server.put('/DVP/API/:version/Trigger/:id/Action', authorization({resource:"triggers", action:"write"}), triggrService.AddAction);
 server.get('/DVP/API/:version/Trigger/:id/Actions', authorization({resource:"triggers", action:"read"}), triggrService.GetActions);
-server.del('/DVP/API/:version/Trigger/:id/Action/:field', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveAction);
+server.del('/DVP/API/:version/Trigger/:id/Action/:actionid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveAction);
 server.put('/DVP/API/:version/Trigger/:id/Operation', authorization({resource:"triggers", action:"write"}), triggrService.AddOperations);
 server.get('/DVP/API/:version/Trigger/:id/Operations', authorization({resource:"triggers", action:"read"}), triggrService.GetOperations);
-server.del('/DVP/API/:version/Trigger/:id/Operation/:field', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
+server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
 
 
 
@@ -210,8 +212,31 @@ server.del('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicField);
 
 
+
+
+///////////////////////////////////////////////////////////////form submission////////////////////////////////////////////////////////
+
+server.post('/DVP/API/:version/FormSubmission', authorization({resource:"forms", action:"write"}), formMaster.CreateFormSubmission);
+server.get('/DVP/API/:version/FormSubmissions', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmissions);
+server.get('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmission);
+server.del('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.DeleteFormSubmission);
+server.post('/DVP/API/:version/FormSubmission/:reference/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicFieldSubmission);
+server.del('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicFieldSubmission);
+server.put('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"write"}), formMaster.UpdateDynamicFieldSubmission);
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);
+
+
+/////////////////////////////////////////////////////////////scheduleWorkerService/////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"sla", action:"write"}), scheduleWorker.ScheduleCallback);
 
 
 

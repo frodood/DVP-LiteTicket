@@ -68,7 +68,10 @@ module.exports = {
         "ardsServiceVersion": "SYS_ARDSLITESERVICE_VERSION",
         "notificationServiceHost": "SYS_NOTIFICATIONSERVICE_HOST",
         "notificationServicePort": "SYS_NOTIFICATIONSERVICE_PORT",
-        "notificationServiceVersion": "SYS_NOTIFICATIONSERVICE_VERSION"
+        "notificationServiceVersion": "SYS_NOTIFICATIONSERVICE_VERSION",
+        "scheduleWorkerHost": "SYS_SCHEDULEWORKER_HOST",
+        "scheduleWorkerPort": "SYS_SCHEDULEWORKER_PORT",
+        "scheduleWorkerVersion": "SYS_SCHEDULEWORKER_VERSION"
     }
 };
 

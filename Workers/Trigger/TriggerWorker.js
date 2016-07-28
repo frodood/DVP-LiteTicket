@@ -1,3 +1,6 @@
+/**
+ * Created by Heshan.i on 7/22/2016.
+ */
 
 var User = require('dvp-mongomodels/model/User');
 var UserGroup = require('dvp-mongomodels/model/UserGroup');
@@ -9,6 +12,7 @@ var util = require('util');
 var PickAgent = require('./PickAgent.js');
 var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
+var SlaWorker = require('../SLA/SLAWorker.js');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -48,6 +52,49 @@ function GenerateFilterRegex(value){
         return util.format("%s[^\s]*", regexStr);
     }else{
         return value;
+    }
+}
+
+function ExecuteOperations(ticketData, operationToExecute){
+    //TODO : Replace switch with npm architect
+    switch(operationToExecute.name){
+        case "AddInteraction":
+            break;
+        case "SendMessage":
+            break;
+        case "PickAgent":
+            var attributeIds = operationToExecute.value;
+            PickAgent.AddRequest(ticketData.tenant, ticketData.company, ticketData.id, attributeIds, "1", "", function(){});
+            break;
+        case "SendEmail":
+            break;
+        case "SendNotification":
+            DvpNotification.SendNotification(ticketData, operationToExecute.field, operationToExecute.value);
+            break;
+        case "InvokeService":
+            var internalAccessToken = util.format("%d:%d", ticketData.tenant, ticketData.company);
+            var reqUrl = operationToExecute.field;
+            var reqData = operationToExecute.value.data;
+            var reqMethod = operationToExecute.value.method;
+            switch (reqMethod){
+                case "POST":
+                    restClientHandler.DoPost(internalAccessToken, reqUrl, reqData, function(){});
+                    break;
+                case "PUT":
+                    restClientHandler.DoPut(internalAccessToken, reqUrl, reqData, function(){});
+                    break;
+                case "GET":
+                    restClientHandler.DoGet(internalAccessToken, reqUrl, function(){});
+                    break;
+                case "DELETE":
+                    restClientHandler.DoDelete(internalAccessToken, reqUrl, function(){});
+                    break;
+                default :
+                    break;
+            }
+            break;
+        default :
+            break;
     }
 }
 
@@ -260,6 +307,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                 if (tResult) {
                     if(triggerEvent === "change_assignee"){
                         PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                    }else if(triggerEvent === "change_status"){
+                        SlaWorker.UpdateSLAWhenStateChange(tResult);
                     }
                     Trigger.find({$and:[{company:tResult.company}, {tenant:tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                         if (err) {
@@ -316,47 +365,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                         if(triggerToExecute.operations.length > 0){
                                             for(var j = 0; j < triggerToExecute.operations.length; j++){
                                                 var operationToExecute = triggerToExecute.operations[j];
-
-                                                //TODO : Replace switch with npm architect
-                                                switch(operationToExecute.name){
-                                                    case "AddInteraction":
-                                                        break;
-                                                    case "SendMessage":
-                                                        break;
-                                                    case "PickAgent":
-                                                        var attributeIds = operationToExecute.value;
-                                                        PickAgent.AddRequest(tResult.tenant, tResult.company, tResult.id, attributeIds, "1", "", function(){});
-                                                        break;
-                                                    case "SendEmail":
-                                                        break;
-                                                    case "SendNotification":
-                                                        DvpNotification.SendNotification(tResult, operationToExecute.field, operationToExecute.value);
-                                                        break;
-                                                    case "InvokeService":
-                                                        var internalAccessToken = util.format("%d:%d", tResult.tenant, tResult.company);
-                                                        var reqUrl = operationToExecute.field;
-                                                        var reqData = operationToExecute.value.data;
-                                                        var reqMethod = operationToExecute.value.method;
-                                                        switch (reqMethod){
-                                                            case "POST":
-                                                                restClientHandler.DoPost(internalAccessToken, reqUrl, reqData, function(){});
-                                                                break;
-                                                            case "PUT":
-                                                                restClientHandler.DoPut(internalAccessToken, reqUrl, reqData, function(){});
-                                                                break;
-                                                            case "GET":
-                                                                restClientHandler.DoGet(internalAccessToken, reqUrl, function(){});
-                                                                break;
-                                                            case "DELETE":
-                                                                restClientHandler.DoDelete(internalAccessToken, reqUrl, function(){});
-                                                                break;
-                                                            default :
-                                                                break;
-                                                        }
-                                                        break;
-                                                    default :
-                                                        break;
-                                                }
+                                                ExecuteOperations(tResult, operationToExecute);
                                             }
                                         }
                                     }else{
@@ -385,3 +394,4 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
 
 
 module.exports.ExecuteTrigger = ExecuteTrigger;
+module.exports.ExecuteOperations = ExecuteOperations;
