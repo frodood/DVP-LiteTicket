@@ -878,7 +878,7 @@ module.exports.PickTicket = function (req, res) {
 
                         } else {
                             if (user) {
-
+                                var oldTicket = deepcopy(ticket.toJSON());
                                 var assigneeGroup = deepcopy(ticket.toJSON().assignee_group);
                                 var time = new Date().toISOString();
                                 ticket.assignee_group = undefined;
@@ -900,7 +900,7 @@ module.exports.PickTicket = function (req, res) {
                                     else {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
-                                            ExecuteTrigger(req.params.id, "change_assignee", undefined);
+                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -1706,7 +1706,7 @@ module.exports.ChangeStatus = function (req, res) {
             }
             else {
                 if (ticket) {
-
+                    var oldTicket = deepcopy(ticket.toJSON());
                     ticket.status = req.body.status;
 
                     var time = new Date().toISOString();
@@ -1747,7 +1747,7 @@ module.exports.ChangeStatus = function (req, res) {
                                         else {
                                             if (rUser) {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                                ExecuteTrigger(req.params.id, "change_status", undefined);
+                                                ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
                                             }
                                             else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -1777,7 +1777,7 @@ module.exports.ChangeStatus = function (req, res) {
                             else {
                                 if (rUser) {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                    ExecuteTrigger(req.params.id, "change_status", undefined);
+                                    ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
                                 }
                                 else {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
