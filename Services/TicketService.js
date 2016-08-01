@@ -26,6 +26,8 @@ var amqp = require('amqp');
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
+var async = require("async");
+var reference = require('dvp-common/Reference/ReferenceGen');
 
 ////////////////////////////rabbitmq//////////////////////////////////////////////////////
 var queueHost = format('amqp://{0}:{1}@{2}:{3}',config.RabbitMQ.user,config.RabbitMQ.password,config.RabbitMQ.ip,config.RabbitMQ.port);
@@ -67,81 +69,82 @@ module.exports.CreateTicket = function (req, res) {
                     }
                 });
 
-                var ticket = Ticket({
-                    created_at: Date.now(),
-                    updated_at: Date.now(),
-                    active: true,
-                    is_sub_ticket: false,
-                    type: req.body.type,
-                    subject: req.body.subject,
-                    reference: req.body.reference,
-                    description: req.body.description,
-                    priority: req.body.priority,
-                    status: "new",
-                    submitter: user.id,
-                    company: company,
-                    tenant: tenant,
-                    attachments: req.body.attachments,
-                    related_tickets: req.body.related_tickets,
-                    merged_tickets: req.body.merged_tickets,
-                    engagement_session: req.body.engagement_session,
-                    channel: req.body.channel,
-                    tags: req.body.tags,
-                    custom_fields: req.body.custom_fields,
-                    comments: req.body.comments,
-                    SLAViolated: false,
-                    events: [tEvent],
-                    requester: undefined
-                });
+                reference.generate(1,3,function(done, id) {
+                    var ticket = Ticket({
+                        created_at: Date.now(),
+                        updated_at: Date.now(),
+                        active: true,
+                        is_sub_ticket: false,
+                        type: req.body.type,
+                        subject: req.body.subject,
+                        reference: id,
+                        description: req.body.description,
+                        priority: req.body.priority,
+                        status: "new",
+                        submitter: user.id,
+                        company: company,
+                        tenant: tenant,
+                        attachments: req.body.attachments,
+                        related_tickets: req.body.related_tickets,
+                        merged_tickets: req.body.merged_tickets,
+                        engagement_session: req.body.engagement_session,
+                        channel: req.body.channel,
+                        tags: req.body.tags,
+                        custom_fields: req.body.custom_fields,
+                        comments: req.body.comments,
+                        SLAViolated: false,
+                        events: [tEvent],
+                        requester: undefined
+                    });
 
-                if (req.body.requesterId)
-                    ticket.requester = req.body.requesterId;
+                    if (req.body.requesterId)
+                        ticket.requester = req.body.requesterId;
 
-                ticket.save(function (err, client) {
-                    if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
-                    }
-                    else {
-                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
-                        ExecuteTrigger(client.id, "change_status", "new");
-
-                        ////////////////////////////////////////add note to engagement session async//////////////////////////
-                        try {
-                            EngagementSession.findOneAndUpdate({
-                                engagement_id: req.body.engagement_session,
-                                company: company,
-                                tenant: tenant
-                            }, {
-                                $addToSet: {
-                                    notes: {
-                                        body: '#TID ' + ticket.reference,
-                                        author: req.user.iss,
-                                        created_at: Date.now(),
-                                    }
-                                }
-                            }, function (err, notes) {
-                                if (err) {
-
-                                    logger.error("Append Note To EngagementSession Failed", err);
-
-                                } else {
-
-                                    logger.debug("Append Note To EngagementSession Success");
-
-                                }
-
-                            });
-                        }catch(excep){
-
-                            logger.error("Append Note To EngagementSession Failed", excep);
+                    ticket.save(function (err, client) {
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
+                            ExecuteTrigger(client.id, "change_status", "new");
+
+                            ////////////////////////////////////////add note to engagement session async//////////////////////////
+                            try {
+                                EngagementSession.findOneAndUpdate({
+                                    engagement_id: req.body.engagement_session,
+                                    company: company,
+                                    tenant: tenant
+                                }, {
+                                    $addToSet: {
+                                        notes: {
+                                            body: '#TID ' + ticket.reference,
+                                            author: req.user.iss,
+                                            created_at: Date.now(),
+                                        }
+                                    }
+                                }, function (err, notes) {
+                                    if (err) {
+
+                                        logger.error("Append Note To EngagementSession Failed", err);
+
+                                    } else {
+
+                                        logger.debug("Append Note To EngagementSession Success");
+
+                                    }
+
+                                });
+                            } catch (excep) {
+
+                                logger.error("Append Note To EngagementSession Failed", excep);
+                            }
 
 
-
-                        //////////////////////////////////////////////////////////////////////////////////////////////////////
-                        ExecuteSla(client.id, undefined);
-                    }
-                    res.end(jsonString);
+                            //////////////////////////////////////////////////////////////////////////////////////////////////////
+                            ExecuteSla(client.id, undefined);
+                        }
+                        res.end(jsonString);
+                    });
                 });
 
             } else {
@@ -2670,6 +2673,82 @@ module.exports.DeAttachTicket = function (req, res) {
             }
         }
     });
+};
+
+module.exports.AppendEngagement = function (req, res) {
+    logger.info("DVP-LiteTicket.AppendEngagement Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.findOne({_id: req.params.id, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                var time = new Date().toISOString();
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " Append Engagement " + req.params.id,
+                        "time": time
+                    }
+                });
+
+                ticket.update({
+                    "$set": {
+                        "updated_at": time,
+                        "engagement_session":req.params.EngagementId
+                    },
+                    "$addToSet": {"events": tEvent}
+
+                }, function (err, rOrg) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Append Engagement to Ticket.", false, undefined);
+                    } else {
+                        if (rOrg) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Append Engagement To Ticket", true, obj);
+
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, obj);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+
+};
+
+module.exports.GetTicketsByEngagementId = function (req, res) {
+    logger.info("DVP-LiteTicket.GetTicketsByEngagementId Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Ticket.find({engagement_session: req.params.EngagementId, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            jsonString = messageFormatter.FormatMessage(undefined, "GetTicketsByEngagementId.", true, ticket);
+            res.end(jsonString);
+        }
+    });
+
+
 };
 
 module.exports.BulkStatusUpdate = function (req, res) {
