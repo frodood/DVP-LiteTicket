@@ -3,7 +3,7 @@
  */
 
 var User = require('dvp-mongomodels/model/User');
-var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
 var Trigger = require('dvp-mongomodels/model/TicketTrigers').Trigger;
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var EventEmitter = require('events').EventEmitter;

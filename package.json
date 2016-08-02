@@ -23,7 +23,7 @@
     "deep-diff": "^0.3.4",
     "deepcopy": "^0.6.3",
     "dvp-dbmodels": "^0.2.4",
-    "dvp-mongomodels": "^1.5.8",
+    "dvp-mongomodels": "^1.6.7",
     "json-query": "^2.1.0",
     "moment": "^2.14.1",
     "mongoose": "^4.5.3",
@@ -36,6 +36,6 @@
     "stringformat": "0.0.5",
     "validator": "^4.1.0",
     "async": "^2.0.1",
-    "dvp-common": "^0.1.7"
+    "dvp-common": "^0.2.0"
   }
 }
