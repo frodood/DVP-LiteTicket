@@ -18,10 +18,10 @@ client.on("connect", function (err) {
 var Publish = function(pattern, message, callback){
     client.publish(pattern, message, function (err, result) {
         if (err) {
-            console.log('error', 'Redis Publish Error - pattern: %s :: Error: %s', pattern, err);
+            console.log(util.format('Redis Publish Error - pattern: %s :: Error: %s', pattern, err));
             callback(err, null);
         } else {
-            console.log('info', 'Redis Publish - pattern: %s :: Reply: %s', pattern, result);
+            console.log(util.format('Redis Publish - pattern: %s :: Reply: %s', pattern, result));
             callback(null, result);
         }
     });
