@@ -70,27 +70,21 @@ function UpdateDashboardChangeStatus(data, tResult){
         var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
         var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
-        async.parallel([
-            redisHandler.Publish("events", pubMsgEChannel, function () {}),
-            redisHandler.Publish("events", pubMsgETags, function () {}),
-            redisHandler.Publish("events", pubMsgEUser, function () {}),
-            redisHandler.Publish("events", pubMsgEUGroup, function () {})
-        ], function(err, results) {
-            // optional callback
-        });
+        redisHandler.Publish("events", pubMsgEChannel, function () {});
+        redisHandler.Publish("events", pubMsgETags, function () {});
+        redisHandler.Publish("events", pubMsgEUser, function () {});
+        redisHandler.Publish("events", pubMsgEUGroup, function () {});
+
     }
     var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
     var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
-    async.parallel([
-        redisHandler.Publish("events", pubMsgNChannel, function () {}),
-        redisHandler.Publish("events", pubMsgNTags, function () {}),
-        redisHandler.Publish("events", pubMsgNUser, function () {}),
-        redisHandler.Publish("events", pubMsgNUGroup, function () {})
-    ], function(err, results) {
-        // optional callback
-    });
+
+    redisHandler.Publish("events", pubMsgNChannel, function () {});
+    redisHandler.Publish("events", pubMsgNTags, function () {});
+    redisHandler.Publish("events", pubMsgNUser, function () {});
+    redisHandler.Publish("events", pubMsgNUGroup, function () {});
 }
 
 function UpdateDashboardChangeAssignee(data, tResult){
