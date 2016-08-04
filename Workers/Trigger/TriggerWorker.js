@@ -14,7 +14,7 @@ var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
 var SlaWorker = require('../SLA/SLAWorker.js');
 var redisHandler = require('../Trigger/RedisHandler.js');
-var async = require('async');
+var deepcopy = require("deepcopy");
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -173,7 +173,9 @@ function ValidateUser(obj, trigger, newAssignee, callback){
                 console.log(jsonString);
             } else {
                 if (uResult && uResult.company === trigger.company && uResult.tenant === trigger.tenant) {
+                    var previousAssignee = deepcopy(obj.toJSON().assignee);
                     obj.assignee = uResult._id;
+                    UpdateDashboardChangeAssignee(previousAssignee, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No User found", false, undefined);
                     console.log(jsonString);
@@ -195,7 +197,9 @@ function ValidateGroup(obj, trigger, newGroup, callback){
                 console.log(jsonString);
             } else {
                 if (ugResult && ugResult.company === trigger.company && ugResult.tenant === trigger.tenant) {
+                    var previousGroup = deepcopy(obj.toJSON().assignee_group);
                     obj.assignee_group = ugResult._id;
+                    UpdateDashboardChangeAssigneeGroup(previousGroup, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No UserGroup found", false, undefined);
                     console.log(jsonString);
