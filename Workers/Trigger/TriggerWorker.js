@@ -14,6 +14,7 @@ var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
 var SlaWorker = require('../SLA/SLAWorker.js');
 var redisHandler = require('../Trigger/RedisHandler.js');
+var async = require('async');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -61,15 +62,34 @@ function UpdateDashboardChangeStatus(data, tResult){
     var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data? data:"";
 
-    var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
     if(data && tResult.status != "new"){
-        var pubMessage1 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, param1, "param2", tResult.id);
-        redisHandler.Publish("events", pubMessage1, function () {
+        var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
+        var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+        var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
+        var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+
+        async.parallel([
+            redisHandler.Publish("events", pubMsgEChannel, function () {}),
+            redisHandler.Publish("events", pubMsgETags, function () {}),
+            redisHandler.Publish("events", pubMsgEUser, function () {}),
+            redisHandler.Publish("events", pubMsgEUGroup, function () {})
+        ], function(err, results) {
+            // optional callback
         });
     }
-    var pubMessage2 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, param1, "param2", tResult.id);
-    redisHandler.Publish("events", pubMessage2, function () {
+    var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
+    var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+    var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
+    var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+    async.parallel([
+        redisHandler.Publish("events", pubMsgNChannel, function () {}),
+        redisHandler.Publish("events", pubMsgNTags, function () {}),
+        redisHandler.Publish("events", pubMsgNUser, function () {}),
+        redisHandler.Publish("events", pubMsgNUGroup, function () {})
+    ], function(err, results) {
+        // optional callback
     });
 }
 
@@ -78,16 +98,15 @@ function UpdateDashboardChangeAssignee(data, tResult){
     var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data? data:"";
 
-    var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s");
 
-    var pubMessage1 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, param1, "param2", tResult.id);
-    redisHandler.Publish("events", pubMessage1, function () {
+    var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, "user_"+data, "param2", "User"+tResult.id);
+    redisHandler.Publish("events", pubMsgEUser, function () {
     });
 
-    var param1Temp = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
-    var pubMessage2 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, param1Temp, "param2", tResult.id);
-    redisHandler.Publish("events", pubMessage2, function () {
+    var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
+    redisHandler.Publish("events", pubMsgNUser, function () {
     });
 }
 
@@ -96,16 +115,15 @@ function UpdateDashboardChangeAssigneeGroup(data, tResult){
     var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data? data:"";
 
-    var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, data);
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, data);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, data);
 
-    var pubMessage1 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, param1, "param2", tResult.id);
-    redisHandler.Publish("events", pubMessage1, function () {
+    var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, "ugroup_"+data, "param2", "UGroup"+tResult.id);
+    redisHandler.Publish("events", pubMsgEUGroup, function () {
     });
 
-    var param1Temp = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
-    var pubMessage2 = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, param1Temp, "param2", tResult.id);
-    redisHandler.Publish("events", pubMessage2, function () {
+    var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+    redisHandler.Publish("events", pubMsgNUGroup, function () {
     });
 }
 
