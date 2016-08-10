@@ -36,7 +36,13 @@ module.exports = {
         "user":"SYS_MONGO_USER"
     },
 
-
+    "RabbitMQ":
+    {
+        "ip": "SYS_RABBITMQ_HOST",
+        "port": "SYS_RABBITMQ_PORT",
+        "user": "SYS_RABBITMQ_USER",
+        "password": "SYS_RABBITMQ_PASSWORD"
+    },
 
     "Host":
     {

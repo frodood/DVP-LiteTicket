@@ -18,6 +18,7 @@
   "homepage": "https://github.com/DuoSoftware/DVP-LiteTicket#readme",
   "dependencies": {
     "amqp": "^0.2.6",
+    "amqplib": "^0.4.1",
     "config": "^1.21.0",
     "cors": "^2.7.1",
     "deep-diff": "^0.3.4",

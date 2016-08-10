@@ -93,8 +93,7 @@ module.exports.CreateTicket = function (req, res) {
                         custom_fields: req.body.custom_fields,
                         comments: req.body.comments,
                         SLAViolated: false,
-                        events: [tEvent],
-                        requester: undefined
+                        events: [tEvent]
                     });
 
                     if (req.body.requesterId)
