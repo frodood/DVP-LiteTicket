@@ -124,7 +124,7 @@ function UpdateTrigger(req,res){
         }else{
             if(trigger){
                 trigger.title = req.body.title;
-                trigger.Active = req.body.active;
+                trigger.Active = req.body.Active;
                 trigger.priority = req.body.priority;
                 trigger.updated_at = Date.now();
                 trigger.conditions = req.body.conditions;
