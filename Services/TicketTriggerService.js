@@ -23,7 +23,7 @@ function CreateTrigger(req, res){
 
     var data = Trigger({
         title: req.body.title,
-        Active: req.body.active,
+        Active: req.body.Active,
         priority: req.body.priority,
         created_at: Date.now(),
         updated_at: Date.now(),
