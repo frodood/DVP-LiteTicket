@@ -183,7 +183,7 @@ server.del('/DVP/API/:version/SLA/:id/Filter/Any/:filterid', authorization({reso
 server.post('/DVP/API/:version/Trigger', authorization({resource:"triggers", action:"write"}), triggrService.CreateTrigger);
 server.get('/DVP/API/:version/Triggers', authorization({resource:"triggers", action:"read"}), triggrService.GetTriggers);
 server.get('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"read"}), triggrService.GetTrigger);
-server.put('/DVP/API/:version/Trigger', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTrigger);
+server.put('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTrigger);
 server.del('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"delete"}), triggrService.DeleteTrigger);
 server.put('/DVP/API/:version/Trigger/:id/Filter/All', authorization({resource:"triggers", action:"write"}), triggrService.AddFilterAll);
 server.get('/DVP/API/:version/Trigger/:id/Filters/All', authorization({resource:"triggers", action:"read"}), triggrService.GetFiltersAll);
