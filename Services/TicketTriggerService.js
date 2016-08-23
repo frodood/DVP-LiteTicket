@@ -244,7 +244,7 @@ function AddFilterAny(req, res){
         }else {
             var anyFiler = {field: req.body.field, operator: req.body.operator, value: req.body.value};
             if (trigger.conditions.any && Array.isArray(trigger.conditions.any)) {
-                trigger.conditions.any.push(allFiler);
+                trigger.conditions.any.push(anyFiler);
             } else {
                 trigger.conditions.any = [anyFiler];
             }
