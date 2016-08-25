@@ -147,12 +147,20 @@ server.put('/DVP/API/:version/Tag/:id/DetachFromCategory/:cid', authorization({r
 
 ///////////////////////////////////////////Timer///////////////////////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/Ticket/:id/timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
-server.get('/DVP/API/:version/Ticket/:id/times', authorization({resource:"ticket", action:"read"}), timerService.GetTimes);
-server.put('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"write"}), timerService.UpdateTimer);
-server.put('/DVP/API/:version/Timer/:id/time', authorization({resource:"timer", action:"write"}), timerService.UpdateTimerTime);
-server.put('/DVP/API/:version/Timer/:id/toggle', authorization({resource:"timer", action:"write"}), timerService.ToggelTimer);
-server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"write"}), timerService.GetMyTimeSheet);
+server.post('/DVP/API/:version/Timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
+server.get('/DVP/API/:version/Timers', authorization({resource:"timer", action:"read"}), timerService.GetTimes);
+server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"read"}), timerService.GetMyTimer);
+server.del('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"delete"}), timerService.DeleteMyTimer);
+server.get('/DVP/API/:version/MyTimers', authorization({resource:"timer", action:"read"}), timerService.GetMyTimes);
+server.get('/DVP/API/:version/Timers/User/:uid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForUser);
+server.get('/DVP/API/:version/Timers/Ticket/:tid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForTicket);
+server.get('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"read"}), timerService.GetTime);
+server.put('/DVP/API/:version/Timer/:id/Ticket/:tid', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTicket);
+server.put('/DVP/API/:version/Timer/:id/Time/:time', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTime);
+server.put('/DVP/API/:version/MyTimer/pause', authorization({resource:"timer", action:"write"}), timerService.PauseTimer);
+server.put('/DVP/API/:version/MyTimer/start', authorization({resource:"timer", action:"write"}), timerService.StartTimer);
+server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", action:"write"}), timerService.StopTimer);
+
 
 
 ///////////////////////////////////////////SLA/////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1344,12 +1344,13 @@ module.exports.AddComment = function (req, res) {
                                         var queueName;
 
                                         var message = {
-                                            "from": req.body.channel_from,
-                                            "to": req.body.channel_to,
-                                            "body": req.body.body,
-                                            "comment":comment._id,
-                                            "company": company,
-                                            "tenant": tenant
+                                            from: req.body.channel_from,
+                                            to: req.body.channel_to,
+                                            body: req.body.body,
+                                            comment:comment._id,
+                                            company: company,
+                                            tenant: tenant,
+                                            author: req.user.iss
                                         }
 
                                         if (req.body.channel == 'twitter') {
@@ -1597,12 +1598,13 @@ module.exports.AddCommentToComment = function (req, res) {
                                                     var queueName;
 
                                                     var message = {
-                                                        "from": req.body.channel_from,
-                                                        "to": req.body.channel_to,
-                                                        "body": req.body.body,
-                                                        "comment":comment._id,
-                                                        "company": company,
-                                                        "tenant": tenant
+                                                        from: req.body.channel_from,
+                                                        to: req.body.channel_to,
+                                                        body: req.body.body,
+                                                        comment:comment._id,
+                                                        company: company,
+                                                        tenant: tenant,
+                                                        author: req.user.iss
                                                     }
 
                                                     if (req.body.channel == 'twitter') {
