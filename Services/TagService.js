@@ -65,7 +65,7 @@ function GetTagCategory(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    TagCategory.find({_id:tagId,company:company,tenant:tenant},function (errPickTagCategory,PickTagCategory) {
+    TagCategory.findOne({_id:tagId,company:company,tenant:tenant},function (errPickTagCategory,PickTagCategory) {
 
         if(errPickTagCategory)
         {
@@ -172,6 +172,8 @@ function GetTags(req, res){
     });
 
 
+
+
 };
 function GetTag(req, res){
 
@@ -182,7 +184,7 @@ function GetTag(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    Tag.find({_id:tagId,company:company,tenant:tenant},function (errPickTag,PickTag) {
+    Tag.findOne({_id:tagId,company:company,tenant:tenant},function (errPickTag,PickTag) {
 
         if(errPickTag)
         {
@@ -240,7 +242,7 @@ function AttachTagsToTag(req, res){
         }
         else
         {
-            jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", false, resAttachTag);
+            jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", true, resAttachTag);
         }
         res.end(jsonString);
     });
@@ -285,7 +287,11 @@ function CreateTagsToTag(req, res){
                 }
                 else
                 {
-                    jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", false, resAttachTag);
+                    var tempAttachTag = resAttachTag.toJSON();
+                    tempAttachTag.newTagID=resSubTag._doc._id;
+                    console.log(JSON.stringify(tempAttachTag.newTagID));
+                    console.log(JSON.stringify(tempAttachTag));
+                    jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", true, tempAttachTag);
                 }
                 res.end(jsonString);
             });
@@ -376,6 +382,59 @@ function DetachTagsFromCategory(req,res){
 
 };
 
+function CreateTagsToTagCategory(req, res){
+
+    logger.debug("DVP-LiteTicket.CreateTagsToTagCategory Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    var newTag = Tag({
+        name:req.body.name,
+        description:req.body.description,
+        company:company,
+        tenant:tenant
+
+    });
+
+    newTag.save(function (errSubTag,resSubTag) {
+
+        console.log("New ID "+newTag._id);
+        if(errSubTag)
+        {
+            jsonString=messageFormatter.FormatMessage(errSubTag, "Sub Tags creation failed", false, undefined);
+            res.end(jsonString);
+        }
+        else
+        {
+            TagCategory.findOneAndUpdate({_id:req.params.id}, {
+                $addToSet :{tags : resSubTag._doc._id}
+
+            },function(errAttachTag,resAttachTag)
+            {
+                if(errAttachTag)
+                {
+                    jsonString=messageFormatter.FormatMessage(errAttachTag, "Attaching Tags failed", false, undefined);
+                }
+                else
+                {
+                    var tempAttachTag = resAttachTag.toJSON();
+                    tempAttachTag.newTagID=resSubTag._doc._id;
+                    console.log(JSON.stringify(tempAttachTag.newTagID));
+                    console.log(JSON.stringify(tempAttachTag));
+                    jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", true, tempAttachTag);
+                }
+                res.end(jsonString);
+            });
+
+        }
+
+    });
+
+
+};
+
 
 
 module.exports.CreateTag = CreateTag;
@@ -391,6 +450,7 @@ module.exports.AttachTagsToCategory = AttachTagsToCategory;
 module.exports.DetachTagsFromCategory = DetachTagsFromCategory;
 module.exports.GetTagCategory = GetTagCategory;
 module.exports.GetTagCategories = GetTagCategories;
+module.exports.CreateTagsToTagCategory = CreateTagsToTagCategory;
 
 
 
