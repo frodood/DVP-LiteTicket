@@ -19,12 +19,14 @@
   "dependencies": {
     "amqp": "^0.2.6",
     "amqplib": "^0.4.1",
+    "async": "^2.0.1",
     "config": "^1.21.0",
     "cors": "^2.7.1",
     "deep-diff": "^0.3.4",
     "deepcopy": "^0.6.3",
+    "dvp-common": "^0.2.0",
     "dvp-dbmodels": "^0.2.4",
-    "dvp-mongomodels": "^1.6.7",
+    "dvp-mongomodels": "^1.7.0",
     "json-query": "^2.1.0",
     "moment": "^2.14.1",
     "mongoose": "^4.5.3",
@@ -35,8 +37,6 @@
     "restify": "^4.1.1",
     "restify-jwt": "^0.4.0",
     "stringformat": "0.0.5",
-    "validator": "^4.1.0",
-    "async": "^2.0.1",
-    "dvp-common": "^0.2.0"
+    "validator": "^4.1.0"
   }
 }
