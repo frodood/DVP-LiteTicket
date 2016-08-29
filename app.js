@@ -11,6 +11,7 @@ var tagService = require('./Services/TagService.js');
 var timerService = require('./Services/TimerService.js');
 var slaService= require('./Services/SLAService.js');
 var triggrService = require('./Services/TicketTriggerService.js');
+var ticketViewService = require('./Services/TicketViewService');
 var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
@@ -183,6 +184,27 @@ server.del('/DVP/API/:version/SLA/:id/Filter/All/:filterid', authorization({reso
 server.put('/DVP/API/:version/SLA/:id/Filter/Any', authorization({resource:"sla", action:"write"}), slaService.AddFilterAny);
 server.get('/DVP/API/:version/SLA/:id/Filters/Any', authorization({resource:"sla", action:"read"}), slaService.GetFiltersAny);
 server.del('/DVP/API/:version/SLA/:id/Filter/Any/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAny);
+
+
+//////////////////////////////////////Ticket View///////////////////////////////////////////////////////////////////////////////////
+
+
+
+server.post('/DVP/API/:version/TicketView', authorization({resource:"ticketview", action:"write"}), ticketViewService.CreateTicketView);
+server.get('/DVP/API/:version/TicketViews', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetMyTicketViews);
+server.get('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketView);
+server.put('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"write"}), ticketViewService.UpdateTicketView);
+server.del('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"delete"}), ticketViewService.DeleteTicketView);
+server.put('/DVP/API/:version/TicketView/:id/Filter/All', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAll);
+server.get('/DVP/API/:version/TicketView/:id/Filters/All', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAll);
+server.del('/DVP/API/:version/TicketView/:id/Filter/All/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAll);
+server.put('/DVP/API/:version/TicketView/:id/Filter/Any', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Filters/Any', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAny);
+server.del('/DVP/API/:version/TicketView/:id/Filter/Any/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Tickets', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByView);
+
+
+
 
 
 //////////////////////////////////////Trigger//////////////////////////////////////////////////////////////////////////////////////////////
