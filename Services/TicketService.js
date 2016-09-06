@@ -4,6 +4,7 @@ var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var User = require('dvp-mongomodels/model/User');
 var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
+var ExternalUser = require('dvp-mongomodels/model/ExternalUser').ExternalUser;
 var Attachment = require('dvp-mongomodels/model/Attachment').Attachment;
 var Tag = require('dvp-mongomodels/model/Tag').Tag;
 var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
@@ -167,27 +168,64 @@ module.exports.GetAllTickets = function (req, res) {
         skip = page > 0 ? ((page - 1) * size) : 0;
 
     var jsonString;
-    Ticket.find({company: company, tenant: tenant, active: true}).skip(skip)
-        .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+    if(req.query.status){
+        var paramArr;
+        if(Array.isArray(req.query.status)) {
+            paramArr = req.query.status;
+        }else{
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            paramArr = [req.query.status];
+        }
 
-            } else {
+        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).skip(skip)
+            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                if (err) {
 
-                if (tickets) {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
 
                 } else {
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                    if (tickets) {
 
+                        jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+
+                    } else {
+
+                        jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                    }
                 }
-            }
 
-            res.end(jsonString);
-        });
+                res.end(jsonString);
+            });
+
+    }
+   else{
+        Ticket.find({company: company, tenant: tenant, active: true}).skip(skip)
+            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                if (err) {
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+                } else {
+
+                    if (tickets) {
+
+                        jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+
+                    } else {
+
+                        jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                    }
+                }
+
+                res.end(jsonString);
+            });
+
+    }
+
+
 
 };
 
