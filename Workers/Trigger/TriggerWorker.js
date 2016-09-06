@@ -3,7 +3,8 @@
  */
 
 var User = require('dvp-mongomodels/model/User');
-var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var ExternalUser = require('dvp-mongomodels/model/ExternalUser');
+var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
 var Trigger = require('dvp-mongomodels/model/TicketTrigers').Trigger;
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var EventEmitter = require('events').EventEmitter;
@@ -13,6 +14,9 @@ var PickAgent = require('./PickAgent.js');
 var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
 var SlaWorker = require('../SLA/SLAWorker.js');
+var redisHandler = require('../Trigger/RedisHandler.js');
+var deepcopy = require("deepcopy");
+var emailHandler = require('./EmailHandler.js');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -55,8 +59,73 @@ function GenerateFilterRegex(value){
     }
 }
 
+function UpdateDashboardChangeStatus(data, tResult){
+    var assignee = tResult.assignee? tResult.assignee: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
+    data = data? data:"";
+
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
+    //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
+    if(data && tResult.status != "new"){
+        var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
+        var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+        var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
+        var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+
+        redisHandler.Publish("events", pubMsgEChannel, function () {});
+        redisHandler.Publish("events", pubMsgETags, function () {});
+        redisHandler.Publish("events", pubMsgEUser, function () {});
+        redisHandler.Publish("events", pubMsgEUGroup, function () {});
+
+    }
+    var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
+    var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+    var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
+    var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+
+    redisHandler.Publish("events", pubMsgNChannel, function () {});
+    redisHandler.Publish("events", pubMsgNTags, function () {});
+    redisHandler.Publish("events", pubMsgNUser, function () {});
+    redisHandler.Publish("events", pubMsgNUGroup, function () {});
+}
+
+function UpdateDashboardChangeAssignee(data, tResult){
+    var assignee = tResult.assignee? tResult.assignee: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
+    data = data? data:"";
+
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
+    //var param2 = util.format("user_%s#ugroup_%s");
+
+    var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, "user_"+data, "param2", "User"+tResult.id);
+    redisHandler.Publish("events", pubMsgEUser, function () {
+    });
+
+    var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
+    redisHandler.Publish("events", pubMsgNUser, function () {
+    });
+}
+
+function UpdateDashboardChangeAssigneeGroup(data, tResult){
+    var assignee = tResult.assignee? tResult.assignee: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
+    data = data? data:"";
+
+    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, data);
+    //var param2 = util.format("user_%s#ugroup_%s", assignee, data);
+
+    var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+tResult.status, "ugroup_"+data, "param2", "UGroup"+tResult.id);
+    redisHandler.Publish("events", pubMsgEUGroup, function () {
+    });
+
+    var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+    redisHandler.Publish("events", pubMsgNUGroup, function () {
+    });
+}
+
 function ExecuteOperations(ticketData, operationToExecute){
     //TODO : Replace switch with npm architect
+    console.log("operationToExecute:: "+operationToExecute.name);
     switch(operationToExecute.name){
         case "AddInteraction":
             break;
@@ -67,6 +136,7 @@ function ExecuteOperations(ticketData, operationToExecute){
             PickAgent.AddRequest(ticketData.tenant, ticketData.company, ticketData.id, attributeIds, "1", "", function(){});
             break;
         case "SendEmail":
+            emailHandler.SendEmail(ticketData, operationToExecute.field, operationToExecute.value, function(){});
             break;
         case "SendNotification":
             DvpNotification.SendNotification(ticketData, operationToExecute.field, operationToExecute.value);
@@ -106,7 +176,9 @@ function ValidateUser(obj, trigger, newAssignee, callback){
                 console.log(jsonString);
             } else {
                 if (uResult && uResult.company === trigger.company && uResult.tenant === trigger.tenant) {
+                    var previousAssignee = deepcopy(obj.toJSON().assignee);
                     obj.assignee = uResult._id;
+                    UpdateDashboardChangeAssignee(previousAssignee, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No User found", false, undefined);
                     console.log(jsonString);
@@ -128,7 +200,9 @@ function ValidateGroup(obj, trigger, newGroup, callback){
                 console.log(jsonString);
             } else {
                 if (ugResult && ugResult.company === trigger.company && ugResult.tenant === trigger.tenant) {
+                    var previousGroup = deepcopy(obj.toJSON().assignee_group);
                     obj.assignee_group = ugResult._id;
+                    UpdateDashboardChangeAssigneeGroup(previousGroup, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No UserGroup found", false, undefined);
                     console.log(jsonString);
@@ -299,92 +373,104 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
     var jsonString;
 
     if(ticketId) {
-        Ticket.findOne({_id: ticketId}, function (err, tResult) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
-                callback(jsonString);
-            } else {
-                if (tResult) {
-                    if(triggerEvent === "change_assignee"){
-                        PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
-                    }else if(triggerEvent === "change_status"){
-                        SlaWorker.UpdateSLAWhenStateChange(tResult);
-                    }
-                    Trigger.find({$and:[{company:tResult.company}, {tenant:tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
-                        if (err) {
-                            jsonString = messageFormatter.FormatMessage(err, "Find Trigger Failed", false, undefined);
-                            callback(jsonString);
-                        } else {
-                            if (trResult) {
-                                var matchingTriggers = [];
-                                var mt = MatchTriggers(tResult, trResult);
+        try {
+            Ticket.findOne({_id: ticketId}).populate('requester submitter assignee collaborators').exec(function (err, tResult) {
+            //Ticket.findOne({_id: ticketId},function (err, tResult) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
+                        callback(jsonString);
+                    } else {
+                        if (tResult) {
+                            if (triggerEvent === "change_assignee") {
+                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                                UpdateDashboardChangeAssignee(data, tResult);
+                            } else if (triggerEvent === "change_status") {
+                                if (tResult.status === "closed") {
+                                    PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                                }
+                                SlaWorker.UpdateSLAWhenStateChange(tResult);
+                                UpdateDashboardChangeStatus(data, tResult);
+                            } else if (triggerEvent === "change_assignee_groups") {
+                                UpdateDashboardChangeAssigneeGroup(data, tResult);
+                            }
+                            Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Find Trigger Failed", false, undefined);
+                                    callback(jsonString);
+                                } else {
+                                    if (trResult) {
+                                        var matchingTriggers = [];
+                                        var mt = MatchTriggers(tResult, trResult);
 
-                                mt.on('trigger', function (trigger) {
-                                    matchingTriggers.push(trigger);
-                                });
+                                        mt.on('trigger', function (trigger) {
+                                            matchingTriggers.push(trigger);
+                                        });
 
-                                mt.on('endMatchingTriggers', function () {
-                                    var triggersToExecute = UniqueObjectArray(matchingTriggers, "title").sort(numSort);
-                                    if(triggersToExecute.length > 0){
-                                        var triggerToExecute = triggersToExecute[0];
-                                        if(triggerToExecute.actions.length > 0) {
-                                            var newAssignee = "";
-                                            var newAssignee_group = "";
-                                            for (var i = 0; i < triggerToExecute.actions.length; i++) {
-                                                var action = triggerToExecute.actions[i];
+                                        mt.on('endMatchingTriggers', function () {
+                                            var triggersToExecute = UniqueObjectArray(matchingTriggers, "title").sort(numSort);
+                                            if (triggersToExecute.length > 0) {
+                                                var triggerToExecute = triggersToExecute[0];
+                                                if (triggerToExecute.actions.length > 0) {
+                                                    var newAssignee = "";
+                                                    var newAssignee_group = "";
+                                                    for (var i = 0; i < triggerToExecute.actions.length; i++) {
+                                                        var action = triggerToExecute.actions[i];
 
-                                                switch (action.field){
-                                                    case "assignee":
-                                                        newAssignee = action.value;
-                                                        break;
-                                                    case "assignee_group":
-                                                        newAssignee_group = action.value;
-                                                        break;
-                                                    default :
-                                                        tResult[action.field] = action.value;
-                                                        break;
-                                                }
-                                            }
-
-                                            var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
-                                            vag.on('validateUserAndGroupDone', function(updatedTicket){
-                                                Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function(err, utResult){
-                                                    if(err){
-                                                        console.log("Update ticket Failed: "+ err);
-                                                        jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
-                                                        callback(jsonString);
-                                                    }else{
-                                                        console.log("Update ticket Success: "+ utResult);
-                                                        jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
-                                                        callback(jsonString);
+                                                        switch (action.field) {
+                                                            case "assignee":
+                                                                newAssignee = action.value;
+                                                                break;
+                                                            case "assignee_group":
+                                                                newAssignee_group = action.value;
+                                                                break;
+                                                            default :
+                                                                tResult[action.field] = action.value;
+                                                                break;
+                                                        }
                                                     }
-                                                });
-                                            });
-                                        }
 
-                                        if(triggerToExecute.operations.length > 0){
-                                            for(var j = 0; j < triggerToExecute.operations.length; j++){
-                                                var operationToExecute = triggerToExecute.operations[j];
-                                                ExecuteOperations(tResult, operationToExecute);
+                                                    var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
+                                                    vag.on('validateUserAndGroupDone', function (updatedTicket) {
+                                                        Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
+                                                            if (err) {
+                                                                console.log("Update ticket Failed: " + err);
+                                                                jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
+                                                                callback(jsonString);
+                                                            } else {
+                                                                console.log("Update ticket Success: " + utResult);
+                                                                jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
+                                                                callback(jsonString);
+                                                            }
+                                                        });
+                                                    });
+                                                }
+
+                                                if (triggerToExecute.operations.length > 0) {
+                                                    for (var j = 0; j < triggerToExecute.operations.length; j++) {
+                                                        var operationToExecute = triggerToExecute.operations[j];
+                                                        ExecuteOperations(tResult, operationToExecute);
+                                                    }
+                                                }
+                                            } else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
+                                                callback(jsonString);
                                             }
-                                        }
-                                    }else{
-                                        jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
+                                        });
+                                    } else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, Trigger object is null", false, undefined);
                                         callback(jsonString);
                                     }
-                                });
-                            } else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, Trigger object is null", false, undefined);
-                                callback(jsonString);
-                            }
+                                }
+                            });
+                        } else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
+                            callback(jsonString);
                         }
-                    });
-                } else {
-                    jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
-                    callback(jsonString);
-                }
-            }
-        });
+                    }
+                });
+        }catch(ex){
+            console.log(ex);
+        }
     }else{
         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID", false, undefined);
         callback(jsonString);

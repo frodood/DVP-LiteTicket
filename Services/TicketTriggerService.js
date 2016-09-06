@@ -23,7 +23,7 @@ function CreateTrigger(req, res){
 
     var data = Trigger({
         title: req.body.title,
-        Active: req.body.active,
+        Active: req.body.Active,
         priority: req.body.priority,
         created_at: Date.now(),
         updated_at: Date.now(),
@@ -124,7 +124,7 @@ function UpdateTrigger(req,res){
         }else{
             if(trigger){
                 trigger.title = req.body.title;
-                trigger.Active = req.body.active;
+                trigger.Active = req.body.Active;
                 trigger.priority = req.body.priority;
                 trigger.updated_at = Date.now();
                 trigger.conditions = req.body.conditions;
@@ -244,7 +244,7 @@ function AddFilterAny(req, res){
         }else {
             var anyFiler = {field: req.body.field, operator: req.body.operator, value: req.body.value};
             if (trigger.conditions.any && Array.isArray(trigger.conditions.any)) {
-                trigger.conditions.any.push(allFiler);
+                trigger.conditions.any.push(anyFiler);
             } else {
                 trigger.conditions.any = [anyFiler];
             }

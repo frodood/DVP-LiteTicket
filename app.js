@@ -11,6 +11,7 @@ var tagService = require('./Services/TagService.js');
 var timerService = require('./Services/TimerService.js');
 var slaService= require('./Services/SLAService.js');
 var triggrService = require('./Services/TicketTriggerService.js');
+var ticketViewService = require('./Services/TicketViewService');
 var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
@@ -128,34 +129,43 @@ server.put('/DVP/API/:version/Case/:id/RelatedTicket/:ticketid',authorization({r
 /////////////////////////////////////////////Tags///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-server.post('/DVP/API/:version/TagCategory', authorization({resource:"ticket", action:"write"}), tagService.CreateTagCategory);
-server.get('/DVP/API/:version/TagCategory/:id', authorization({resource:"ticket", action:"read"}), tagService.GetTagCategory);
-server.get('/DVP/API/:version/TagCategories', authorization({resource:"ticket", action:"read"}), tagService.GetTagCategories);
-server.del('/DVP/API/:version/TagCategory/:id', authorization({resource:"ticket", action:"write"}), tagService.RemoveTagCategory);
+server.post('/DVP/API/:version/TagCategory', authorization({resource:"tag", action:"write"}), tagService.CreateTagCategory);
+server.get('/DVP/API/:version/TagCategory/:id', authorization({resource:"tag", action:"read"}), tagService.GetTagCategory);
+server.get('/DVP/API/:version/TagCategories', authorization({resource:"tag", action:"read"}), tagService.GetTagCategories);
+server.del('/DVP/API/:version/TagCategory/:id', authorization({resource:"tag", action:"write"}), tagService.RemoveTagCategory);
+server.put('/DVP/API/:version/TagCategory/:id/Tag', authorization({resource:"tag", action:"write"}), tagService.CreateTagsToTagCategory);
 
 
-server.post('/DVP/API/:version/Tag', authorization({resource:"ticket", action:"write"}), tagService.CreateTag);
-server.get('/DVP/API/:version/Tags', authorization({resource:"ticket", action:"read"}), tagService.GetTags);
-server.get('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"read"}), tagService.GetTag);
-server.del('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"write"}), tagService.DeleteTag);
-server.post('/DVP/API/:version/Tag/:id', authorization({resource:"ticket", action:"write"}), tagService.CreateTagsToTag);
-server.put('/DVP/API/:version/Tag/:id/AttachTo/:tagid', authorization({resource:"ticket", action:"write"}), tagService.AttachTagsToTag);
-server.del('/DVP/API/:version/Tag/:id/DetachFrom/:tagid', authorization({resource:"ticket", action:"write"}), tagService.DetachTagsFromTag);
+server.post('/DVP/API/:version/Tag', authorization({resource:"tag", action:"write"}), tagService.CreateTag);
+server.get('/DVP/API/:version/Tags', authorization({resource:"tag", action:"read"}), tagService.GetTags);
+server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"read"}), tagService.GetTag);
+server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.DeleteTag);
+server.post('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.CreateTagsToTag);
+server.put('/DVP/API/:version/Tag/:id/AttachToTag/:tagid', authorization({resource:"tag", action:"write"}), tagService.AttachTagsToTag);
+server.del('/DVP/API/:version/Tag/:id/DetachFrom/:tagid', authorization({resource:"tag", action:"write"}), tagService.DetachTagsFromTag);
 
 /////////////////////////////////////////////Tag Category///////////////////////////////////////////////////////////////////////////////////////////////
-server.put('/DVP/API/:version/Tag/:id/AttachToCategory/:cid', authorization({resource:"ticket", action:"write"}), tagService.AttachTagsToCategory);
-server.put('/DVP/API/:version/Tag/:id/DetachFromCategory/:cid', authorization({resource:"ticket", action:"write"}), tagService.DetachTagsFromCategory);
+server.put('/DVP/API/:version/Tag/:id/AttachToCategory/:cid', authorization({resource:"tag", action:"write"}), tagService.AttachTagsToCategory);
+server.del('/DVP/API/:version/Tag/:id/DetachFromCategory/:cid', authorization({resource:"tag", action:"write"}), tagService.DetachTagsFromCategory);
 
 
 
 ///////////////////////////////////////////Timer///////////////////////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/Ticket/:id/timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
-server.get('/DVP/API/:version/Ticket/:id/times', authorization({resource:"ticket", action:"read"}), timerService.GetTimes);
-server.put('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"write"}), timerService.UpdateTimer);
-server.put('/DVP/API/:version/Timer/:id/time', authorization({resource:"timer", action:"write"}), timerService.UpdateTimerTime);
-server.put('/DVP/API/:version/Timer/:id/toggle', authorization({resource:"timer", action:"write"}), timerService.ToggelTimer);
-server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"write"}), timerService.GetMyTimeSheet);
+server.post('/DVP/API/:version/Timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
+server.get('/DVP/API/:version/Timers', authorization({resource:"timer", action:"read"}), timerService.GetTimes);
+server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"read"}), timerService.GetMyTimer);
+server.del('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"delete"}), timerService.DeleteMyTimer);
+server.get('/DVP/API/:version/MyTimers', authorization({resource:"timer", action:"read"}), timerService.GetMyTimes);
+server.get('/DVP/API/:version/Timers/User/:uid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForUser);
+server.get('/DVP/API/:version/Timers/Ticket/:tid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForTicket);
+server.get('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"read"}), timerService.GetTime);
+server.put('/DVP/API/:version/Timer/:id/Ticket/:tid', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTicket);
+server.put('/DVP/API/:version/Timer/:id/Time/:time', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTime);
+server.put('/DVP/API/:version/MyTimer/pause', authorization({resource:"timer", action:"write"}), timerService.PauseTimer);
+server.put('/DVP/API/:version/MyTimer/start', authorization({resource:"timer", action:"write"}), timerService.StartTimer);
+server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", action:"write"}), timerService.StopTimer);
+
 
 
 ///////////////////////////////////////////SLA/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,13 +187,34 @@ server.get('/DVP/API/:version/SLA/:id/Filters/Any', authorization({resource:"sla
 server.del('/DVP/API/:version/SLA/:id/Filter/Any/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAny);
 
 
+//////////////////////////////////////Ticket View///////////////////////////////////////////////////////////////////////////////////
+
+
+
+server.post('/DVP/API/:version/TicketView', authorization({resource:"ticketview", action:"write"}), ticketViewService.CreateTicketView);
+server.get('/DVP/API/:version/TicketViews', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetMyTicketViews);
+server.get('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketView);
+server.put('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"write"}), ticketViewService.UpdateTicketView);
+server.del('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"delete"}), ticketViewService.DeleteTicketView);
+server.put('/DVP/API/:version/TicketView/:id/Filter/All', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAll);
+server.get('/DVP/API/:version/TicketView/:id/Filters/All', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAll);
+server.del('/DVP/API/:version/TicketView/:id/Filter/All/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAll);
+server.put('/DVP/API/:version/TicketView/:id/Filter/Any', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Filters/Any', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAny);
+server.del('/DVP/API/:version/TicketView/:id/Filter/Any/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Tickets', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByView);
+
+
+
+
+
 //////////////////////////////////////Trigger//////////////////////////////////////////////////////////////////////////////////////////////
 
 
 server.post('/DVP/API/:version/Trigger', authorization({resource:"triggers", action:"write"}), triggrService.CreateTrigger);
 server.get('/DVP/API/:version/Triggers', authorization({resource:"triggers", action:"read"}), triggrService.GetTriggers);
 server.get('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"read"}), triggrService.GetTrigger);
-server.put('/DVP/API/:version/Trigger', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTrigger);
+server.put('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTrigger);
 server.del('/DVP/API/:version/Trigger/:id', authorization({resource:"triggers", action:"delete"}), triggrService.DeleteTrigger);
 server.put('/DVP/API/:version/Trigger/:id/Filter/All', authorization({resource:"triggers", action:"write"}), triggrService.AddFilterAll);
 server.get('/DVP/API/:version/Trigger/:id/Filters/All', authorization({resource:"triggers", action:"read"}), triggrService.GetFiltersAll);

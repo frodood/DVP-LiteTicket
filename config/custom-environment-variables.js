@@ -36,13 +36,19 @@ module.exports = {
         "user":"SYS_MONGO_USER"
     },
 
-
+    "RabbitMQ":
+    {
+        "ip": "SYS_RABBITMQ_HOST",
+        "port": "SYS_RABBITMQ_PORT",
+        "user": "SYS_RABBITMQ_USER",
+        "password": "SYS_RABBITMQ_PASSWORD"
+    },
 
     "Host":
     {
         "vdomain": "LB_FRONTEND",
         "domain": "HOST_NAME",
-        "port": "HOST_USERSERVICE_PORT",
+        "port": "HOST_LITETICKET_PORT",
         "version": "HOST_VERSION"
     },
 

@@ -94,8 +94,7 @@ module.exports.CreateTicket = function (req, res) {
                         custom_fields: req.body.custom_fields,
                         comments: req.body.comments,
                         SLAViolated: false,
-                        events: [tEvent],
-                        requester: undefined
+                        events: [tEvent]
                     });
 
                     if (req.body.requesterId)
@@ -919,7 +918,7 @@ module.exports.PickTicket = function (req, res) {
 
                         } else {
                             if (user) {
-
+                                var oldTicket = deepcopy(ticket.toJSON());
                                 var assigneeGroup = deepcopy(ticket.toJSON().assignee_group);
                                 var time = new Date().toISOString();
                                 ticket.assignee_group = undefined;
@@ -941,7 +940,7 @@ module.exports.PickTicket = function (req, res) {
                                     else {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
-                                            ExecuteTrigger(req.params.id, "change_assignee", undefined);
+                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -1385,12 +1384,13 @@ module.exports.AddComment = function (req, res) {
                                         var queueName;
 
                                         var message = {
-                                            "from": req.body.channel_from,
-                                            "to": req.body.channel_to,
-                                            "body": req.body.body,
-                                            "comment":comment._id,
-                                            "company": company,
-                                            "tenant": tenant
+                                            from: req.body.channel_from,
+                                            to: req.body.channel_to,
+                                            body: req.body.body,
+                                            comment:comment._id,
+                                            company: company,
+                                            tenant: tenant,
+                                            author: req.user.iss
                                         }
 
                                         if (req.body.channel == 'twitter') {
@@ -1638,12 +1638,13 @@ module.exports.AddCommentToComment = function (req, res) {
                                                     var queueName;
 
                                                     var message = {
-                                                        "from": req.body.channel_from,
-                                                        "to": req.body.channel_to,
-                                                        "body": req.body.body,
-                                                        "comment":comment._id,
-                                                        "company": company,
-                                                        "tenant": tenant
+                                                        from: req.body.channel_from,
+                                                        to: req.body.channel_to,
+                                                        body: req.body.body,
+                                                        comment:comment._id,
+                                                        company: company,
+                                                        tenant: tenant,
+                                                        author: req.user.iss
                                                     }
 
                                                     if (req.body.channel == 'twitter') {
@@ -1747,7 +1748,7 @@ module.exports.ChangeStatus = function (req, res) {
             }
             else {
                 if (ticket) {
-
+                    var oldTicket = deepcopy(ticket.toJSON());
                     ticket.status = req.body.status;
 
                     var time = new Date().toISOString();
@@ -1788,7 +1789,7 @@ module.exports.ChangeStatus = function (req, res) {
                                         else {
                                             if (rUser) {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                                ExecuteTrigger(req.params.id, "change_status", undefined);
+                                                ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
                                             }
                                             else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -1818,7 +1819,7 @@ module.exports.ChangeStatus = function (req, res) {
                             else {
                                 if (rUser) {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                    ExecuteTrigger(req.params.id, "change_status", undefined);
+                                    ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
                                 }
                                 else {
                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
