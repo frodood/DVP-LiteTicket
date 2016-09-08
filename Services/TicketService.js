@@ -3699,7 +3699,8 @@ module.exports.CreateStatusFlow = function(req, res){
                     updated_at: Date.now(),
                     company: company,
                     tenant: tenant,
-                    flow_nodes: req.body
+                    type: req.body.type,
+                    flow_nodes: req.body.flow_nodes
                 });
 
                 ticketStatusFlow.save(function (err, tsf) {
