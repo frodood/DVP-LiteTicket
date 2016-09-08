@@ -272,6 +272,8 @@ server.put('/DVP/API/:version/TicketStatusFlow/:id/FlowNode',authorization({reso
 server.get('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusFlow);
 server.del('/DVP/API/:version/TicketStatusFlow/:id/FlowNode/:flownodeid',authorization({resource:"ticket", action:"read"}), ticketService.RemoveNodeFromStatusFlow);
 
+server.get('/DVP/API/:version/TicketStatusFlow/NextAvailableStatus/:ticketType/:currentStatus',authorization({resource:"ticket", action:"read"}), ticketService.GetNextAvailableStatus);
+server.get('/DVP/API/:version/TicketStatusFlow/ValidateStatus/:ticketType/:currentStatus/:newStatus',authorization({resource:"ticket", action:"read"}), ticketService.ValidateStatusChange);
 
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);

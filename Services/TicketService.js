@@ -3692,27 +3692,49 @@ module.exports.CreateStatusFlow = function(req, res){
 
             if (user) {
 
+                if(req.body && req.body.type) {
+                    TicketStatusFlow.findOne({
+                        type: req.body.type,
+                        company: company,
+                        tenant: tenant
+                    }, function (err, ticketFlow) {
+                        if (err) {
 
+                            jsonString = messageFormatter.FormatMessage(err, "Get ticketFlow Failed", false, undefined);
+                            res.end(jsonString);
 
-                var ticketStatusFlow = TicketStatusFlow({
-                    created_at: Date.now(),
-                    updated_at: Date.now(),
-                    company: company,
-                    tenant: tenant,
-                    type: req.body.type,
-                    flow_nodes: req.body.flow_nodes
-                });
+                        } else {
+                            if(!ticketFlow){
+                                var ticketStatusFlow = TicketStatusFlow({
+                                    created_at: Date.now(),
+                                    updated_at: Date.now(),
+                                    company: company,
+                                    tenant: tenant,
+                                    type: req.body.type,
+                                    flow_nodes: req.body.flow_nodes
+                                });
 
-                ticketStatusFlow.save(function (err, tsf) {
-                    if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
-                    }
-                    else {
-                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
+                                ticketStatusFlow.save(function (err, tsf) {
+                                    if (err) {
+                                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
 
-                    }
+                                    }
+                                    res.end(jsonString);
+                                });
+                            }else{
+                                jsonString = messageFormatter.FormatMessage(undefined, "Flow Already Added", false, undefined);
+                                res.end(jsonString);
+                            }
+                        }
+
+                    });
+                }else{
+                    jsonString = messageFormatter.FormatMessage(undefined, "Flow Type Required", false, undefined);
                     res.end(jsonString);
-                });
+                }
 
             } else {
 
@@ -3797,8 +3819,74 @@ module.exports.RemoveNodeFromStatusFlow = function(req, res){
     });
 };
 
+module.exports.GetNextAvailableStatus = function(req,res){
+    logger.info("DVP-LiteTicket.RemoveNodeFromStatusFlow Internal method ");
 
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
 
+    GetNextAvailableStatusList(tenant, company, req.params.ticketType, req.params.currentStatus, function(result){
+        res.end(result);
+    });
+};
+
+module.exports.ValidateStatusChange = function(req,res){
+    logger.info("DVP-LiteTicket.ValidateStatusChange Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    ValidateStatusChangeRequest(tenant, company, req.params.ticketType, req.params.currentStatus, req.params.newStatus, function(result){
+        res.end(result);
+    });
+};
+
+var GetNextAvailableStatusList = function(tenant, company, type, currentStatus, callback){
+    logger.info("DVP-LiteTicket.GetNextAvailableStatus Internal method ");
+    var jsonString;
+    var nextAvailableStatus = [];
+
+    TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_nodes.source')
+        .populate('flow_nodes.targets').exec(function (err, stf) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, nextAvailableStatus);
+            } else {
+                if(stf){
+                    for(var i = 0; i < stf.flow_nodes.length; i++){
+                        if(stf.flow_nodes[i].source.status_node === currentStatus){
+                            nextAvailableStatus.push(stf.flow_nodes[i].targets.status_node);
+                        }
+                    }
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
+                }else{
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Status Flow Found", false, nextAvailableStatus);
+                }
+            }
+            callback(jsonString);
+        });
+};
+
+var ValidateStatusChangeRequest = function(tenant, company, type, currentStatus, newStatus, callback){
+    logger.info("DVP-LiteTicket.ValidateStatusChangeRequest Internal method ");
+    var jsonString;
+    GetNextAvailableStatusList(tenant, company, type, currentStatus, function(result){
+        var jResult = JSON.parse(result);
+        if(jResult && jResult.IsSuccess){
+            if(jResult.Result.indexOf(newStatus) > -1){
+                jsonString = messageFormatter.FormatMessage(undefined, "status valid", true, undefined);
+            }else{
+                jsonString = messageFormatter.FormatMessage(undefined, "status Invalid", false, undefined);
+            }
+        }else{
+            jsonString = messageFormatter.FormatMessage(undefined, "No Status Flow Found", false, undefined);
+        }
+
+        callback(jsonString);
+    });
+};
+
+module.exports.GetNextAvailableStatusList = GetNextAvailableStatusList;
+module.exports.ValidateStatusChangeRequest = ValidateStatusChangeRequest;
 
 
 
