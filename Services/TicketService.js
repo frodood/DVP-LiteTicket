@@ -593,6 +593,89 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
+
+
+module.exports.GetAllMyGroupTickets = function (req, res) {
+    logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+
+            if(user) {
+                UserGroup.find({"users": user.id}, function (error, groups) {
+
+
+                    if(!error  && groups) {
+
+                        var ids= [];
+
+                        groups.forEach(function(item){
+
+                            ids.push(item._id);
+                        });
+
+
+                        Ticket.find({
+                            company: company,
+                            tenant: tenant,
+                            assignee_group: {$in: ids},
+                            active: true
+                        }).skip(skip)
+                            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                            if (err) {
+
+                                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+                            } else {
+
+                                if (tickets) {
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
+
+                                } else {
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                                }
+                            }
+
+
+                            res.end(jsonString);
+                        });
+                    }else{
+
+                        jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
+                        res.end(jsonString);
+                    }
+
+
+                });
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+
+
+
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
 
@@ -614,7 +697,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                 Ticket.find({
                     company: company,
                     tenant: tenant, active: true,
-                    submitter: user.id
+                    assignee: user.id
                 }).skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
