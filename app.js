@@ -11,6 +11,7 @@ var tagService = require('./Services/TagService.js');
 var timerService = require('./Services/TimerService.js');
 var slaService= require('./Services/SLAService.js');
 var triggrService = require('./Services/TicketTriggerService.js');
+var ticketViewService = require('./Services/TicketViewService');
 var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
@@ -29,6 +30,8 @@ server.use(restify.bodyParser({ mapParams: false }));
 restify.CORS.ALLOW_HEADERS.push('authorization');
 server.use(restify.CORS());
 server.use(restify.fullResponse());
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.queryParser());
 
 server.use(jwt({secret: secret.Secret}));
 
@@ -81,6 +84,7 @@ server.get('/DVP/API/:version/Tickets/Priority/:Priority/:Size/:Page', authoriza
 server.get('/DVP/API/:version/Tickets/Priority/:Priority/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriorityTimeRange);
 server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
+server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
 server.put('/DVP/API/:version/Ticket/:id/MapToProfile/:Requester', authorization({resource:"ticket", action:"write"}), ticketService.MapTicketToProfile);
@@ -151,12 +155,20 @@ server.del('/DVP/API/:version/Tag/:id/DetachFromCategory/:cid', authorization({r
 
 ///////////////////////////////////////////Timer///////////////////////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/Ticket/:id/timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
-server.get('/DVP/API/:version/Ticket/:id/times', authorization({resource:"ticket", action:"read"}), timerService.GetTimes);
-server.put('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"write"}), timerService.UpdateTimer);
-server.put('/DVP/API/:version/Timer/:id/time', authorization({resource:"timer", action:"write"}), timerService.UpdateTimerTime);
-server.put('/DVP/API/:version/Timer/:id/toggle', authorization({resource:"timer", action:"write"}), timerService.ToggelTimer);
-server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"write"}), timerService.GetMyTimeSheet);
+server.post('/DVP/API/:version/Timer', authorization({resource:"timer", action:"write"}), timerService.CreateTimer);
+server.get('/DVP/API/:version/Timers', authorization({resource:"timer", action:"read"}), timerService.GetTimes);
+server.get('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"read"}), timerService.GetMyTimer);
+server.del('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:"delete"}), timerService.DeleteMyTimer);
+server.get('/DVP/API/:version/MyTimers', authorization({resource:"timer", action:"read"}), timerService.GetMyTimes);
+server.get('/DVP/API/:version/Timers/User/:uid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForUser);
+server.get('/DVP/API/:version/Timers/Ticket/:tid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForTicket);
+server.get('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"read"}), timerService.GetTime);
+server.put('/DVP/API/:version/Timer/:id/Ticket/:tid', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTicket);
+server.put('/DVP/API/:version/Timer/:id/Time/:time', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTime);
+server.put('/DVP/API/:version/MyTimer/pause', authorization({resource:"timer", action:"write"}), timerService.PauseTimer);
+server.put('/DVP/API/:version/MyTimer/start', authorization({resource:"timer", action:"write"}), timerService.StartTimer);
+server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", action:"write"}), timerService.StopTimer);
+
 
 
 ///////////////////////////////////////////SLA/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -176,6 +188,27 @@ server.del('/DVP/API/:version/SLA/:id/Filter/All/:filterid', authorization({reso
 server.put('/DVP/API/:version/SLA/:id/Filter/Any', authorization({resource:"sla", action:"write"}), slaService.AddFilterAny);
 server.get('/DVP/API/:version/SLA/:id/Filters/Any', authorization({resource:"sla", action:"read"}), slaService.GetFiltersAny);
 server.del('/DVP/API/:version/SLA/:id/Filter/Any/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAny);
+
+
+//////////////////////////////////////Ticket View///////////////////////////////////////////////////////////////////////////////////
+
+
+
+server.post('/DVP/API/:version/TicketView', authorization({resource:"ticketview", action:"write"}), ticketViewService.CreateTicketView);
+server.get('/DVP/API/:version/TicketViews', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetMyTicketViews);
+server.get('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketView);
+server.put('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"write"}), ticketViewService.UpdateTicketView);
+server.del('/DVP/API/:version/TicketView/:id', authorization({resource:"ticketview", action:"delete"}), ticketViewService.DeleteTicketView);
+server.put('/DVP/API/:version/TicketView/:id/Filter/All', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAll);
+server.get('/DVP/API/:version/TicketView/:id/Filters/All', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAll);
+server.del('/DVP/API/:version/TicketView/:id/Filter/All/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAll);
+server.put('/DVP/API/:version/TicketView/:id/Filter/Any', authorization({resource:"ticketview", action:"write"}), ticketViewService.AddFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Filters/Any', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAny);
+server.del('/DVP/API/:version/TicketView/:id/Filter/Any/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAny);
+server.get('/DVP/API/:version/TicketView/:id/Tickets', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByView);
+
+
+
 
 
 //////////////////////////////////////Trigger//////////////////////////////////////////////////////////////////////////////////////////////
