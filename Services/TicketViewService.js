@@ -8,6 +8,8 @@ var TicketView = require('dvp-mongomodels/model/TicketView').TicketView;
 var User = require('dvp-mongomodels/model/User');
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
+var moment = require("moment");
+
 
 function CreateTicketView(req, res){
 
@@ -383,12 +385,8 @@ function RemoveFilterAll(req, res){
                                 res.end(jsonString);
                             });
                         }
-
-
                     }
                 });
-
-
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
@@ -444,12 +442,8 @@ function RemoveFilterAny(req, res){
                                 res.end(jsonString);
                             });
                         }
-
-
                     }
                 });
-
-
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
@@ -569,6 +563,29 @@ function GetTicketsByView(req, res){
 
                                     }
 
+                                    if(item.field == "created_at" || item.field == "updated_at:" || item.field == "due_at"){
+
+
+                                        if(item.value == '{now}'){
+
+                                            item.value = moment().toISOString();
+
+                                        }else {
+
+                                            try {
+
+                                                item.value = moment(item.value);
+
+                                            } catch (ex) {
+
+                                                item.value = moment();
+                                            }
+                                        }
+
+                                    }
+
+
+
                                     switch(item.operator){
 
                                         case 'is':
@@ -611,7 +628,23 @@ function GetTicketsByView(req, res){
                             }
 
 
-                            var orQuery = {$or:[andQueryObject]};
+                            var mainQuery = {$and:[andQueryObject]};
+
+
+                            /*
+
+
+                             Test.find({
+                             $and: [
+                             { $or: [{a: 1}, {b: 1}] },
+                             { $or: [{c: 1}, {d: 1}] }
+                             ]
+                             }, function (err, results) {
+                             ...
+                             }
+                             */
+
+                            var orQuery = { $or: [] };
 
                             if(view.conditions.any && Array.isArray(view.conditions.any) && view.conditions.any.length > 0){
                                 view.conditions.any.forEach(function(item){
@@ -624,6 +657,30 @@ function GetTicketsByView(req, res){
                                         item.value = user.id;
 
                                     }
+
+                                    if(item.field == "created_at" || item.field == "updated_at:" || item.field == "due_at"){
+
+
+                                        if(item.value == '{now}'){
+
+                                            item.value = moment().toISOString();
+
+                                        }else {
+
+                                            try {
+
+                                                item.value = moment(item.value);
+
+                                            } catch (ex) {
+
+                                                item.value = moment();
+                                            }
+                                        }
+
+                                    }
+
+
+
 
                                     switch(item.operator){
 
@@ -668,7 +725,9 @@ function GetTicketsByView(req, res){
                             }
 
 
-                            Ticket.find(orQuery, function (err, tickets) {
+                            mainQuery.$and.push(orQuery);
+
+                            Ticket.find(mainQuery, function (err, tickets) {
                                 if (err) {
                                     jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
                                 } else {
