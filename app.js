@@ -30,6 +30,8 @@ server.use(restify.bodyParser({ mapParams: false }));
 restify.CORS.ALLOW_HEADERS.push('authorization');
 server.use(restify.CORS());
 server.use(restify.fullResponse());
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.queryParser());
 
 server.use(jwt({secret: secret.Secret}));
 

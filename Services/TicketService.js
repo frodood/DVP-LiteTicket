@@ -199,7 +199,7 @@ module.exports.GetAllTickets = function (req, res) {
             });
 
     }
-   else{
+    else{
         Ticket.find({company: company, tenant: tenant, active: true}).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
@@ -649,27 +649,64 @@ module.exports.GetAllMyTickets = function (req, res) {
         } else {
 
             if (user) {
-                Ticket.find({
-                    company: company,
-                    tenant: tenant, active: true,
-                    submitter: user.id
-                }).skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                            res.end(jsonString);
-                        }
-                        else {
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+                if(req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+
+                    Ticket.find({
+                        company: company,
+                        tenant: tenant, active: true,
+                        submitter: user.id,
+                        status: { $in: paramArr }
+                    }).skip(skip)
+                        .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                            if (err) {
+
+                                jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                                res.end(jsonString);
                             }
                             else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                                if (tickets) {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+                                }
+                                else {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                                }
+                                res.end(jsonString);
                             }
-                            res.end(jsonString);
-                        }
-                    })
+                        });
+                }
+                else
+                {
+                    Ticket.find({
+                        company: company,
+                        tenant: tenant, active: true,
+                        submitter: user.id
+                    }).skip(skip)
+                        .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                            if (err) {
+
+                                jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                                res.end(jsonString);
+                            }
+                            else {
+                                if (tickets) {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+                                }
+                                else {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                                }
+                                res.end(jsonString);
+                            }
+                        });
+                }
             } else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                 res.end(jsonString);
@@ -1634,7 +1671,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                                 if (obj.id) {
 
 
-                                                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                    ////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                     var queueName;
 
                                                     var message = {
@@ -1661,7 +1698,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                                         contentType: 'application/json'
                                                     });
 
-                                                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                    /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                                                     Comment.findOneAndUpdate({_id: req.params.commentid},
                                                         {$addToSet: {sub_comment: obj.id}}
@@ -2944,7 +2981,7 @@ module.exports.AddCaseConfiguration = function (req, res) {
                         if(caseConfiguration){
                             jsonString = messageFormatter.FormatMessage(undefined, "caseConfiguration saved successfully", true, caseConfiguration);
                         }
-                            else{
+                        else{
                             jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save caseConfiguration.", false, caseConfiguration);
                         }
                     }
