@@ -227,9 +227,16 @@ server.put('/DVP/API/:version/FormSubmission/:reference/field/:field', authoriza
 
 
 
+///////////////////////////////////////////////////////////////ticket status flow////////////////////////////////////////////////////////
+
+server.post('/DVP/API/:version/TicketStatusNode',authorization({resource:"ticket", action:"write"}), ticketService.CreateStatusNode);
+server.get('/DVP/API/:version/TicketStatusNodes',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusNodes);
 
 
-
+server.post('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.CreateStatusFlow);
+server.put('/DVP/API/:version/TicketStatusFlow/:id/FlowNode',authorization({resource:"ticket", action:"read"}), ticketService.AddNodeToStatusFlow);
+server.get('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusFlow);
+server.del('/DVP/API/:version/TicketStatusFlow/:id/FlowNode/:flownodeid',authorization({resource:"ticket", action:"read"}), ticketService.RemoveNodeFromStatusFlow);
 
 
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////

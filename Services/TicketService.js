@@ -2,6 +2,8 @@ var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
+var TicketStatusFlow= require('dvp-mongomodels/model/TicketStatusFlow').TicketStatusFlow;
+var TicketStatusNode= require('dvp-mongomodels/model/TicketStatusFlow').TicketStatusNode;
 var User = require('dvp-mongomodels/model/User');
 var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
 var Attachment = require('dvp-mongomodels/model/Attachment').Attachment;
@@ -3406,8 +3408,186 @@ module.exports.CreateTicketWithComment = function (req, res) {
 
 
 
+//-------------------Ticker Status Flow --------------------------------------------------------------
+
+module.exports.CreateStatusNode = function(req, res){
+    logger.info("DVP-LiteTicket.CreateStatusNode Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
 
 
+
+                    var ticketStatusNode = TicketStatusNode({
+                        created_at: Date.now(),
+                        updated_at: Date.now(),
+                        status_node: req.body.status_node
+                    });
+
+                ticketStatusNode.save(function (err, tsn) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusNode create failed", false, undefined);
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusNode saved successfully", true, tsn._doc);
+
+                    }
+                    res.end(jsonString);
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.GetStatusNodes = function(req, res){
+    logger.info("DVP-LiteTicket.GetStatusNodes Internal method ");
+    var jsonString;
+
+    TicketStatusNode.find({}, function (err, stn) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusNodes Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusNodes Successful", true, stn);
+        }
+        res.end(jsonString);
+    });
+};
+
+
+module.exports.CreateStatusFlow = function(req, res){
+    logger.info("DVP-LiteTicket.CreateStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+
+
+                var ticketStatusFlow = TicketStatusFlow({
+                    created_at: Date.now(),
+                    updated_at: Date.now(),
+                    company: company,
+                    tenant: tenant,
+                    flow_nodes: req.body
+                });
+
+                ticketStatusFlow.save(function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
+
+                    }
+                    res.end(jsonString);
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.GetStatusFlow = function(req, res){
+    logger.info("DVP-LiteTicket.GetStatusFlow Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant}).populate('flow_nodes.source')
+        .populate('flow_nodes.targets').exec(function (err, stf) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
+        }
+        res.end(jsonString);
+    });
+};
+
+module.exports.AddNodeToStatusFlow = function(req, res){
+    logger.info("DVP-LiteTicket.AddNodeToStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+
+
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id,company: company, tenant: tenant}, { $addToSet :{
+                    flow_nodes : req.body}}, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Add NodeToStatusFlow Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Add NodeToStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.RemoveNodeFromStatusFlow = function(req, res){
+    logger.info("DVP-LiteTicket.RemoveNodeFromStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOneAndUpdate({_id: req.params.id,company: company, tenant: tenant}, { $pull :{
+        flow_nodes : {
+            _id: req.params.flownodeid
+        }}}, function (err, tsf) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
+        }
+        res.end(jsonString);
+    });
+};
 
 
 
