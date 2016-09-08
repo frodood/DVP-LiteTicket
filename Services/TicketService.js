@@ -654,6 +654,8 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
 
             if(user) {
+
+
                 UserGroup.find({"users": user.id}, function (error, groups) {
 
 
@@ -663,37 +665,82 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
                         groups.forEach(function(item){
 
+                            console.log(item.id);
                             ids.push(item._id);
                         });
 
 
-                        Ticket.find({
-                            company: company,
-                            tenant: tenant,
-                            assignee_group: {$in: ids},
-                            active: true
-                        }).skip(skip)
-                            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                                if (err) {
+                        if(req.query.status) {
+                            var paramArr;
+                            if (Array.isArray(req.query.status)) {
+                                paramArr = req.query.status;
+                            } else {
 
-                                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+                                paramArr = [req.query.status];
+                            }
 
-                                } else {
+                            Ticket.find({
+                                company: company,
+                                tenant: tenant,
+                                assignee_group: {$in: ids},
+                                active: true,
+                                status: { $in: paramArr }
+                            }).skip(skip)
+                                .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                                    if (err) {
 
-                                    if (tickets) {
-
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
+                                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
 
                                     } else {
 
-                                        jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                                        if (tickets) {
 
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+
+                                        } else {
+
+                                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                                        }
                                     }
-                                }
 
 
-                                res.end(jsonString);
-                            });
+                                    res.end(jsonString);
+                                });
+                        }
+                        else
+                        {
+                            Ticket.find({
+                                company: company,
+                                tenant: tenant,
+                                assignee_group: {$in: ids},
+                                active: true
+                            }).skip(skip)
+                                .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                                    if (err) {
+
+                                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+                                    } else {
+
+                                        if (tickets) {
+
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
+
+                                        } else {
+
+                                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                                        }
+                                    }
+
+
+                                    res.end(jsonString);
+                                });
+                        }
+
+
+
                     }else{
 
                         jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
