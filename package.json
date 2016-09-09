@@ -35,6 +35,7 @@
     "q": "^1.4.1",
     "request": "^2.69.0",
     "restify": "^4.1.1",
+    "redis": "^2.6.2",
     "restify-jwt": "^0.4.0",
     "stringformat": "0.0.5",
     "validator": "^4.1.0"
