@@ -178,7 +178,7 @@ module.exports.GetAllTickets = function (req, res) {
             paramArr = [req.query.status];
         }
 
-        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).skip(skip)
+        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
 
@@ -202,7 +202,7 @@ module.exports.GetAllTickets = function (req, res) {
 
     }
     else{
-        Ticket.find({company: company, tenant: tenant, active: true}).skip(skip)
+        Ticket.find({company: company, tenant: tenant, active: true}).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
 
@@ -476,7 +476,7 @@ module.exports.GetAllTicketsByRequester = function (req, res) {
         skip = page > 0 ? ((page - 1) * size) : 0;
 
     var jsonString;
-    Ticket.find({company: company, tenant: tenant, requester: req.params.Requester, active: true}).skip(skip)
+    Ticket.find({company: company, tenant: tenant, requester: req.params.Requester, active: true}).populate('requester', 'name avatar').populate('submitter', 'name avatar').skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -633,8 +633,6 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
-
-
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -687,7 +685,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                                 assignee_group: {$in: ids},
                                 active: true,
                                 status: { $in: paramArr }
-                            }).skip(skip)
+                            }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
                                 .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                     if (err) {
 
@@ -717,7 +715,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                                 tenant: tenant,
                                 assignee_group: {$in: ids},
                                 active: true
-                            }).skip(skip)
+                            }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
                                 .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                     if (err) {
 
@@ -760,9 +758,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
     });
 };
 
-
-
-
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
 
@@ -797,7 +792,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                             tenant: tenant, active: true,
                             submitter: user.id,
                             status: { $in: paramArr }
-                        }).skip(skip)
+                        }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
                             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                 if (err) {
 
@@ -821,7 +816,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                             company: company,
                             tenant: tenant, active: true,
                             submitter: user.id
-                        }).skip(skip)
+                        }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
                             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                 if (err) {
 
