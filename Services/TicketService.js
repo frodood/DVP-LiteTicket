@@ -178,7 +178,7 @@ module.exports.GetAllTickets = function (req, res) {
             paramArr = [req.query.status];
         }
 
-        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
 
@@ -202,7 +202,7 @@ module.exports.GetAllTickets = function (req, res) {
 
     }
     else{
-        Ticket.find({company: company, tenant: tenant, active: true}).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+        Ticket.find({company: company, tenant: tenant, active: true}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
 
@@ -685,7 +685,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                                 assignee_group: {$in: ids},
                                 active: true,
                                 status: { $in: paramArr }
-                            }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+                            }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                                 .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                     if (err) {
 
@@ -715,7 +715,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                                 tenant: tenant,
                                 assignee_group: {$in: ids},
                                 active: true
-                            }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+                            }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                                 .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                     if (err) {
 
@@ -792,7 +792,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                             tenant: tenant, active: true,
                             submitter: user.id,
                             status: { $in: paramArr }
-                        }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+                        }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                 if (err) {
 
@@ -816,7 +816,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                             company: company,
                             tenant: tenant, active: true,
                             submitter: user.id
-                        }).populate('assignee', 'name avatar').populate('assignee_group', 'name').skip(skip)
+                        }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                                 if (err) {
 
