@@ -178,7 +178,7 @@ module.exports.GetAllTickets = function (req, res) {
             paramArr = [req.query.status];
         }
 
-        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+        Ticket.find({company: company, tenant: tenant, active: true, status: { $in: paramArr }}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                 if (err) {
 
@@ -897,26 +897,29 @@ module.exports.GetAllMyTickets = function (req, res) {
         var company = parseInt(req.user.company);
         var tenant = parseInt(req.user.tenant);
         var jsonString;
-        Ticket.findOne({
-            company: company,
-            tenant: tenant,
-            active: true,
-            _id: req.params.id
-        }, function (err, ticket) {
-            if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
-            }
-            else {
-                if (ticket) {
-                    jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+
+        Ticket.findOne({company: company, tenant: tenant, active: true, _id:req.params.id}).populate('assignee', 'name avatar').sort({created_at: -1}).exec(function (err, ticket)
+            {
+                if(err)
+                {
+                    jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
                 }
-                else {
-                    jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                else
+                {
+                    if (ticket) {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                    }
                 }
-            }
-            res.end(jsonString);
-        })
+                res.end(jsonString);
+
+
+            });
+
+
     };
 
     module.exports.MapTicketToProfile = function (req, res) {
