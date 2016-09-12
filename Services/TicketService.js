@@ -96,7 +96,8 @@ module.exports.CreateTicket = function (req, res) {
                         custom_fields: req.body.custom_fields,
                         comments: req.body.comments,
                         SLAViolated: false,
-                        events: [tEvent]
+                        events: [tEvent],
+                        assignee:req.body.assignee
                     });
 
                     if (req.body.requesterId)
@@ -3467,7 +3468,8 @@ module.exports.GetAllMyTickets = function (req, res) {
                         comments: req.body.comments,
                         SLAViolated: false,
                         events: [tEvent],
-                        requester: undefined
+                        requester: undefined,
+                        assignee:req.body.assignee
                     });
 
                     if (req.body.requesterId)
