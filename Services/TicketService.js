@@ -899,7 +899,7 @@ module.exports.GetAllMyTickets = function (req, res) {
         var jsonString;
 
 
-        Ticket.findOne({company: company, tenant: tenant, active: true, _id:req.params.id}).populate('assignee', 'name avatar').sort({created_at: -1}).exec(function (err, ticket)
+        Ticket.findOne({company: company, tenant: tenant, active: true, _id:req.params.id}).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar').sort({created_at: -1}).exec(function (err, ticket)
             {
                 if(err)
                 {
