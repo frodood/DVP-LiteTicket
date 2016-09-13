@@ -669,6 +669,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
                  */
 
+
                 var obj = {
                     company: company,
                     tenant: tenant,
@@ -676,6 +677,21 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     active: true,
 
                 };
+
+                var paramArr;
+                if (req.query.status) {
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+                        paramArr = [req.query.status];
+                    }
+
+                    //if(paramArr.length > 0)
+                     obj[status] = {$in: paramArr}
+                }
+
+
+
 
                 Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
@@ -1024,7 +1040,7 @@ module.exports.PickTicket = function (req, res) {
                                 var oldTicket = deepcopy(ticket.toJSON());
                                 var assigneeGroup = deepcopy(ticket.toJSON().assignee_group);
                                 var time = new Date().toISOString();
-                                ticket.assignee_group = undefined;
+                                //ticket.assignee_group = undefined;
                                 ticket.assignee = user.id;
                                 ticket.updated_at = time;
                                 var tEvent = TicketEvent({
