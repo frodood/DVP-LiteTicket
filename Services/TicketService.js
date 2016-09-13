@@ -890,7 +890,7 @@ module.exports.GetTicket = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }).populate('assignee', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
         }
@@ -1174,7 +1174,7 @@ module.exports.UpdateTicket = function (req, res) {
                 ticket.subject = req.body.subject;
                 ticket.description = req.body.description;
                 ticket.priority = req.body.priority;
-                ticket.type = req.body.type;
+                //ticket.type = req.body.type;
                 ticket.attachments = req.body.attachments;
                 ticket.sub_tickets = req.body.sub_tickets;
                 ticket.related_tickets = req.body.related_tickets;
