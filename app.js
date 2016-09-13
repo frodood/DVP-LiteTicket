@@ -84,7 +84,7 @@ server.get('/DVP/API/:version/Tickets/Priority/:Priority/:Size/:Page', authoriza
 server.get('/DVP/API/:version/Tickets/Priority/:Priority/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriorityTimeRange);
 server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTickets);
-server.get('/DVP/API/:version/TicketSummeryByRequester/:requester', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTicketSummeryByRequester);
+server.get('/DVP/API/:version/TicketSummery/Requester/:requester', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTicketSummeryByRequester);
 server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicket);
