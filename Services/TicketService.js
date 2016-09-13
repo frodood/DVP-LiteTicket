@@ -726,6 +726,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
     });
 };
 
+
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
 
@@ -744,7 +745,6 @@ module.exports.GetAllMyTickets = function (req, res) {
         } else {
 
             if (user) {
-
 
                 var qObj = {
                     company: company,
@@ -767,21 +767,21 @@ module.exports.GetAllMyTickets = function (req, res) {
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
+                    if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                            res.end(jsonString);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
                         }
                         else {
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
-                            }
-                            else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
-                            }
-                            res.end(jsonString);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
                         }
-                    });
+                        res.end(jsonString);
+                    }
+                });
 
 
             } else {
@@ -790,6 +790,42 @@ module.exports.GetAllMyTickets = function (req, res) {
             }
         }
     });
+};
+
+module.exports.GetAllTicketSummeryByRequester = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+
+
+
+    var qObj = {
+        company: company,
+        tenant: tenant, active: true,
+        requester: req.params.requester,
+    };
+
+    Ticket.find(qObj, {_id: true, subject: true, reference: true}, function (err, tickets) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+            }
+            res.end(jsonString);
+        }
+    });
+
+
 };
 
 module.exports.GetAllMyTicketsWithStatus = function (req, res) {
