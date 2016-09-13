@@ -854,7 +854,7 @@ module.exports.GetTicket = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }).populate('assignee', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
         }
