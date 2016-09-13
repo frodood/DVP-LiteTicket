@@ -96,7 +96,8 @@ module.exports.CreateTicket = function (req, res) {
                         custom_fields: req.body.custom_fields,
                         comments: req.body.comments,
                         SLAViolated: false,
-                        events: [tEvent]
+                        events: [tEvent],
+                        assignee:req.body.assignee
                     });
 
                     if (req.body.requesterId)
@@ -661,17 +662,26 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
                     if(!error  && groups) {
 
-                        var ids= [];
+                        var ids = [];
 
-                        groups.forEach(function(item){
+                        groups.forEach(function (item) {
 
                             console.log(item.id);
                             ids.push(item._id);
                         });
 
 
-                        if(req.query.status) {
-                            var paramArr;
+                        var obj = {
+                            company: company,
+                            tenant: tenant,
+                            assignee_group: {$in: ids},
+                            active: true,
+
+                        };
+
+                        var paramArr;
+                        if (req.query.status) {
+
                             if (Array.isArray(req.query.status)) {
                                 paramArr = req.query.status;
                             } else {
@@ -679,68 +689,36 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                                 paramArr = [req.query.status];
                             }
 
-                            Ticket.find({
-                                company: company,
-                                tenant: tenant,
-                                assignee_group: {$in: ids},
-                                active: true,
-                                status: { $in: paramArr }
-                            }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                                .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                                    if (err) {
+                            obj[status] = {$in: paramArr}
 
-                                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
-
-                                    } else {
-
-                                        if (tickets) {
-
-                                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
-
-                                        } else {
-
-                                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                                        }
-                                    }
-
-
-                                    res.end(jsonString);
-                                });
-                        }
-                        else
-                        {
-                            Ticket.find({
-                                company: company,
-                                tenant: tenant,
-                                assignee_group: {$in: ids},
-                                active: true
-                            }).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                                .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                                    if (err) {
-
-                                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
-
-                                    } else {
-
-                                        if (tickets) {
-
-                                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
-
-                                        } else {
-
-                                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                                        }
-                                    }
-
-
-                                    res.end(jsonString);
-                                });
                         }
 
 
+                        Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                            if (err) {
 
+                                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+
+                            } else {
+
+                                if (tickets) {
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+
+                                } else {
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+
+                                }
+                            }
+
+
+                            res.end(jsonString);
+                        });
+
+
+                        
                     }else{
 
                         jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
@@ -3470,7 +3448,8 @@ module.exports.GetAllMyTickets = function (req, res) {
                         comments: req.body.comments,
                         SLAViolated: false,
                         events: [tEvent],
-                        requester: undefined
+                        requester: undefined,
+                        assignee:req.body.assignee
                     });
 
                     if (req.body.requesterId)
