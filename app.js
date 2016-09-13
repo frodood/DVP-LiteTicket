@@ -30,6 +30,8 @@ server.use(restify.bodyParser({ mapParams: false }));
 restify.CORS.ALLOW_HEADERS.push('authorization');
 server.use(restify.CORS());
 server.use(restify.fullResponse());
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.queryParser());
 
 server.use(jwt({secret: secret.Secret}));
 
@@ -68,9 +70,9 @@ mongoose.connect(connectionstring);
 server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicket);
 server.post('/DVP/API/:version/Ticket/Comments',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicketWithComment);
 server.put('/DVP/API/:version/Ticket/Comment/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateComment);
-server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
+server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTickets);
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
-server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
+server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTicketsWithStatus);
 server.get('/DVP/API/:version/Tickets/:status/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatusTimeRange);
 server.get('/DVP/API/:version/TicketsWithMatrix/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithMatrix);
 server.get('/DVP/API/:version/TicketsWithMatrix/:status', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsInStatusWithMatrix);
@@ -81,10 +83,10 @@ server.get('/DVP/API/:version/Tickets/Requester/:Requester/TimeRange/:fromDate/:
 server.get('/DVP/API/:version/Tickets/Priority/:Priority/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriority);
 server.get('/DVP/API/:version/Tickets/Priority/:Priority/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriorityTimeRange);
 server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllGroupTickets);
-server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
-server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyGroupTickets);
-server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
-server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
+server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTickets);
+server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyGroupTickets);
+server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
+server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicket);
 server.put('/DVP/API/:version/Ticket/:id/MapToProfile/:Requester', authorization({resource:"ticket", action:"write"}), ticketService.MapTicketToProfile);
 server.get('/DVP/API/:version/Ticket/:id/Details', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketWithDetails);
 server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"delete"}), ticketService.DeActivateTicket);
@@ -93,7 +95,7 @@ server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
-server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
+server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
 server.put('/DVP/API/:version/TicketByEngagement/:engagementid/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByEngagement);
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/Status/Bulk', authorization({resource:"ticket", action:"write"}), ticketService.BulkStatusUpdate);
@@ -259,10 +261,19 @@ server.put('/DVP/API/:version/FormSubmission/:reference/field/:field', authoriza
 
 
 
+///////////////////////////////////////////////////////////////ticket status flow////////////////////////////////////////////////////////
+
+server.post('/DVP/API/:version/TicketStatusNode',authorization({resource:"ticket", action:"write"}), ticketService.CreateStatusNode);
+server.get('/DVP/API/:version/TicketStatusNodes',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusNodes);
 
 
+server.post('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.CreateStatusFlow);
+server.put('/DVP/API/:version/TicketStatusFlow/:id/FlowNode',authorization({resource:"ticket", action:"read"}), ticketService.AddNodeToStatusFlow);
+server.get('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusFlow);
+server.del('/DVP/API/:version/TicketStatusFlow/:id/FlowNode/:flownodeid',authorization({resource:"ticket", action:"read"}), ticketService.RemoveNodeFromStatusFlow);
 
-
+server.get('/DVP/API/:version/TicketStatusFlow/NextAvailableStatus/:ticketType/:currentStatus',authorization({resource:"ticket", action:"read"}), ticketService.GetNextAvailableStatus);
+server.get('/DVP/API/:version/TicketStatusFlow/ValidateStatus/:ticketType/:currentStatus/:newStatus',authorization({resource:"ticket", action:"read"}), ticketService.ValidateStatusChange);
 
 /////////////////////////////////////////////////////////////ardsService/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Ticket/ArdsCallback', authorization({resource:"ticket", action:"write"}), ardsService.ArdsCallback);
