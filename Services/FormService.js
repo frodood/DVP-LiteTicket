@@ -220,8 +220,6 @@ function UpdateDynamicField(req, res){
 };
 
 
-
-
 function CreateFormSubmission(req, res){
 
     logger.debug("DVP-LiteTicket.CreateFormSubmission Internal method ");
