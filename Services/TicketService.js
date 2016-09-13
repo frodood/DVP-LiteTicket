@@ -614,6 +614,7 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
+
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -634,72 +635,73 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
         } else {
 
 
-            if (user) {
+
+            if(user && user.group) {
+                /*
+                 UserGroup.find({"users": user.id}, function (error, groups) {
+                 if(!error  && groups) {
+
+                 var ids = [];
+
+                 groups.forEach(function (item) {
+                 console.log(item.id);
+                 ids.push(item._id);
+                 });
 
 
-                UserGroup.find({"users": user.id}, function (error, groups) {
+                 var obj = {
+                 company: company,
+                 tenant: tenant,
+                 assignee_group: {$in: ids},
+                 active: true,
 
+                 };
 
-                    if (!error && groups) {
+                 var paramArr;
+                 if (req.query.status) {
+                 if (Array.isArray(req.query.status)) {
+                 paramArr = req.query.status;
+                 } else {
+                 paramArr = [req.query.status];
+                 }
+                 obj[status] = {$in: paramArr}
+                 }
 
-                        var ids = [];
+                 */
 
-                        groups.forEach(function (item) {
+                var obj = {
+                    company: company,
+                    tenant: tenant,
+                    assignee_group: user.group,
+                    active: true,
 
-                            console.log(item.id);
-                            ids.push(item._id);
-                        });
+                };
 
-                        var qObj = {
-                            company: company,
-                            tenant: tenant,
-                            assignee_group: {$in: ids},
-                            active: true
-                        };
-                        if (req.query.status) {
-                            var paramArr;
-                            if (Array.isArray(req.query.status)) {
-                                paramArr = req.query.status;
-                            } else {
+                Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    if (err) {
 
-                                paramArr = [req.query.status];
-                            }
-                            qObj.status = {$in: paramArr};
-                        }
-
-                        Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                                if (err) {
-
-                                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
-
-                                } else {
-
-                                    if (tickets) {
-
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
-
-                                    } else {
-
-                                        jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                                    }
-                                }
-
-
-                                res.end(jsonString);
-                            });
-
+                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
 
                     } else {
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
-                        res.end(jsonString);
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+                        } else {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                        }
                     }
-
-
+                    res.end(jsonString);
                 });
-            } else {
+
+                /* }else{
+
+                 jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
+                 res.end(jsonString);
+                 }
+                 });*/
+            }else{
 
                 jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
                 res.end(jsonString);
