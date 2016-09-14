@@ -177,7 +177,7 @@ server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", ac
 server.post('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.CreateSLA);
 server.get('/DVP/API/:version/SLAs', authorization({resource:"sla", action:"read"}), slaService.GetSLAs);
 server.get('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"read"}), slaService.GetSLA);
-server.put('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
+server.put('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
 server.del('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"delete"}), slaService.DeleteSLA);
 server.put('/DVP/API/:version/SLA/:id/Matrix', authorization({resource:"sla", action:"write"}), slaService.AddMatrix);
 server.get('/DVP/API/:version/SLA/:id/Matrixs', authorization({resource:"sla", action:"read"}), slaService.GetMatrices);
