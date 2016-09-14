@@ -79,6 +79,7 @@ function GetTagCategory(req, res){
     });
 
 };
+
 function GetTagCategories(req, res){
 
     logger.debug("DVP-LiteTicket.GetTagCategories Internal method ");
