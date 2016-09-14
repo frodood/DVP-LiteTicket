@@ -65,7 +65,7 @@ function GetTagCategory(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    TagCategory.findOne({_id:tagId,company:company,tenant:tenant},function (errPickTagCategory,PickTagCategory) {
+    TagCategory.findOne({_id:tagId,company:company,tenant:tenant}).populate("tags").exec(function (errPickTagCategory,PickTagCategory) {
 
         if(errPickTagCategory)
         {
@@ -87,7 +87,7 @@ function GetTagCategories(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    TagCategory.find({company:company,tenant:tenant},function (errAllTagCats,resAllTagCats) {
+    TagCategory.find({company:company,tenant:tenant}).populate("tags").exec(function (errAllTagCats,resAllTagCats) {
 
         if(errAllTagCats)
         {
@@ -150,7 +150,7 @@ function GetTags(req, res){
 
     var jsonString;
 
-    Tag.find({company:company,tenant:tenant},function (errAllTags,resAllTags) {
+    Tag.find({company:company,tenant:tenant}).populate("tags").exec(function (errAllTags,resAllTags) {
 
         if(errAllTags)
         {
@@ -184,7 +184,7 @@ function GetTag(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
 
-    Tag.findOne({_id:tagId,company:company,tenant:tenant},function (errPickTag,PickTag) {
+    Tag.findOne({_id:tagId,company:company,tenant:tenant}).populate("tags").exec(function (errPickTag,PickTag) {
 
         if(errPickTag)
         {
