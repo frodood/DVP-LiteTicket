@@ -749,7 +749,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                 var qObj = {
                     company: company,
                     tenant: tenant, active: true,
-                    submitter: user.id,
+                    assignee: user.id,
                 };
 
 
@@ -765,7 +765,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
