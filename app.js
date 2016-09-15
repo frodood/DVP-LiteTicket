@@ -94,6 +94,7 @@ server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", act
 server.put('/DVP/API/:version/Ticket/:id/pick', authorization({resource:"ticket", action:"write"}), ticketService.PickTicket);
 server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketAudit);
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
+server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
@@ -288,6 +289,14 @@ server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"s
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+server.post('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.CreateFormProfile);
+server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.UpdateFormProfile);
+
+
+
+
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
