@@ -726,6 +726,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
     });
 };
 
+
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
 
@@ -744,7 +745,6 @@ module.exports.GetAllMyTickets = function (req, res) {
         } else {
 
             if (user) {
-
 
                 var qObj = {
                     company: company,
@@ -767,21 +767,21 @@ module.exports.GetAllMyTickets = function (req, res) {
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
+                    if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                            res.end(jsonString);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
                         }
                         else {
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
-                            }
-                            else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
-                            }
-                            res.end(jsonString);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
                         }
-                    });
+                        res.end(jsonString);
+                    }
+                });
 
 
             } else {
@@ -790,6 +790,42 @@ module.exports.GetAllMyTickets = function (req, res) {
             }
         }
     });
+};
+
+module.exports.GetAllTicketSummeryByRequester = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+
+
+
+    var qObj = {
+        company: company,
+        tenant: tenant, active: true,
+        requester: req.params.requester,
+    };
+
+    Ticket.find(qObj, {_id: true, subject: true, reference: true}, function (err, tickets) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+            }
+            res.end(jsonString);
+        }
+    });
+
+
 };
 
 module.exports.GetAllMyTicketsWithStatus = function (req, res) {
@@ -935,7 +971,8 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('related_tickets')
         .populate('merged_tickets')
         .populate('engagement_session')
-        .populate('comments').exec(function (err, ticket) {
+        .populate('form_submission')
+        .populate({path: 'comments',populate : {path: 'author', select:'name avatar'}}).exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
@@ -1147,7 +1184,67 @@ module.exports.UpdateTicket = function (req, res) {
                 ticket.channel = req.body.channel;
                 /*ticket.tags = req.body.tags;*/
                 ticket.custom_fields = req.body.custom_fields;
+                ticket.form_submission = req.body.form_submission;
                 /*ticket.comments = req.body.comments;*/
+
+                var differences = diff(oldTicket, ticket.toJSON());
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " made changes",
+                        "time": time,
+                        "differences": differences
+                    }
+                });
+                ticket.events.push(tEvent);
+
+                ticket.update(ticket, function (err, rUser) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                    }
+                    else {
+                        if (rUser) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, rUser);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, rUser);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                res.end(jsonString);
+            }
+        }
+
+    });
+};
+
+module.exports.UpdateFormSubmission = function (req, res) {
+
+    logger.debug("DVP-LiteTicket.FormSubmission Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                var oldTicket = deepcopy(ticket.toJSON());
+
+                var time = new Date().toISOString();
+                ticket.updated_at = time;
+                ticket.form_submission = req.body.form_submission;
 
                 var differences = diff(oldTicket, ticket.toJSON());
 

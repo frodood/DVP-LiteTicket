@@ -543,7 +543,7 @@ function GetTicketsByView(req, res){
         else {
             if (user) {
 
-                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, view) {
+                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').exec(function (err, view) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Views Failed", false, undefined);
                         res.end(jsonString);
@@ -765,6 +765,240 @@ function GetTicketsByView(req, res){
 }
 
 
+function GetTicketCountByView(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (user) {
+
+                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, view) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get Ticket Views Failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+                        if(view) {
+                            var andQueryObject = {company: company, tenant: tenant};
+                            if(view.conditions.all && Array.isArray(view.conditions.all) && view.conditions.all.length > 0){
+
+                                view.conditions.all.forEach(function(item){
+                                    //'is', 'less_than', 'greater_than','is_not','included','not_included', 'greater_than_or_equal','less_than_or_equal'
+
+                                    ///////////////////////////////////fix system variables///////////////////////////////////////////
+
+                                    if(item.value == '{me}'){
+
+                                        item.value = user.id;
+
+                                    }
+
+                                    if(item.field == "created_at" || item.field == "updated_at:" || item.field == "due_at"){
+
+
+                                        if(item.value == '{now}'){
+
+                                            item.value = moment().toISOString();
+
+                                        }else {
+
+                                            try {
+
+                                                item.value = moment(item.value);
+
+                                            } catch (ex) {
+
+                                                item.value = moment();
+                                            }
+                                        }
+
+                                    }
+
+
+
+                                    switch(item.operator){
+
+                                        case 'is':
+                                            if(item.value == '{unassigned}'){
+
+                                                andQueryObject[item.field] =  {$exists: false};
+                                            }else {
+                                                andQueryObject[item.field] = item.value;
+                                            }
+                                            break;
+                                        case 'less_than':
+                                            //age: { $lt: 21 }
+                                            andQueryObject[item.field] = {$lt: item.value};
+                                            break;
+                                        case 'greater_than':
+                                            andQueryObject[item.field] = {$gt: item.value};
+                                            break;
+                                        case 'is_not':
+                                            andQueryObject[item.field] = {$ne: item.value};
+                                            break;
+                                        case 'included':
+                                            andQueryObject[item.field] = {$in: [item.value]};
+                                            break;
+                                        case 'not_included':
+                                            andQueryObject[item.field] = {$nin: [item.value]};
+                                            break;
+                                        case 'greater_than_or_equal':
+                                            andQueryObject[item.field] = {$gte: item.value};
+                                            break;
+                                        case 'less_than_or_equal':
+                                            andQueryObject[item.field] = {$lte: item.value};
+                                            break;
+                                        default:
+
+                                            break;
+                                    }
+
+                                })
+
+                            }
+
+
+                            var mainQuery = {$and:[andQueryObject]};
+
+
+                            /*
+
+
+                             Test.find({
+                             $and: [
+                             { $or: [{a: 1}, {b: 1}] },
+                             { $or: [{c: 1}, {d: 1}] }
+                             ]
+                             }, function (err, results) {
+                             ...
+                             }
+                             */
+
+                            var orQuery = { $or: [] };
+
+                            if(view.conditions.any && Array.isArray(view.conditions.any) && view.conditions.any.length > 0){
+                                view.conditions.any.forEach(function(item){
+
+                                    var tempQuery = {company: company, tenant: tenant};
+                                    //'is', 'less_than', 'greater_than','is_not','included','not_included', 'greater_than_or_equal','less_than_or_equal'
+
+                                    if(item.value == '{me}'){
+
+                                        item.value = user.id;
+
+                                    }
+
+                                    if(item.field == "created_at" || item.field == "updated_at:" || item.field == "due_at"){
+
+
+                                        if(item.value == '{now}'){
+
+                                            item.value = moment().toISOString();
+
+                                        }else {
+
+                                            try {
+
+                                                item.value = moment(item.value);
+
+                                            } catch (ex) {
+
+                                                item.value = moment();
+                                            }
+                                        }
+
+                                    }
+
+
+
+
+                                    switch(item.operator){
+
+                                        case 'is':
+                                            if(item.value == '{unassigned}'){
+
+                                                tempQuery[item.field] =  {$exists: false};
+                                            }else {
+                                                tempQuery[item.field] = item.value;
+                                            }
+
+                                            break;
+                                        case 'less_than':
+                                            //age: { $lt: 21 }
+                                            tempQuery[item.field] = {$lt: item.value};
+                                            break;
+                                        case 'greater_than':
+                                            tempQuery[item.field] = {$gt: item.value};
+                                            break;
+                                        case 'is_not':
+                                            tempQuery[item.field] = {$ne: item.value};
+                                            break;
+                                        case 'included':
+                                            tempQuery[item.field] = {$in: [item.value]};
+                                            break;
+                                        case 'not_included':
+                                            tempQuery[item.field] = {$nin: [item.value]};
+                                            break;
+                                        case 'greater_than_or_equal':
+                                            tempQuery[item.field] = {$gte: item.value};
+                                            break;
+                                        case 'less_than_or_equal':
+                                            tempQuery[item.field] = {$lte: item.value};
+                                            break;
+                                        default:
+
+                                            break;
+                                    }
+
+                                    orQuery.$or.push(tempQuery);
+                                })
+                            }
+
+
+                            mainQuery.$and.push(orQuery);
+
+                            Ticket.count(mainQuery, function (err, tickets) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+                                } else {
+
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+
+                                }
+                                res.end(jsonString);
+                            });
+
+                        }else{
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "No Ticket View found ", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+
+
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+
+
+}
+
+
 module.exports.CreateTicketView = CreateTicketView;
 module.exports.GetMyTicketViews = GetMyTicketViews;
 module.exports.GetTicketView = GetTicketView;
@@ -777,3 +1011,4 @@ module.exports.RemoveFilterAny = RemoveFilterAny;
 module.exports.GetFiltersAny = GetFiltersAny;
 module.exports.GetFiltersAll = GetFiltersAll;
 module.exports.GetTicketsByView = GetTicketsByView;
+module.exports.GetTicketCountByView = GetTicketCountByView;

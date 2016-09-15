@@ -84,6 +84,7 @@ server.get('/DVP/API/:version/Tickets/Priority/:Priority/:Size/:Page', authoriza
 server.get('/DVP/API/:version/Tickets/Priority/:Priority/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsByPriorityTimeRange);
 server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTickets);
+server.get('/DVP/API/:version/TicketSummery/Requester/:requester', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTicketSummeryByRequester);
 server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicket);
@@ -93,6 +94,7 @@ server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", act
 server.put('/DVP/API/:version/Ticket/:id/pick', authorization({resource:"ticket", action:"write"}), ticketService.PickTicket);
 server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketAudit);
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
+server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
@@ -177,11 +179,11 @@ server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", ac
 server.post('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.CreateSLA);
 server.get('/DVP/API/:version/SLAs', authorization({resource:"sla", action:"read"}), slaService.GetSLAs);
 server.get('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"read"}), slaService.GetSLA);
-server.put('/DVP/API/:version/SLA', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
+server.put('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"write"}), slaService.UpdateSLA);
 server.del('/DVP/API/:version/SLA/:id', authorization({resource:"sla", action:"delete"}), slaService.DeleteSLA);
 server.put('/DVP/API/:version/SLA/:id/Matrix', authorization({resource:"sla", action:"write"}), slaService.AddMatrix);
 server.get('/DVP/API/:version/SLA/:id/Matrixs', authorization({resource:"sla", action:"read"}), slaService.GetMatrices);
-server.del('/DVP/API/:version/SLA/:id/Matrix/matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
+server.del('/DVP/API/:version/SLA/:id/Matrix/:matrixid', authorization({resource:"sla", action:"delete"}), slaService.DeleteMatrix);
 server.put('/DVP/API/:version/SLA/:id/Filter/All', authorization({resource:"sla", action:"write"}), slaService.AddFilterAll);
 server.get('/DVP/API/:version/SLA/:id/Filters/All', authorization({resource:"sla", action:"read"}), slaService.GetFiltersAll);
 server.del('/DVP/API/:version/SLA/:id/Filter/All/:filterid', authorization({resource:"sla", action:"delete"}), slaService.RemoveFilterAll);
@@ -206,9 +208,10 @@ server.put('/DVP/API/:version/TicketView/:id/Filter/Any', authorization({resourc
 server.get('/DVP/API/:version/TicketView/:id/Filters/Any', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAny);
 server.del('/DVP/API/:version/TicketView/:id/Filter/Any/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAny);
 server.get('/DVP/API/:version/TicketView/:id/Tickets', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByView);
+server.get('/DVP/API/:version/TicketView/:id/TicketCount', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketCountByView);
 
 
-
+//
 
 
 //////////////////////////////////////Trigger//////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,6 +289,14 @@ server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"s
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+server.get('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"read"}), formMaster.GetFormProfile);
+server.post('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.CreateFormProfile);
+server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.UpdateFormProfile);
+
+
+
+
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
