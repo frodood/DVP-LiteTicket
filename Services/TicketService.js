@@ -182,7 +182,7 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -971,7 +971,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('related_tickets')
         .populate('merged_tickets')
         .populate('engagement_session')
-        .populate('form_submission')
+        .populate( {path: 'form_submission',populate : {path: 'form'}})
         .populate({path: 'comments',populate : {path: 'author', select:'name avatar'}}).exec(function (err, ticket) {
             if (err) {
 
