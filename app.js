@@ -290,7 +290,7 @@ server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"s
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+server.get('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"read"}), formMaster.GetFormProfile);
 server.post('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.CreateFormProfile);
 server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.UpdateFormProfile);
 
