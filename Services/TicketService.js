@@ -182,7 +182,7 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('form_submission').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -457,7 +457,7 @@ module.exports.GetAllTicketsByRequester = function (req, res) {
         tenant: tenant,
         requester: req.params.Requester,
         active: true
-    }).populate('requester', 'name avatar').populate('form_submission').populate('submitter', 'name avatar').skip(skip)
+    }).populate('requester', 'name avatar').populate('submitter', 'name avatar').skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -693,7 +693,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
 
 
-                Ticket.find(obj).populate('assignee', 'name avatar').populate('form_submission').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                     if (err) {
 
@@ -765,7 +765,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('form_submission').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                ).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                     if (err) {
 
@@ -890,7 +890,7 @@ module.exports.GetTicket = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('form_submission').populate('requester', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
         }
@@ -972,7 +972,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('merged_tickets')
         .populate('engagement_session')
         .populate('form_submission')
-        .populate('comments').exec(function (err, ticket) {
+        .populate({path: 'comments',populate : {path: 'author', select:'name avatar'}}).exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
