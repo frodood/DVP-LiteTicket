@@ -1605,31 +1605,35 @@ module.exports.AddComment = function (req, res) {
 
 
                                         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                        var queueName;
 
-                                        var message = {
-                                            from: req.body.channel_from,
-                                            to: req.body.channel_to,
-                                            body: req.body.body,
-                                            comment: comment._id,
-                                            company: company,
-                                            tenant: tenant,
-                                            author: req.user.iss
+                                        if(req.body.public == 'public') {
+
+                                            var queueName;
+
+                                            var message = {
+                                                from: req.body.channel_from,
+                                                to: req.body.channel_to,
+                                                body: req.body.body,
+                                                comment: comment._id,
+                                                company: company,
+                                                tenant: tenant,
+                                                author: req.user.iss
+                                            }
+
+                                            if (req.body.channel == 'twitter') {
+                                                queueName = 'TWEETOUT';
+                                            } else if (req.body.channel == 'sms') {
+                                                queueName = 'SMSOUT';
+                                            } else {
+                                             //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                             //   res.end(jsonString);
+                                             //   return;
+                                            }
+
+                                            queueConnection.publish(queueName, message, {
+                                                contentType: 'application/json'
+                                            });
                                         }
-
-                                        if (req.body.channel == 'twitter') {
-                                            queueName = 'TWEETOUT';
-                                        } else if (req.body.channel == 'sms') {
-                                            queueName = 'SMSOUT';
-                                        } else {
-                                            jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
-                                            res.end(jsonString);
-                                            return;
-                                        }
-
-                                        queueConnection.publish(queueName, message, {
-                                            contentType: 'application/json'
-                                        });
 
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1859,31 +1863,34 @@ module.exports.AddCommentToComment = function (req, res) {
 
 
                                                     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                    var queueName;
+                                                    if(req.body.public == 'public') {
 
-                                                    var message = {
-                                                        from: req.body.channel_from,
-                                                        to: req.body.channel_to,
-                                                        body: req.body.body,
-                                                        comment: comment._id,
-                                                        company: company,
-                                                        tenant: tenant,
-                                                        author: req.user.iss
+                                                        var queueName;
+
+                                                        var message = {
+                                                            from: req.body.channel_from,
+                                                            to: req.body.channel_to,
+                                                            body: req.body.body,
+                                                            comment: comment._id,
+                                                            company: company,
+                                                            tenant: tenant,
+                                                            author: req.user.iss
+                                                        }
+
+                                                        if (req.body.channel == 'twitter') {
+                                                            queueName = 'TWEETOUT';
+                                                        } else if (req.body.channel == 'sms') {
+                                                            queueName = 'SMSOUT';
+                                                        } else {
+                                                            //jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                                            //res.end(jsonString);
+                                                            //return;
+                                                        }
+
+                                                        queueConnection.publish(queueName, message, {
+                                                            contentType: 'application/json'
+                                                        });
                                                     }
-
-                                                    if (req.body.channel == 'twitter') {
-                                                        queueName = 'TWEETOUT';
-                                                    } else if (req.body.channel == 'sms') {
-                                                        queueName = 'SMSOUT';
-                                                    } else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
-                                                        res.end(jsonString);
-                                                        return;
-                                                    }
-
-                                                    queueConnection.publish(queueName, message, {
-                                                        contentType: 'application/json'
-                                                    });
 
                                                     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
