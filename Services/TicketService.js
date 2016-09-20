@@ -96,7 +96,8 @@ module.exports.CreateTicket = function (req, res) {
                         comments: req.body.comments,
                         SLAViolated: false,
                         events: [tEvent],
-                        assignee: req.body.assignee
+                        assignee: req.body.assignee,
+                        due_at: req.body.due_at
                     });
 
                     if (req.body.requesterId)
@@ -614,7 +615,6 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
-
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -725,7 +725,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
         }
     });
 };
-
 
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
@@ -1589,7 +1588,7 @@ module.exports.AddComment = function (req, res) {
                                 attachments: req.body.attachments,
                                 channel: req.body.channel,
                                 channel_from: req.body.channel_from,
-                                engagement_session: ObjectId(req.body.engagement_session),
+                                engagement_session: req.body.engagement_session,
                                 created_at: new Date().toISOString(),
                                 meta_data: req.body.meta_data
                             });
@@ -1600,9 +1599,7 @@ module.exports.AddComment = function (req, res) {
                                     res.end(jsonString);
                                 }
                                 else {
-                                    if (obj.id) {
-
-
+                                    if (obj && obj.id) {
 
                                         ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1615,6 +1612,8 @@ module.exports.AddComment = function (req, res) {
                                                 to: req.body.channel_to,
                                                 body: req.body.body,
                                                 comment: comment._id,
+                                                update_comment: true,
+                                                reply_session: req.body.reply_session,
                                                 company: company,
                                                 tenant: tenant,
                                                 author: req.user.iss
@@ -1634,6 +1633,8 @@ module.exports.AddComment = function (req, res) {
                                                 contentType: 'application/json'
                                             });
                                         }
+
+
 
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1657,6 +1658,7 @@ module.exports.AddComment = function (req, res) {
                                                 } else {
                                                     if (rOrg) {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                        ExecuteTrigger(req.params.id, "add_comment", comment);
 
                                                     }
                                                     else {
@@ -1848,7 +1850,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                             attachments: req.body.attachments,
                                             channel: req.body.channel,
                                             channel_from: req.body.channel_from,
-                                            engagement_session: ObjectId(req.body.engagement_session),
+                                            engagement_session: req.body.engagement_session,
                                             created_at: new Date().toISOString(),
                                             meta_data: req.body.meta_data
                                         });
@@ -1872,6 +1874,8 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             to: req.body.channel_to,
                                                             body: req.body.body,
                                                             comment: comment._id,
+                                                            updatecomment: true,
+                                                            reply_session: req.body.reply_session,
                                                             company: company,
                                                             tenant: tenant,
                                                             author: req.user.iss
@@ -1902,6 +1906,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             } else {
                                                                 if (rOrg) {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+                                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
                                                                 }
                                                                 else {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
@@ -3677,9 +3682,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
 
 /*to Facebook App*/
 
-
-
-
 //-------------------Ticker Status Flow --------------------------------------------------------------
 
 module.exports.CreateStatusNode = function (req, res) {
@@ -3738,7 +3740,6 @@ module.exports.GetStatusNodes = function (req, res) {
         res.end(jsonString);
     });
 };
-
 
 module.exports.CreateStatusFlow = function (req, res) {
     logger.info("DVP-LiteTicket.CreateStatusFlow Internal method ");
