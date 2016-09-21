@@ -381,6 +381,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                         callback(jsonString);
                     } else {
                         if (tResult) {
+
+                            var ticketCopy = deepcopy(tResult.toJSON());
+
                             if (triggerEvent === "change_assignee") {
                                 PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                                 UpdateDashboardChangeAssignee(data, tResult);
@@ -392,6 +395,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                 UpdateDashboardChangeStatus(data, tResult);
                             } else if (triggerEvent === "change_assignee_groups") {
                                 UpdateDashboardChangeAssigneeGroup(data, tResult);
+                            } else if(triggerEvent === "add_comment"){
+                                ticketCopy.comments = data;
                             }
                             Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                                 if (err) {
