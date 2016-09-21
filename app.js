@@ -106,6 +106,9 @@ server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({res
 server.get('/DVP/API/:version/Tickets/:FieldName/:FieldValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
 server.get('/DVP/API/:version/TicketSearch/:SearchBy/:SearchValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.TicketSearch);
 server.get('/DVP/API/:version/TicketSearch/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.SearchTickets);
+server.get('/DVP/API/:version/RecentTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetRecentTicket);
+server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUSerRecentTicket);
+
 
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);

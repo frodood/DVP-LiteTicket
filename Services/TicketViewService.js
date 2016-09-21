@@ -764,7 +764,6 @@ function GetTicketsByView(req, res){
 
 }
 
-
 function GetTicketCountByView(req, res){
 
     logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
