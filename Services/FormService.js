@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var FormMaster = require('dvp-mongomodels/model/FormMaster').FormMaster;
 var FormSubmission = require('dvp-mongomodels/model/FormMaster').FormSubmission;
+var FormProfile = require('dvp-mongomodels/model/FormMaster').FormProfile;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 function CreateForm(req, res) {
@@ -227,8 +228,6 @@ function UpdateDynamicField(req, res) {
     });
 
 };
-
-
 function CreateFormSubmission(req, res) {
 
     logger.debug("DVP-LiteTicket.CreateFormSubmission Internal method ");
@@ -294,6 +293,37 @@ function CreateFormSubmission(req, res) {
 
     }
 
+
+};
+function UpdateFormSubmission(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.UpdateDynamicFieldSubmission Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FormSubmission.findOneAndUpdate({
+        reference: req.params.reference,
+        company: company,
+        tenant: tenant},
+        {
+            fields: req.params.fields
+        }, function (err, form) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Update Field successful", true, form);
+            res.end(jsonString);
+
+        }
+
+    });
 
 };
 function GetFormSubmissions(req, res) {
@@ -456,7 +486,7 @@ function UpdateDynamicFieldSubmission(req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    FormSubmission.update({
+    FormSubmission.findOneAndUpdate({
         reference: req.params.reference,
         company: company,
         tenant: tenant,
@@ -483,6 +513,86 @@ function UpdateDynamicFieldSubmission(req, res) {
 };
 
 
+function CreateFormProfile(req, res) {
+
+    logger.debug("DVP-LiteTicket.CreateForm Internal method ");
+    var jsonString;
+    var tenant = parseInt(req.user.tenant);
+    var company = parseInt(req.user.company);
+
+
+    var form = FormProfile({
+        company: parseInt(req.user.company),
+        tenant: parseInt(req.user.tenant),
+        ticket_form: req.body.ticket_form,
+        profile_form: req.body.profile_form
+    });
+
+
+    form.save(function (err, form) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Form Profile save failed", false, undefined);
+            res.end(jsonString);
+        } else {
+
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Form Profile saved successfully", true, form);
+            res.end(jsonString);
+        }
+    });
+
+}
+function GetFormProfile(req, res){
+
+    logger.debug("DVP-LiteTicket.GetFormProfile Internal method ");
+    var jsonString;
+    var tenant = parseInt(req.user.tenant);
+    var company = parseInt(req.user.company);
+
+
+    FormProfile.findOne({company: company, tenant: tenant}).populate("ticket_form").populate("profile_form").exec(
+        function(err, forms) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get Form Profile Failed", false, undefined);
+            }else {
+                if (forms) {
+                    jsonString = messageFormatter.FormatMessage(err, "Get Form Profile Successful", true, forms);
+                }else{
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Form Profile Found", false, undefined);
+                }
+            }
+            res.end(jsonString);
+        });
+
+}
+function UpdateFormProfile(req, res){
+
+    logger.debug("DVP-LiteTicket.CreateForm Internal method ");
+    var jsonString;
+    var tenant = parseInt(req.user.tenant);
+    var company = parseInt(req.user.company);
+
+
+    FormProfile.findOneAndUpdate({company: company, tenant: tenant}, {
+        ticket_form: req.body.ticket_form,
+        profile_form: req.body.profile_form},
+        function(err, forms) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Form Profile Failed", false, undefined);
+        }else {
+            if (forms) {
+                jsonString = messageFormatter.FormatMessage(err, "Form Profile Successful", true, forms);
+            }else{
+                jsonString = messageFormatter.FormatMessage(undefined, "No Form Profile Found", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+
+
+}
+
 module.exports.CreateForm = CreateForm;
 module.exports.GetForm = GetForm;
 module.exports.GetForms = GetForms;
@@ -495,11 +605,14 @@ module.exports.UpdateDynamicField = UpdateDynamicField;
 module.exports.CreateFormSubmission = CreateFormSubmission;
 module.exports.GetFormSubmission = GetFormSubmission;
 module.exports.GetFormSubmissions = GetFormSubmissions;
+module.exports.UpdateFormSubmission = UpdateFormSubmission;
 module.exports.DeleteFormSubmission = DeleteFormSubmission;
 module.exports.AddDynamicFieldSubmission = AddDynamicFieldSubmission;
 module.exports.RemoveDynamicFieldSubmission = RemoveDynamicFieldSubmission;
 module.exports.UpdateDynamicFieldSubmission = UpdateDynamicFieldSubmission;
 
-
+module.exports.CreateFormProfile = CreateFormProfile;
+module.exports.UpdateFormProfile = UpdateFormProfile;
+module.exports.GetFormProfile = GetFormProfile;
 
 

@@ -94,6 +94,7 @@ server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", act
 server.put('/DVP/API/:version/Ticket/:id/pick', authorization({resource:"ticket", action:"write"}), ticketService.PickTicket);
 server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketAudit);
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
+server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
@@ -256,6 +257,7 @@ server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 server.post('/DVP/API/:version/FormSubmission', authorization({resource:"forms", action:"write"}), formMaster.CreateFormSubmission);
 server.get('/DVP/API/:version/FormSubmissions', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmissions);
 server.get('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmission);
+server.put('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.UpdateFormSubmission);
 server.del('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.DeleteFormSubmission);
 server.post('/DVP/API/:version/FormSubmission/:reference/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicFieldSubmission);
 server.del('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicFieldSubmission);
@@ -288,6 +290,14 @@ server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"s
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+server.get('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"read"}), formMaster.GetFormProfile);
+server.post('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.CreateFormProfile);
+server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.UpdateFormProfile);
+
+
+
+
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);

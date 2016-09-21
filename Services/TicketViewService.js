@@ -543,7 +543,7 @@ function GetTicketsByView(req, res){
         else {
             if (user) {
 
-                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, view) {
+                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').exec(function (err, view) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Views Failed", false, undefined);
                         res.end(jsonString);

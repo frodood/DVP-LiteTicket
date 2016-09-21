@@ -96,7 +96,8 @@ module.exports.CreateTicket = function (req, res) {
                         comments: req.body.comments,
                         SLAViolated: false,
                         events: [tEvent],
-                        assignee: req.body.assignee
+                        assignee: req.body.assignee,
+                        due_at: req.body.due_at
                     });
 
                     if (req.body.requesterId)
@@ -182,7 +183,7 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -614,7 +615,6 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
-
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -726,7 +726,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
     });
 };
 
-
 module.exports.GetAllMyTickets = function (req, res) {
     logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
 
@@ -749,7 +748,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                 var qObj = {
                     company: company,
                     tenant: tenant, active: true,
-                    submitter: user.id,
+                    assignee: user.id,
                 };
 
 
@@ -765,7 +764,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                     if (err) {
 
@@ -969,9 +968,15 @@ module.exports.GetTicketWithDetails = function (req, res) {
     }).populate('attachments')
         .populate('sub_tickets')
         .populate('related_tickets')
+        .populate('assignee', 'name avatar')
+        .populate('assignee_group', 'name')
+        .populate('requester', 'name avatar')
+        .populate('submitter', 'name avatar')
+        .populate('collaborators', 'name avatar')
         .populate('merged_tickets')
         .populate('engagement_session')
-        .populate('comments').exec(function (err, ticket) {
+        .populate( {path: 'form_submission',populate : {path: 'form'}})
+        .populate({path: 'comments',populate : {path: 'author', select:'name avatar'}}).exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
@@ -1183,7 +1188,67 @@ module.exports.UpdateTicket = function (req, res) {
                 ticket.channel = req.body.channel;
                 /*ticket.tags = req.body.tags;*/
                 ticket.custom_fields = req.body.custom_fields;
+                ticket.form_submission = req.body.form_submission;
                 /*ticket.comments = req.body.comments;*/
+
+                var differences = diff(oldTicket, ticket.toJSON());
+
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    body: {
+                        "message": req.user.iss + " made changes",
+                        "time": time,
+                        "differences": differences
+                    }
+                });
+                ticket.events.push(tEvent);
+
+                ticket.update(ticket, function (err, rUser) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                    }
+                    else {
+                        if (rUser) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, rUser);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, rUser);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                res.end(jsonString);
+            }
+        }
+
+    });
+};
+
+module.exports.UpdateFormSubmission = function (req, res) {
+
+    logger.debug("DVP-LiteTicket.FormSubmission Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                var oldTicket = deepcopy(ticket.toJSON());
+
+                var time = new Date().toISOString();
+                ticket.updated_at = time;
+                ticket.form_submission = req.body.form_submission;
 
                 var differences = diff(oldTicket, ticket.toJSON());
 
@@ -1523,7 +1588,7 @@ module.exports.AddComment = function (req, res) {
                                 attachments: req.body.attachments,
                                 channel: req.body.channel,
                                 channel_from: req.body.channel_from,
-                                engagement_session: ObjectId(req.body.engagement_session),
+                                engagement_session: req.body.engagement_session,
                                 created_at: new Date().toISOString(),
                                 meta_data: req.body.meta_data
                             });
@@ -1534,36 +1599,42 @@ module.exports.AddComment = function (req, res) {
                                     res.end(jsonString);
                                 }
                                 else {
-                                    if (obj.id) {
-
-
+                                    if (obj && obj.id) {
 
                                         ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                        var queueName;
 
-                                        var message = {
-                                            from: req.body.channel_from,
-                                            to: req.body.channel_to,
-                                            body: req.body.body,
-                                            comment: comment._id,
-                                            company: company,
-                                            tenant: tenant,
-                                            author: req.user.iss
+                                        if(req.body.public == 'public') {
+
+                                            var queueName;
+
+                                            var message = {
+                                                from: req.body.channel_from,
+                                                to: req.body.channel_to,
+                                                body: req.body.body,
+                                                comment: comment._id,
+                                                update_comment: true,
+                                                reply_session: req.body.reply_session,
+                                                company: company,
+                                                tenant: tenant,
+                                                author: req.user.iss
+                                            }
+
+                                            if (req.body.channel == 'twitter') {
+                                                queueName = 'TWEETOUT';
+                                            } else if (req.body.channel == 'sms') {
+                                                queueName = 'SMSOUT';
+                                            } else {
+                                             //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                             //   res.end(jsonString);
+                                             //   return;
+                                            }
+
+                                            queueConnection.publish(queueName, message, {
+                                                contentType: 'application/json'
+                                            });
                                         }
 
-                                        if (req.body.channel == 'twitter') {
-                                            queueName = 'TWEETOUT';
-                                        } else if (req.body.channel == 'sms') {
-                                            queueName = 'SMSOUT';
-                                        } else {
-                                            jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
-                                            res.end(jsonString);
-                                            return;
-                                        }
 
-                                        queueConnection.publish(queueName, message, {
-                                            contentType: 'application/json'
-                                        });
 
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1587,6 +1658,7 @@ module.exports.AddComment = function (req, res) {
                                                 } else {
                                                     if (rOrg) {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                        ExecuteTrigger(req.params.id, "add_comment", comment);
 
                                                     }
                                                     else {
@@ -1778,7 +1850,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                             attachments: req.body.attachments,
                                             channel: req.body.channel,
                                             channel_from: req.body.channel_from,
-                                            engagement_session: ObjectId(req.body.engagement_session),
+                                            engagement_session: req.body.engagement_session,
                                             created_at: new Date().toISOString(),
                                             meta_data: req.body.meta_data
                                         });
@@ -1793,31 +1865,36 @@ module.exports.AddCommentToComment = function (req, res) {
 
 
                                                     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                    var queueName;
+                                                    if(req.body.public == 'public') {
 
-                                                    var message = {
-                                                        from: req.body.channel_from,
-                                                        to: req.body.channel_to,
-                                                        body: req.body.body,
-                                                        comment: comment._id,
-                                                        company: company,
-                                                        tenant: tenant,
-                                                        author: req.user.iss
+                                                        var queueName;
+
+                                                        var message = {
+                                                            from: req.body.channel_from,
+                                                            to: req.body.channel_to,
+                                                            body: req.body.body,
+                                                            comment: comment._id,
+                                                            updatecomment: true,
+                                                            reply_session: req.body.reply_session,
+                                                            company: company,
+                                                            tenant: tenant,
+                                                            author: req.user.iss
+                                                        }
+
+                                                        if (req.body.channel == 'twitter') {
+                                                            queueName = 'TWEETOUT';
+                                                        } else if (req.body.channel == 'sms') {
+                                                            queueName = 'SMSOUT';
+                                                        } else {
+                                                            //jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                                            //res.end(jsonString);
+                                                            //return;
+                                                        }
+
+                                                        queueConnection.publish(queueName, message, {
+                                                            contentType: 'application/json'
+                                                        });
                                                     }
-
-                                                    if (req.body.channel == 'twitter') {
-                                                        queueName = 'TWEETOUT';
-                                                    } else if (req.body.channel == 'sms') {
-                                                        queueName = 'SMSOUT';
-                                                    } else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
-                                                        res.end(jsonString);
-                                                        return;
-                                                    }
-
-                                                    queueConnection.publish(queueName, message, {
-                                                        contentType: 'application/json'
-                                                    });
 
                                                     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1829,6 +1906,7 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             } else {
                                                                 if (rOrg) {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+                                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
                                                                 }
                                                                 else {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
@@ -3604,9 +3682,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
 
 /*to Facebook App*/
 
-
-
-
 //-------------------Ticker Status Flow --------------------------------------------------------------
 
 module.exports.CreateStatusNode = function (req, res) {
@@ -3665,7 +3740,6 @@ module.exports.GetStatusNodes = function (req, res) {
         res.end(jsonString);
     });
 };
-
 
 module.exports.CreateStatusFlow = function (req, res) {
     logger.info("DVP-LiteTicket.CreateStatusFlow Internal method ");
