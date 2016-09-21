@@ -27,7 +27,6 @@ var format = require('stringformat');
 var config = require('config');
 var q = require('q');
 var amqp = require('amqp');
-var queueConnection = require('../Workers/Common/Queue').queueConnection
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
@@ -36,7 +35,15 @@ var async = require("async");
 var reference = require('dvp-common/Reference/ReferenceGen');
 
 ////////////////////////////rabbitmq//////////////////////////////////////////////////////
+var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
+var queueConnection = amqp.createConnection({
+    url: queueHost
+});
+queueConnection.on('ready', function () {
 
+    logger.info("Coonection with the queue is OK");
+
+});
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1690,12 +1697,16 @@ module.exports.AddComment = function (req, res) {
                                 author: user.id,
                                 author_external: req.body.author_external,
                                 attachments: req.body.attachments,
-                                channel: req.body.channel,
+
                                 channel_from: req.body.channel_from,
                                 engagement_session: req.body.engagement_session,
                                 created_at: new Date().toISOString(),
                                 meta_data: req.body.meta_data
                             });
+
+                            if(req.body.channel){
+                                comment.channel= req.body.channel;
+                            }
 
                             comment.save(function (err, obj) {
                                 if (err) {
