@@ -295,6 +295,37 @@ function CreateFormSubmission(req, res) {
 
 
 };
+function UpdateFormSubmission(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.UpdateDynamicFieldSubmission Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FormSubmission.findOneAndUpdate({
+        reference: req.params.reference,
+        company: company,
+        tenant: tenant},
+        {
+            fields: req.params.fields
+        }, function (err, form) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Update Field successful", true, form);
+            res.end(jsonString);
+
+        }
+
+    });
+
+};
 function GetFormSubmissions(req, res) {
 
 
@@ -455,7 +486,7 @@ function UpdateDynamicFieldSubmission(req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    FormSubmission.update({
+    FormSubmission.findOneAndUpdate({
         reference: req.params.reference,
         company: company,
         tenant: tenant,
@@ -574,6 +605,7 @@ module.exports.UpdateDynamicField = UpdateDynamicField;
 module.exports.CreateFormSubmission = CreateFormSubmission;
 module.exports.GetFormSubmission = GetFormSubmission;
 module.exports.GetFormSubmissions = GetFormSubmissions;
+module.exports.UpdateFormSubmission = UpdateFormSubmission;
 module.exports.DeleteFormSubmission = DeleteFormSubmission;
 module.exports.AddDynamicFieldSubmission = AddDynamicFieldSubmission;
 module.exports.RemoveDynamicFieldSubmission = RemoveDynamicFieldSubmission;
