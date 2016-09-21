@@ -243,6 +243,12 @@ function ValidateAssigneeAndGroup(obj, trigger, newAssignee, newGroup){
 
 function AggregateCondition(obj, field, value, operator, callback){
     try {
+        if(value === "true"){
+            value = true;
+        }else if(value === "false"){
+            value = false;
+        }
+
         switch (operator) {
             case "is":
                 callback(obj[field] === value);
@@ -453,7 +459,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                 if (triggerToExecute.operations.length > 0) {
                                                     for (var j = 0; j < triggerToExecute.operations.length; j++) {
                                                         var operationToExecute = triggerToExecute.operations[j];
-                                                        ExecuteOperations(tResult, operationToExecute);
+                                                        ExecuteOperations(ticketCopy, operationToExecute);
                                                     }
                                                 }
                                             } else {

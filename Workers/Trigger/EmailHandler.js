@@ -1,6 +1,20 @@
 /**
  * Created by Heshan.i on 8/8/2016.
  */
+var format = require('stringformat');
+var config = require('config');
+var q = require('q');
+var amqp = require('amqp');
+
+var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
+var queueConnection = amqp.createConnection({
+    url: queueHost
+});
+queueConnection.on('ready', function () {
+
+    logger.info("Coonection with the queue is OK");
+
+});
 
 function ReadDataFromTicket(ticket, pattern){
     var queryPath = pattern.slice(2, -1);
@@ -36,20 +50,32 @@ function SendEmail(ticket, template, emailData, callback){
         if(template){
             sendObj.template = template;
             sendObj.body = "";
+            sendObj.subject = queryPattern.test(emailData.subject)? ReadDataFromTicket(ticket, emailData.subject) : emailData.subject;
             sendObj.Parameters = {};
-            var parameterCount = Object.keys(emailData.Parameters).length;
-            for(var i = 0; i < parameterCount; i++){
-                var paramKey = Object.keys(emailData.Parameters)[i];
-                var valueAt = emailData.Parameters[paramKey];
-                if(valueAt){
-                    sendObj.Parameters[paramKey] = queryPattern.test(valueAt)? ReadDataFromTicket(ticket, valueAt) : valueAt;
+            if(emailData.Parameters) {
+                var parameterCount = Object.keys(emailData.Parameters).length;
+                for (var i = 0; i < parameterCount; i++) {
+                    var paramKey = Object.keys(emailData.Parameters)[i];
+                    var valueAt = emailData.Parameters[paramKey];
+                    if (valueAt) {
+                        sendObj.Parameters[paramKey] = queryPattern.test(valueAt) ? ReadDataFromTicket(ticket, valueAt) : valueAt;
+                    }
                 }
             }
             console.log("tetdgdb");
         }else{
             sendObj.template = "";
             sendObj.body = emailData.body;
-            sendObj.Parameters.subject = emailData.Parameters.subject;
+            sendObj.subject = emailData.subject;
+        }
+        //CommonHandler.RbmqPublish("EMAILOUT", JSON.stringify(sendObj));
+        try {
+            queueConnection.publish("EMAILOUT", sendObj, {
+                contentType: 'application/json'
+            });
+        }catch(exp){
+
+            console.log(exp);
         }
         callback(true);
     }catch(ex){
