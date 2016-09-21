@@ -50,10 +50,10 @@ function SendEmail(ticket, template, emailData, callback){
 
         sendObj.from =  queryPattern.test(emailData.from)? ReadDataFromTicket(ticket, emailData.from) : emailData.from;
         sendObj.to =  queryPattern.test(emailData.to)? ReadDataFromTicket(ticket, emailData.to) : emailData.to;
+        sendObj.subject = queryPattern.test(emailData.subject)? ReadDataFromTicket(ticket, emailData.subject) : emailData.subject;
         if(template){
             sendObj.template = template;
             sendObj.body = "";
-            sendObj.subject = queryPattern.test(emailData.subject)? ReadDataFromTicket(ticket, emailData.subject) : emailData.subject;
             sendObj.Parameters = {};
             if(emailData.Parameters) {
                 var parameterCount = Object.keys(emailData.Parameters).length;
@@ -69,7 +69,6 @@ function SendEmail(ticket, template, emailData, callback){
         }else{
             sendObj.template = "";
             sendObj.body = emailData.body;
-            sendObj.subject = emailData.subject;
         }
         //CommonHandler.RbmqPublish("EMAILOUT", JSON.stringify(sendObj));
         try {
