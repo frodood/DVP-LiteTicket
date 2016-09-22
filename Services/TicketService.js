@@ -1533,6 +1533,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                 meta_data: req.body.meta_data
                             });
 
+                            logger.debug("Object to save as a comment is" + comment);
                             comment.save(function (err, obj) {
                                 if (err) {
                                     jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
