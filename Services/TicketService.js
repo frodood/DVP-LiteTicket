@@ -39,7 +39,7 @@ var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.Ra
 var queueConnection = amqp.createConnection({
     url: queueHost
 });
-queueConnection.on('ready', {durable: true, autoDelete: false},function () {
+queueConnection.on('ready', function () {
 
     logger.info("Coonection with the queue is OK");
 
