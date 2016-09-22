@@ -380,7 +380,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
 
     if(ticketId) {
         try {
-            Ticket.findOne({_id: ticketId}).populate('requester submitter assignee collaborators').exec(function (err, tResult) {
+            Ticket.findOne({_id: ticketId}).populate('requester' , '-password').populate('submitter' , '-password').populate('assignee' , '-password').populate('assignee_group collaborators attachments comments').exec(function (err, tResult) {
             //Ticket.findOne({_id: ticketId},function (err, tResult) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
@@ -402,7 +402,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                             } else if (triggerEvent === "change_assignee_groups") {
                                 UpdateDashboardChangeAssigneeGroup(data, tResult);
                             } else if(triggerEvent === "add_comment"){
-                                ticketCopy.comments = data;
+                                ticketCopy.last_comment = data;
                             }
                             Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                                 if (err) {

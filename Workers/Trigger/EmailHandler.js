@@ -55,17 +55,16 @@ function SendEmail(ticket, template, emailData, callback){
             sendObj.template = template;
             sendObj.body = "";
             sendObj.Parameters = {};
-            if(emailData.Parameters) {
-                var parameterCount = Object.keys(emailData.Parameters).length;
+            //if(emailData.Parameters) {
+                var parameterCount = Object.keys(ticket).length;
                 for (var i = 0; i < parameterCount; i++) {
-                    var paramKey = Object.keys(emailData.Parameters)[i];
-                    var valueAt = emailData.Parameters[paramKey];
+                    var paramKey = Object.keys(ticket)[i];
+                    var valueAt = ticket[paramKey];
                     if (valueAt) {
-                        sendObj.Parameters[paramKey] = queryPattern.test(valueAt) ? ReadDataFromTicket(ticket, valueAt) : valueAt;
+                        sendObj.Parameters[paramKey] = valueAt;
                     }
                 }
-            }
-            console.log("tetdgdb");
+            //}
         }else{
             sendObj.template = "";
             sendObj.body = emailData.body;
