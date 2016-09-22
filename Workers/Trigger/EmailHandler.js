@@ -70,6 +70,7 @@ function SendEmail(ticket, template, emailData, callback){
             sendObj.body = emailData.body;
         }
         //CommonHandler.RbmqPublish("EMAILOUT", JSON.stringify(sendObj));
+        console.log("From: "+ sendObj.from +" :: To: "+ sendObj.to);
         try {
             queueConnection.publish("EMAILOUT", sendObj, {
                 contentType: 'application/json'
