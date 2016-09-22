@@ -243,6 +243,12 @@ function ValidateAssigneeAndGroup(obj, trigger, newAssignee, newGroup){
 
 function AggregateCondition(obj, field, value, operator, callback){
     try {
+        if(value === "true"){
+            value = true;
+        }else if(value === "false"){
+            value = false;
+        }
+
         switch (operator) {
             case "is":
                 callback(obj[field] === value);
@@ -374,13 +380,16 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
 
     if(ticketId) {
         try {
-            Ticket.findOne({_id: ticketId}).populate('requester submitter assignee collaborators').exec(function (err, tResult) {
+            Ticket.findOne({_id: ticketId}).populate('requester' , '-password').populate('submitter' , '-password').populate('assignee' , '-password').populate('assignee_group collaborators attachments comments').exec(function (err, tResult) {
             //Ticket.findOne({_id: ticketId},function (err, tResult) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
                         callback(jsonString);
                     } else {
                         if (tResult) {
+
+                            var ticketCopy = deepcopy(tResult.toJSON());
+
                             if (triggerEvent === "change_assignee") {
                                 PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                                 UpdateDashboardChangeAssignee(data, tResult);
@@ -392,6 +401,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                 UpdateDashboardChangeStatus(data, tResult);
                             } else if (triggerEvent === "change_assignee_groups") {
                                 UpdateDashboardChangeAssigneeGroup(data, tResult);
+                            } else if(triggerEvent === "add_comment"){
+                                ticketCopy.last_comment = data;
                             }
                             Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                                 if (err) {
@@ -448,7 +459,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                 if (triggerToExecute.operations.length > 0) {
                                                     for (var j = 0; j < triggerToExecute.operations.length; j++) {
                                                         var operationToExecute = triggerToExecute.operations[j];
-                                                        ExecuteOperations(tResult, operationToExecute);
+                                                        ExecuteOperations(ticketCopy, operationToExecute);
                                                     }
                                                 }
                                             } else {

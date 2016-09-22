@@ -26,7 +26,7 @@
     "deepcopy": "^0.6.3",
     "dvp-common": "^0.2.0",
     "dvp-dbmodels": "^0.2.4",
-    "dvp-mongomodels": "^1.8.1",
+    "dvp-mongomodels": "^1.9.1",
     "json-query": "^2.1.0",
     "moment": "^2.14.1",
     "mongoose": "^4.5.3",
