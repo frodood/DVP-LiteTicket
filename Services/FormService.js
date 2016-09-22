@@ -309,7 +309,7 @@ function UpdateFormSubmission(req, res) {
         company: company,
         tenant: tenant},
         {
-            fields: req.params.fields
+            fields: req.body.fields
         }, function (err, form) {
         if (err) {
 
@@ -392,6 +392,7 @@ function GetFormSubmission(req, res) {
     });
 
 };
+
 function DeleteFormSubmission(req, res) {
 
     logger.debug("DVP-LiteTicket.DeleteFormSubmission Internal method ");
