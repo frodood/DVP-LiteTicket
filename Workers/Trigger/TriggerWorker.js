@@ -66,23 +66,33 @@ function UpdateDashboardChangeStatus(data, tResult){
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
+
+    if(data && data === "closed" && tResult.status === "open"){
+        var pubMsgEReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total"+tResult.id);
+        redisHandler.Publish("events", pubMsgEReopen, function () {});
+    }
+
     if(data && tResult.status != "new"){
+        var pubMsgETotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "total", "total", "Total"+tResult.id);
         var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
         var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
         var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
         var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
+        redisHandler.Publish("events", pubMsgETotal, function () {});
         redisHandler.Publish("events", pubMsgEChannel, function () {});
         redisHandler.Publish("events", pubMsgETags, function () {});
         redisHandler.Publish("events", pubMsgEUser, function () {});
         redisHandler.Publish("events", pubMsgEUGroup, function () {});
 
     }
+    var pubMsgNTotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "total", "total", "Total"+tResult.id);
     var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
     var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
+    redisHandler.Publish("events", pubMsgNTotal, function () {});
     redisHandler.Publish("events", pubMsgNChannel, function () {});
     redisHandler.Publish("events", pubMsgNTags, function () {});
     redisHandler.Publish("events", pubMsgNUser, function () {});
