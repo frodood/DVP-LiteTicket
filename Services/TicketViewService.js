@@ -8,7 +8,6 @@ var TicketView = require('dvp-mongomodels/model/TicketView').TicketView;
 var User = require('dvp-mongomodels/model/User');
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
-var moment = require("moment");
 
 
 function CreateTicketView(req, res){
@@ -568,17 +567,17 @@ function GetTicketsByView(req, res){
 
                                         if(item.value == '{now}'){
 
-                                            item.value = moment().toISOString();
+                                            item.value = new Date();
 
                                         }else {
 
                                             try {
 
-                                                item.value = moment(item.value);
+                                                item.value = new Date(item.value);
 
                                             } catch (ex) {
 
-                                                item.value = moment();
+                                                item.value = new Date();
                                             }
                                         }
 
@@ -663,17 +662,17 @@ function GetTicketsByView(req, res){
 
                                         if(item.value == '{now}'){
 
-                                            item.value = moment().toISOString();
+                                            item.value = new Date();
 
                                         }else {
 
                                             try {
 
-                                                item.value = moment(item.value);
+                                                item.value = new Date(item.value);
 
                                             } catch (ex) {
 
-                                                item.value = moment();
+                                                item.value = new Date();
                                             }
                                         }
 
@@ -805,17 +804,17 @@ function GetTicketCountByView(req, res){
 
                                         if(item.value == '{now}'){
 
-                                            item.value = moment().toISOString();
+                                            item.value = new Date();
 
                                         }else {
 
                                             try {
 
-                                                item.value = moment(item.value);
+                                                item.value = new Date(item.value);
 
                                             } catch (ex) {
 
-                                                item.value = moment();
+                                                item.value = new Date();;
                                             }
                                         }
 
@@ -900,17 +899,17 @@ function GetTicketCountByView(req, res){
 
                                         if(item.value == '{now}'){
 
-                                            item.value = moment().toISOString();
+                                            item.value = new Date();
 
                                         }else {
 
                                             try {
 
-                                                item.value = moment(item.value);
+                                                item.value = new Date(item.value);
 
                                             } catch (ex) {
 
-                                                item.value = moment();
+                                                item.value = new Date();
                                             }
                                         }
 

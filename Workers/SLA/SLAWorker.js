@@ -459,8 +459,13 @@ function ScheduleCallback(req, res){
                         res.end(jsonString);
                     }else{
                         if(ticket.priority === matrixInfo.priority){
-                            ticket.SLAViolated = true;
-                            ticket.update(ticket, function(err, updateResult){
+                           // ticket.SLAViolated = true;
+
+                            if(ticket.ticket_matrix) {
+                                ticket.ticket_matrix.sla_violated = true;
+                            }
+
+                            ticket.save( function(err, updateResult){
                                 if(err){
                                     console.log("Update Ticket failed:: " + err);
                                 }else{
