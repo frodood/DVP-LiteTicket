@@ -71,7 +71,7 @@ server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:
 server.post('/DVP/API/:version/Ticket/Comments',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicketWithComment);
 server.put('/DVP/API/:version/Ticket/Comment/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateComment);
 server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"sipuser", action:"read"}), ticketService.GetAllTickets);
-server.get('/DVP/API/:version/TicketReport', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicketReport);
+server.post('/DVP/API/:version/TicketReport', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicketReport);
 
 
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);

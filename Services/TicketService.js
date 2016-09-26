@@ -4648,7 +4648,7 @@ module.exports.GetTicketReport= function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = {$contains: req.body.tag};
+                tempQuery.isolated_tags = [ req.body.tag];
             }
 
             if(req.body.channel){
@@ -4669,7 +4669,6 @@ module.exports.GetTicketReport= function(req, res){
 
             {
                 $match: tempQuery,
-
 
             },
             {
@@ -4723,10 +4722,19 @@ module.exports.GetTicketReport= function(req, res){
                         }
                     },
                     average_response: {
-                        $avg: "$ticket_matrix.waited_time"
+                        $avg: {
+
+                            $cond: [{$ne:["$status","new"]}, "$ticket_matrix.waited_time", null]
+
+                        }
                     },
                     average_resolution: {
-                        $avg: "$ticket_matrix.resolution_time"
+
+                        $avg: {
+
+                            $cond: [{$and : [{$eq:["$status","closed"]},{$eq:["$status","solved"]}]}, "$ticket_matrix.resolution_time", null]
+
+                        }
                     }
                 }
             },{
