@@ -66,23 +66,33 @@ function UpdateDashboardChangeStatus(data, tResult){
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
+
+    if(data && data === "closed" && tResult.status === "open"){
+        var pubMsgEReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total"+tResult.id);
+        redisHandler.Publish("events", pubMsgEReopen, function () {});
+    }
+
     if(data && tResult.status != "new"){
+        var pubMsgETotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "total", "total", "Total"+tResult.id);
         var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
         var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
         var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
         var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
+        redisHandler.Publish("events", pubMsgETotal, function () {});
         redisHandler.Publish("events", pubMsgEChannel, function () {});
         redisHandler.Publish("events", pubMsgETags, function () {});
         redisHandler.Publish("events", pubMsgEUser, function () {});
         redisHandler.Publish("events", pubMsgEUGroup, function () {});
 
     }
+    var pubMsgNTotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "total", "total", "Total"+tResult.id);
     var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
     var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
+    redisHandler.Publish("events", pubMsgNTotal, function () {});
     redisHandler.Publish("events", pubMsgNChannel, function () {});
     redisHandler.Publish("events", pubMsgNTags, function () {});
     redisHandler.Publish("events", pubMsgNUser, function () {});
@@ -178,6 +188,21 @@ function ValidateUser(obj, trigger, newAssignee, callback){
                 if (uResult && uResult.company === trigger.company && uResult.tenant === trigger.tenant) {
                     var previousAssignee = deepcopy(obj.toJSON().assignee);
                     obj.assignee = uResult._id;
+
+                    var time = new Date().toISOString();
+
+                    if(obj.ticket_matrix) {
+                        obj.ticket_matrix.last_assigned = time;
+                        obj.ticket_matrix.last_updated = time;
+
+                        if(obj.ticket_matrix.assignees)
+                            obj.ticket_matrix.assignees.$inc();
+                        else
+                            obj.ticket_matrix.assignees =1;
+                    }
+
+
+
                     UpdateDashboardChangeAssignee(previousAssignee, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No User found", false, undefined);
@@ -202,6 +227,21 @@ function ValidateGroup(obj, trigger, newGroup, callback){
                 if (ugResult && ugResult.company === trigger.company && ugResult.tenant === trigger.tenant) {
                     var previousGroup = deepcopy(obj.toJSON().assignee_group);
                     obj.assignee_group = ugResult._id;
+
+                    var time = new Date().toISOString();
+
+                    if(obj.ticket_matrix) {
+                        obj.ticket_matrix.last_assigned = time;
+                        obj.ticket_matrix.last_updated = time;
+
+                        if(obj.ticket_matrix.assignees)
+                            obj.ticket_matrix.assignees.$inc();
+                        else
+                            obj.ticket_matrix.assignees =1;
+                    }
+
+
+
                     UpdateDashboardChangeAssigneeGroup(previousGroup, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No UserGroup found", false, undefined);
@@ -243,6 +283,12 @@ function ValidateAssigneeAndGroup(obj, trigger, newAssignee, newGroup){
 
 function AggregateCondition(obj, field, value, operator, callback){
     try {
+        if(value === "true"){
+            value = true;
+        }else if(value === "false"){
+            value = false;
+        }
+
         switch (operator) {
             case "is":
                 callback(obj[field] === value);
@@ -374,13 +420,16 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
 
     if(ticketId) {
         try {
-            Ticket.findOne({_id: ticketId}).populate('requester submitter assignee collaborators').exec(function (err, tResult) {
+            Ticket.findOne({_id: ticketId}).populate('requester' , '-password').populate('submitter' , '-password').populate('assignee' , '-password').populate('assignee_group collaborators attachments comments').exec(function (err, tResult) {
             //Ticket.findOne({_id: ticketId},function (err, tResult) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
                         callback(jsonString);
                     } else {
                         if (tResult) {
+
+                            var ticketCopy = deepcopy(tResult.toJSON());
+
                             if (triggerEvent === "change_assignee") {
                                 PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                                 UpdateDashboardChangeAssignee(data, tResult);
@@ -392,6 +441,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                 UpdateDashboardChangeStatus(data, tResult);
                             } else if (triggerEvent === "change_assignee_groups") {
                                 UpdateDashboardChangeAssigneeGroup(data, tResult);
+                            } else if(triggerEvent === "add_comment"){
+                                ticketCopy.last_comment = data;
                             }
                             Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
                                 if (err) {
@@ -448,7 +499,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                 if (triggerToExecute.operations.length > 0) {
                                                     for (var j = 0; j < triggerToExecute.operations.length; j++) {
                                                         var operationToExecute = triggerToExecute.operations[j];
-                                                        ExecuteOperations(tResult, operationToExecute);
+                                                        ExecuteOperations(ticketCopy, operationToExecute);
                                                     }
                                                 }
                                             } else {

@@ -71,6 +71,9 @@ server.post('/DVP/API/:version/Ticket',authorization({resource:"ticket", action:
 server.post('/DVP/API/:version/Ticket/Comments',authorization({resource:"ticket", action:"write"}), ticketService.CreateTicketWithComment);
 server.put('/DVP/API/:version/Ticket/Comment/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateComment);
 server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
+server.get('/DVP/API/:version/TicketReport', authorization({resource:"sipuser", action:"read"}), ticketService.GetTicketReport);
+
+
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
 server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
 server.get('/DVP/API/:version/Tickets/:status/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatusTimeRange);
@@ -99,6 +102,9 @@ server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"tick
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
 server.put('/DVP/API/:version/TicketByEngagement/:engagementid/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByEngagement);
+
+server.put('/DVP/API/:version/TicketByReference/:reference/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByReference);
+
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/Status/Bulk', authorization({resource:"ticket", action:"write"}), ticketService.BulkStatusUpdate);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
@@ -106,6 +112,9 @@ server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({res
 server.get('/DVP/API/:version/Tickets/:FieldName/:FieldValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsBy);
 server.get('/DVP/API/:version/TicketSearch/:SearchBy/:SearchValue/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.TicketSearch);
 server.get('/DVP/API/:version/TicketSearch/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.SearchTickets);
+server.get('/DVP/API/:version/RecentTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetRecentTicket);
+server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUSerRecentTicket);
+
 
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
@@ -257,6 +266,7 @@ server.put('/DVP/API/:version/FormMaster/:name/field/:field', authorization({res
 server.post('/DVP/API/:version/FormSubmission', authorization({resource:"forms", action:"write"}), formMaster.CreateFormSubmission);
 server.get('/DVP/API/:version/FormSubmissions', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmissions);
 server.get('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"read"}), formMaster.GetFormSubmission);
+server.put('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.UpdateFormSubmission);
 server.del('/DVP/API/:version/FormSubmission/:reference', authorization({resource:"forms", action:"delete"}), formMaster.DeleteFormSubmission);
 server.post('/DVP/API/:version/FormSubmission/:reference/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicFieldSubmission);
 server.del('/DVP/API/:version/FormSubmission/:reference/field/:field', authorization({resource:"forms", action:"delete"}), formMaster.RemoveDynamicFieldSubmission);

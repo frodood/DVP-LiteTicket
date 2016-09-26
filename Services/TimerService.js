@@ -35,8 +35,8 @@ function CreateTimer(req, res){
                                 user: user.id,
                                 running: true,
                                 company: company,
-                                time_events: [{state:'start', time: Date.now()}],
-                                last_event:'start',
+                                //time_events: [{state:'start', time: Date.now()}],
+                                //last_event:'start',
                                 tenant: tenant
                             }, function (err, forms) {
                                 if ((err || !forms)&& req.body) {
@@ -67,9 +67,6 @@ function CreateTimer(req, res){
                                 }
 
                             });
-
-
-
 
                             }else{
 
@@ -417,7 +414,12 @@ function StartTimer(req, res){
                     }else {
                         if (timer) {
                             jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successfull", true, timer);
-                            var timeevent = {state:'start', time: Date.now(), note:req.body.note};
+                            var timeevent = {state:'start', time: Date.now()};
+                            if(req.body && req.body.note){
+
+                                timeevent["note"] = req.body.note;
+                            }
+
                             TimeEntry.findOneAndUpdate(
                                 {user: user.id,  running: true, last_event:'pause', company: company, tenant: tenant},
                                 {
@@ -429,9 +431,9 @@ function StartTimer(req, res){
                                 },function(err, timer) {
 
                                     if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
                                     }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessfull", true, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfull", true, timer);
                                     }
                                     res.end(jsonString);
 
@@ -476,7 +478,13 @@ function PauseTimer(req, res){
                     }else {
                         if (timer) {
                             jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successfull", true, timer);
-                            var timeevent = {state:'pause', time: Date.now(), note:req.body.note};
+                            var timeevent = {state:'pause', time: Date.now()};
+
+                            if(req.body && req.body.note){
+
+                                timeevent["note"] = req.body.note;
+                            }
+
                             var ms = moment(Date.now()).diff(moment(timer.last_event_date));
                             var d = moment.duration(ms);
                             var time = timer.time + d;
@@ -491,9 +499,9 @@ function PauseTimer(req, res){
                                 },function(err, timer) {
 
                                     if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
                                     }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessfull", true, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessfull", true, timer);
                                     }
                                     res.end(jsonString);
 
@@ -537,7 +545,12 @@ function StopTimer(req, res){
                     }else {
                         if (timer) {
                             jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successful", true, timer);
-                            var timeevent = {state:'stop', time: Date.now(), node:req.body.note};
+                            var timeevent = {state:'stop', time: Date.now()};
+
+                              if(req.body && req.body.note){
+
+                                  timeevent["note"] = req.body.note;
+                              }
 
                             var time = timer.time;
                             if(timer.last_event == 'start') {
@@ -558,9 +571,9 @@ function StopTimer(req, res){
                                 },function(err, timer) {
 
                                     if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
                                     }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessful", true, undefined);
+                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessful", true, timer);
                                     }
                                     res.end(jsonString);
 
