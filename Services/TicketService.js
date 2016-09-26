@@ -4150,10 +4150,8 @@ module.exports.CreateTicketWithComment = function (req, res) {
                 if (req.body.requester)
                     ticket.requester = req.body.requester;
 
-
                 /////////////////////////////ticket matrix//////////////////////
                 var matrix = {
-
                     created_at: ticket.created_at,
                     last_updated:ticket.created_at,
                     last_status_changed:ticket.created_at,
@@ -4164,13 +4162,11 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     reopens: 0,
                     replies: 0,
                     assignees: 0
-
                 };
 
                 if(req.body.assignee){
                     matrix.assignees = 1;
                 }else{
-
                     matrix.assignees = 0;
                 }
 
@@ -4179,14 +4175,8 @@ module.exports.CreateTicketWithComment = function (req, res) {
                 }else{
                     matrix.groups = 0;
                 }
-
-
                 ticket.ticket_matrix = matrix;
-
-
                 if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
-
-
                     var arr = [];
                     req.body.tags.forEach(function(item){
 
@@ -4201,26 +4191,18 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     })
 
                 }
-
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
                 ticket.save(function (err, client) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         res.end(jsonString);
                     }
                     else {
-
-
-
                         if(client) {
                             AddUserRecentTicket(company, tenant,user.id,client.id);
                             if(req.body.requester)
                                 AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
                         }
-
                         ////////////////////////////////////////add note to engagement session async//////////////////////////
                         try {
                             EngagementSession.findOneAndUpdate({
@@ -4237,25 +4219,15 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                 }
                             }, function (err, notes) {
                                 if (err) {
-
                                     logger.error("Append Note To EngagementSession Failed", err);
-
                                 } else {
-
                                     logger.debug("Append Note To EngagementSession Success");
-
                                 }
-
                             });
                         } catch (excep) {
-
                             logger.error("Append Note To EngagementSession Failed", excep);
                         }
-
-
                         //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
                         if (req.body.comments) {
                             var createTicketTasks = [];
                             req.body.comments.forEach(function (com) {
@@ -4290,8 +4262,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                     }
                                                 });
                                                 ticket.events.push(tEvent);
-                                                
-
                                                 /////////////////////////////////ticket matrix///////////////////////////////////////
                                                 if(ticket.ticket_matrix) {
                                                     ticket.ticket_matrix.last_updated = time;
@@ -4311,11 +4281,8 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                             ticket.ticket_matrix.replies =1;
                                                     }
                                                 }
-                                                /////////////////////////////////ticket matrix///////////////////////////////////////
+                                                //////////////////////////////////////////////////////////////////////////////
 
-
-
-                                                ///////////////////////////////////////////////////////////
                                                 ticket.save(function (err, rOrg) {
                                                         if (err) {
                                                             callBack(err, undefined);
