@@ -13,6 +13,7 @@ var config = require('config');
 var moment = require('moment');
 var RestClient = require('../Trigger/RestClient.js');
 var CommonWorker = require('../Trigger/TriggerWorker.js');
+var redisHandler = require('../Trigger/RedisHandler.js');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -459,26 +460,33 @@ function ScheduleCallback(req, res){
                         res.end(jsonString);
                     }else{
                         if(ticket.priority === matrixInfo.priority){
-                            ticket.SLAViolated = true;
-                            ticket.update(ticket, function(err, updateResult){
-                                if(err){
-                                    console.log("Update Ticket failed:: " + err);
-                                }else{
-                                    console.log("Update Ticket Success:: "+ updateResult);
+                            if(ticket.ticket_matrix) {
+                                ticket.ticket_matrix.sla_violated = true;
+                                ticket.update(ticket, function (err, updateResult) {
+                                    if (err) {
+                                        console.log("Update Ticket failed:: " + err);
+                                    } else {
+                                        UpdateDashBoardSLAStats(ticket);
+                                        console.log("Update Ticket Success:: " + updateResult);
+                                    }
+                                });
+                                var operationsToExecute = matrixInfo[operationType];
+                                if (operationsToExecute && operationsToExecute.length > 0) {
+                                    for (var i = 0; i < operationsToExecute.length; i++) {
+                                        var operationToExecute = operationsToExecute[i];
+                                        CommonWorker.ExecuteOperations(ticket, operationToExecute);
+                                    }
+                                    console.log("Execute Operations Success");
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Execute Operations Success", true, undefined);
+                                    res.end(jsonString);
+                                } else {
+                                    console.log("No Operations To Execute.");
+                                    jsonString = messageFormatter.FormatMessage(undefined, "No Operations To Execute.", false, undefined);
+                                    res.end(jsonString);
                                 }
-                            });
-                            var operationsToExecute = matrixInfo[operationType];
-                            if(operationsToExecute && operationsToExecute.length > 0){
-                                for(var i =0; i < operationsToExecute.length; i++){
-                                    var operationToExecute = operationsToExecute[i];
-                                    CommonWorker.ExecuteOperations(ticket, operationToExecute);
-                                }
-                                console.log("Execute Operations Success");
-                                jsonString = messageFormatter.FormatMessage(undefined, "Execute Operations Success", true, undefined);
-                                res.end(jsonString);
                             }else{
-                                console.log("No Operations To Execute.");
-                                jsonString = messageFormatter.FormatMessage(undefined, "No Operations To Execute.", false, undefined);
+                                console.log("No Ticket Matrix Found.");
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Matrix Found.", false, undefined);
                                 res.end(jsonString);
                             }
                         }else{
@@ -502,6 +510,15 @@ function ScheduleCallback(req, res){
         console.log("ScheduleCallback Failed.");
         jsonString = messageFormatter.FormatMessage(ex, "ScheduleCallback Failed.", false, undefined);
         res.end(jsonString);
+    }
+}
+
+function UpdateDashBoardSLAStats(tResult){
+    if(tResult && tResult.ticket_matrix && tResult.ticket_matrix.sla_violated === true){
+        //update SLA violated count
+        var pubMsgNSlaViolated = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "SLA", "slaviolated", "total", "total", "Total" + tResult.id);
+        redisHandler.Publish("events", pubMsgNSlaViolated, function () {
+        });
     }
 }
 
