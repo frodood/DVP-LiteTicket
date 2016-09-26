@@ -216,6 +216,21 @@ function ValidateUser(obj, trigger, newAssignee, callback){
                 if (uResult && uResult.company === trigger.company && uResult.tenant === trigger.tenant) {
                     var previousAssignee = deepcopy(obj.toJSON().assignee);
                     obj.assignee = uResult._id;
+
+                    var time = new Date().toISOString();
+
+                    if(obj.ticket_matrix) {
+                        obj.ticket_matrix.last_assigned = time;
+                        obj.ticket_matrix.last_updated = time;
+
+                        if(obj.ticket_matrix.assignees)
+                            obj.ticket_matrix.assignees.$inc();
+                        else
+                            obj.ticket_matrix.assignees =1;
+                    }
+
+
+
                     UpdateDashboardChangeAssignee(previousAssignee, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No User found", false, undefined);
@@ -240,6 +255,21 @@ function ValidateGroup(obj, trigger, newGroup, callback){
                 if (ugResult && ugResult.company === trigger.company && ugResult.tenant === trigger.tenant) {
                     var previousGroup = deepcopy(obj.toJSON().assignee_group);
                     obj.assignee_group = ugResult._id;
+
+                    var time = new Date().toISOString();
+
+                    if(obj.ticket_matrix) {
+                        obj.ticket_matrix.last_assigned = time;
+                        obj.ticket_matrix.last_updated = time;
+
+                        if(obj.ticket_matrix.assignees)
+                            obj.ticket_matrix.assignees.$inc();
+                        else
+                            obj.ticket_matrix.assignees =1;
+                    }
+
+
+
                     UpdateDashboardChangeAssigneeGroup(previousGroup, obj);
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No UserGroup found", false, undefined);
