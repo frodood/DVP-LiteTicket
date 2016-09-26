@@ -2653,7 +2653,7 @@ module.exports.CreateSubTicket = function (req, res) {
                             description: req.body.description,
                             priority: req.body.priority,
                             status: "new",
-                            requester: req.body.requesterId,
+                            requester: req.body.requester,
                             submitter: user.id,
                             company: company,
                             tenant: tenant,
@@ -2669,6 +2669,7 @@ module.exports.CreateSubTicket = function (req, res) {
                             events: [tEvent]
                         });
 
+                        console.log(ticket);
                         ticket.save(function (err, obj) {
                             jsonString = messageFormatter.FormatMessage(new Error("Invalid Parent ID."), "Sub-Ticket Saved Successfully.Without Mapping To Parent.", false, ticket);
                             if (err) {
