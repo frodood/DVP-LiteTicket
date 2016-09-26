@@ -3177,6 +3177,8 @@ module.exports.CreateSubTicket = function (req, res) {
                             priority: req.body.priority,
                             status: "new",
                             requester: req.body.requester,
+                            assignee: req.body.assignee,
+                            assignee_group: req.body.assignee_group,
                             submitter: user.id,
                             company: company,
                             tenant: tenant,
@@ -3188,7 +3190,6 @@ module.exports.CreateSubTicket = function (req, res) {
                             tags: req.body.tags,
                             custom_fields: req.body.custom_fields,
                             comments: req.body.comments,
-                            SLAViolated: false,
                             events: [tEvent]
                         });
 
@@ -4141,7 +4142,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     tags: req.body.tags,
                     custom_fields: req.body.custom_fields,
                     comments: req.body.comments,
-                    SLAViolated: false,
                     events: [tEvent],
                     requester: undefined,
                     assignee: req.body.assignee
