@@ -146,8 +146,19 @@ module.exports.CreateTicket = function (req, res) {
 
                     if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
 
-                        var arr = req.body.tags[0].split('.');
-                        ticket.isolated_tags = arr;
+
+                        var arr = [];
+                        req.body.tags.forEach(function(item){
+
+                            var tagArr = item.split('.');
+                            if(tagArr && tagArr.length > 0){
+
+                                tagArr.forEach(function(myTags){
+                                    ticket.isolated_tags.push(myTags);
+                                })
+                            }
+
+                        })
 
                     }
 
@@ -4139,6 +4150,62 @@ module.exports.CreateTicketWithComment = function (req, res) {
                 if (req.body.requester)
                     ticket.requester = req.body.requester;
 
+
+                /////////////////////////////ticket matrix//////////////////////
+                var matrix = {
+
+                    created_at: ticket.created_at,
+                    last_updated:ticket.created_at,
+                    last_status_changed:ticket.created_at,
+                    waited_time: 0,
+                    worked_time: 0,
+                    resolution_time:0,
+                    sla_violated: false,
+                    reopens: 0,
+                    replies: 0,
+                    assignees: 0
+
+                };
+
+                if(req.body.assignee){
+                    matrix.assignees = 1;
+                }else{
+
+                    matrix.assignees = 0;
+                }
+
+                if(req.body.assignee_group){
+                    matrix.groups = 1;
+                }else{
+                    matrix.groups = 0;
+                }
+
+
+                ticket.ticket_matrix = matrix;
+
+
+                if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
+
+
+                    var arr = [];
+                    req.body.tags.forEach(function(item){
+
+                        var tagArr = item.split('.');
+                        if(tagArr && tagArr.length > 0){
+
+                            tagArr.forEach(function(myTags){
+                                ticket.isolated_tags.push(myTags);
+                            })
+                        }
+
+                    })
+
+                }
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
                 ticket.save(function (err, client) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
@@ -4223,9 +4290,33 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                     }
                                                 });
                                                 ticket.events.push(tEvent);
+                                                
 
-                                                ticket.update(ticket
-                                                    , function (err, rOrg) {
+                                                /////////////////////////////////ticket matrix///////////////////////////////////////
+                                                if(ticket.ticket_matrix) {
+                                                    ticket.ticket_matrix.last_updated = time;
+                                                    ticket.ticket_matrix.last_commented = time;
+
+                                                    if(comment.author_external){
+
+                                                        if(ticket.ticket_matrix.external_replies)
+                                                            ticket.ticket_matrix.external_replies.$inc();
+                                                        else
+                                                            ticket.ticket_matrix.external_replies =1;
+
+                                                    }else{
+                                                        if(ticket.ticket_matrix.replies)
+                                                            ticket.ticket_matrix.replies.$inc();
+                                                        else
+                                                            ticket.ticket_matrix.replies =1;
+                                                    }
+                                                }
+                                                /////////////////////////////////ticket matrix///////////////////////////////////////
+
+
+
+                                                ///////////////////////////////////////////////////////////
+                                                ticket.save(function (err, rOrg) {
                                                         if (err) {
                                                             callBack(err, undefined);
                                                         } else {
