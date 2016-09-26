@@ -67,12 +67,38 @@ function UpdateDashboardChangeStatus(data, tResult){
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
 
-    if(data && data === "closed" && tResult.status === "open"){
-        var pubMsgEReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total"+tResult.id);
-        redisHandler.Publish("events", pubMsgEReopen, function () {});
+    if(tResult && tResult.status === "closed" && tResult.ticket_matrix.external_replies && tResult.ticket_matrix.external_replies === 0){
+        var pubMsgEFirstCallResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "firstCallResolution", "total", "total", "Total"+tResult.id);
+        redisHandler.Publish("events", pubMsgEFirstCallResolution, function () {});
     }
 
-    if(data && tResult.status != "new"){
+    if(tResult && tResult.status === "new"){
+        //run ticket resolve time
+        var pubMsgNResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "new", "total", "total", "Total" + tResult.id);
+        redisHandler.Publish("events", pubMsgNResolution, function () {
+        });
+    }
+
+    if(tResult && tResult.status === "closed"){
+        //stop ticket resolve time
+        var pubMsgEResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "closed", "total", "total", "Total" + tResult.id);
+        redisHandler.Publish("events", pubMsgEResolution, function () {
+        });
+    }
+
+    if(tResult && data && data === "closed" && tResult.status === "open"){
+        //rerun ticket resolve time
+        var pubMsgNRResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "new", "total", "total", "Total" + tResult.id);
+        redisHandler.Publish("events", pubMsgNRResolution, function () {
+        });
+
+        //set ticket reopn count
+        var pubMsgEReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total" + tResult.id);
+        redisHandler.Publish("events", pubMsgEReopen, function () {
+        });
+    }
+
+    if(tResult && data && tResult.status != "new"){
         var pubMsgETotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "total", "total", "Total"+tResult.id);
         var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
         var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
@@ -86,6 +112,8 @@ function UpdateDashboardChangeStatus(data, tResult){
         redisHandler.Publish("events", pubMsgEUGroup, function () {});
 
     }
+
+    //create new window ==> until close
     var pubMsgNTotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "total", "total", "Total"+tResult.id);
     var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
     var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
