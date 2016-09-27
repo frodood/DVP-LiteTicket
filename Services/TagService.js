@@ -420,11 +420,11 @@ function CreateTagsToTagCategory(req, res){
                 }
                 else
                 {
-                    var tempAttachTag = resAttachTag.toJSON();
+                    /*var tempAttachTag = resAttachTag.toJSON();
                     tempAttachTag.newTagID=resSubTag._doc._id;
                     console.log(JSON.stringify(tempAttachTag.newTagID));
-                    console.log(JSON.stringify(tempAttachTag));
-                    jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", true, tempAttachTag);
+                    console.log(JSON.stringify(tempAttachTag));*/
+                    jsonString=messageFormatter.FormatMessage(undefined, "Attaching Tags succeeded", true, resSubTag);
                 }
                 res.end(jsonString);
             });
