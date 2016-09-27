@@ -1267,7 +1267,7 @@ module.exports.PickTicket = function (req, res) {
                                     ticket.ticket_matrix.last_updated = time;
 
                                     if(ticket.ticket_matrix.assignees)
-                                        ticket.ticket_matrix.assignees.$inc();
+                                        ticket.ticket_matrix.assignees += 1;
                                     else
                                         ticket.ticket_matrix.assignees =1;
                                 }
@@ -1649,13 +1649,13 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                             if(comment.author_external){
 
                                                 if(ticket.ticket_matrix.external_replies)
-                                                    ticket.ticket_matrix.external_replies.$inc();
+                                                    ticket.ticket_matrix.external_replies += 1;
                                                 else
                                                     ticket.ticket_matrix.external_replies =1;
 
                                             }else{
                                                 if(ticket.ticket_matrix.replies)
-                                                    ticket.ticket_matrix.replies.$inc();
+                                                    ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
                                             }
@@ -1873,13 +1873,13 @@ module.exports.AddCommentByReference = function (req, res) {
                                             if(comment.author_external){
 
                                                 if(ticket.ticket_matrix.external_replies)
-                                                    ticket.ticket_matrix.external_replies.$inc();
+                                                    ticket.ticket_matrix.external_replies += 1;
                                                 else
                                                     ticket.ticket_matrix.external_replies =1;
 
                                             }else{
                                                 if(ticket.ticket_matrix.replies)
-                                                    ticket.ticket_matrix.replies.$inc();
+                                                    ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
                                             }
@@ -2067,13 +2067,13 @@ module.exports.AddComment = function (req, res) {
                                             if(comment.author_external){
 
                                                 if(ticket.ticket_matrix.external_replies)
-                                                    ticket.ticket_matrix.external_replies.$inc();
+                                                    ticket.ticket_matrix.external_replies += 1;
                                                 else
                                                     ticket.ticket_matrix.external_replies =1;
 
                                             }else{
                                                 if(ticket.ticket_matrix.replies)
-                                                    ticket.ticket_matrix.replies.$inc();
+                                                    ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
                                             }
@@ -2374,13 +2374,13 @@ module.exports.AddCommentToComment = function (req, res) {
                                                         if(comment.author_external){
 
                                                             if(ticket.ticket_matrix.external_replies)
-                                                                ticket.ticket_matrix.external_replies.$inc();
+                                                                ticket.ticket_matrix.external_replies += 1;
                                                             else
                                                                 ticket.ticket_matrix.external_replies =1;
 
                                                         }else{
                                                             if(ticket.ticket_matrix.replies)
-                                                                ticket.ticket_matrix.replies.$inc();
+                                                                ticket.ticket_matrix.replies += 1;
                                                             else
                                                                 ticket.ticket_matrix.replies =1;
                                                         }
@@ -2610,7 +2610,7 @@ module.exports.AssignToUser = function (req, res) {
 
 
                                     if(ticket.ticket_matrix.assignees)
-                                        ticket.ticket_matrix.assignees.$inc();
+                                        ticket.ticket_matrix.assignees += 0;
                                     else
                                         ticket.ticket_matrix.assignees =1;
                                 }
@@ -2626,13 +2626,14 @@ module.exports.AssignToUser = function (req, res) {
                                 ticket.save( function (err, obj) {
                                     if (err) {
                                         jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
-                                    }
-                                    if (obj) {
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
-                                        ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
-                                    }
-                                    else {
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
+                                    }else {
+                                        if (obj) {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
+                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
+                                        }
+                                        else {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
+                                        }
                                     }
                                     res.end(jsonString);
                                 });
@@ -2707,7 +2708,7 @@ module.exports.AssignToGroup = function (req, res) {
 
 
                                     if(ticket.ticket_matrix.assignees)
-                                        ticket.ticket_matrix.assignees.$inc();
+                                        ticket.ticket_matrix.assignees += 1;
                                     else
                                         ticket.ticket_matrix.assignees =1;
                                 }
@@ -3165,85 +3166,89 @@ module.exports.CreateSubTicket = function (req, res) {
                         });
 
 
-                        var ticket = Ticket({
-                            created_at: time,
-                            updated_at: time,
-                            active: true,
-                            is_sub_ticket: true,
-                            type: req.body.type,
-                            subject: req.body.subject,
-                            reference: req.body.reference,
-                            description: req.body.description,
-                            priority: req.body.priority,
-                            status: "new",
-                            requester: req.body.requester,
-                            assignee: req.body.assignee,
-                            assignee_group: req.body.assignee_group,
-                            submitter: user.id,
-                            company: company,
-                            tenant: tenant,
-                            attachments: req.body.attachments,
-                            related_tickets: req.body.related_tickets,
-                            merged_tickets: req.body.merged_tickets,
-                            engagement_session: ObjectId(req.body.engagement_session),
-                            channel: req.body.channel,
-                            tags: req.body.tags,
-                            custom_fields: req.body.custom_fields,
-                            comments: req.body.comments,
-                            events: [tEvent]
-                        });
+                        reference.generate(tenant, company, function (done, id, key) {
+
+                            var ticket = Ticket({
+                                created_at: time,
+                                updated_at: time,
+                                active: true,
+                                is_sub_ticket: true,
+                                type: req.body.type,
+                                subject: req.body.subject,
+                                reference: id,
+                                tid: key,
+                                description: req.body.description,
+                                priority: req.body.priority,
+                                status: "new",
+                                requester: req.body.requester,
+                                assignee: req.body.assignee,
+                                assignee_group: req.body.assignee_group,
+                                submitter: user.id,
+                                company: company,
+                                tenant: tenant,
+                                attachments: req.body.attachments,
+                                related_tickets: req.body.related_tickets,
+                                merged_tickets: req.body.merged_tickets,
+                                engagement_session: ObjectId(req.body.engagement_session),
+                                channel: req.body.channel,
+                                tags: req.body.tags,
+                                custom_fields: req.body.custom_fields,
+                                comments: req.body.comments,
+                                events: [tEvent]
+                            });
 
 
-                        /////////////////////////////ticket matrix//////////////////////
-                        var matrix = {
+                            /////////////////////////////ticket matrix//////////////////////
+                            var matrix = {
 
-                            created_at: ticket.created_at,
-                            last_updated:ticket.created_at,
-                            last_status_changed:ticket.created_at,
-                            waited_time: 0,
-                            worked_time: 0,
-                            resolution_time:0,
-                            sla_violated: false,
-                            reopens: 0,
-                            replies: 0,
+                                created_at: ticket.created_at,
+                                last_updated: ticket.created_at,
+                                last_status_changed: ticket.created_at,
+                                waited_time: 0,
+                                worked_time: 0,
+                                resolution_time: 0,
+                                sla_violated: false,
+                                reopens: 0,
+                                replies: 0,
 
-                        };
+                            };
 
-                        if(req.body.assignee){
-                            matrix.assignees = 0;
-                        }
-
-                        if(req.body.assignee_group){
-                            matrix.groups = 0;
-                        }
-
-
-                        ticket.ticket_matrix = matrix;
-
-                        ////////////////////////////////////////////////////////////////
-
-                        ticket.save(function (err, obj) {
-                            jsonString = messageFormatter.FormatMessage(new Error("Invalid Parent ID."), "Sub-Ticket Saved Successfully.Without Mapping To Parent.", false, ticket);
-                            if (err) {
-                                jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
-                                res.end(jsonString);
+                            if (req.body.assignee) {
+                                matrix.assignees = 0;
                             }
-                            else {
-                                parentTicket.update({$addToSet: {sub_tickets: obj._doc._id}}
-                                    , function (err, rOrg) {
-                                        if (err) {
-                                            jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Parent.", false, undefined);
-                                        } else {
-                                            if (rOrg) {
-                                                jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, obj._doc);
-                                            }
-                                            else {
-                                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj._doc);
-                                            }
-                                        }
-                                        res.end(jsonString);
-                                    });
+
+                            if (req.body.assignee_group) {
+                                matrix.groups = 0;
                             }
+
+
+                            ticket.ticket_matrix = matrix;
+
+                            ////////////////////////////////////////////////////////////////
+
+                            ticket.save(function (err, obj) {
+                                jsonString = messageFormatter.FormatMessage(new Error("Invalid Parent ID."), "Sub-Ticket Saved Successfully.Without Mapping To Parent.", false, ticket);
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    parentTicket.update({$addToSet: {sub_tickets: obj._doc._id}}
+                                        , function (err, rOrg) {
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Parent.", false, undefined);
+                                            } else {
+                                                if (rOrg) {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Sub-Ticket Saved Successfully", true, obj._doc);
+                                                }
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj._doc);
+                                                }
+                                            }
+                                            res.end(jsonString);
+                                        });
+                                }
+                            });
                         });
                     } else {
 
@@ -4270,13 +4275,13 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                     if(comment.author_external){
 
                                                         if(ticket.ticket_matrix.external_replies)
-                                                            ticket.ticket_matrix.external_replies.$inc();
+                                                            ticket.ticket_matrix.external_replies += 1;
                                                         else
                                                             ticket.ticket_matrix.external_replies =1;
 
                                                     }else{
                                                         if(ticket.ticket_matrix.replies)
-                                                            ticket.ticket_matrix.replies.$inc();
+                                                            ticket.ticket_matrix.replies += 1;
                                                         else
                                                             ticket.ticket_matrix.replies =1;
                                                     }
@@ -4776,16 +4781,198 @@ module.exports.GetTicketReport= function(req, res){
         res.end(jsonString);
     }
 
+}
+
+module.exports.GetTicketDetailReport = function(req, res){
 
 
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
 
 
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
+
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        }catch(ex){
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
+        }
+
+        if(from > to){
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['created_at'] = { $gt: from, $lt: to };
+
+        if(req.body){
+
+            if(req.body.tag){
+                tempQuery.isolated_tags = [ req.body.tag];
+            }
+
+            if(req.body.channel){
+                tempQuery.channel =  req.body.channel;
+            }
+
+            if(req.body.priority){
+                tempQuery.priority = req.body.priority;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+            if(req.body.requester){
+                tempQuery.requester = req.body.requester;
+            }
+
+            if(req.body.submitter){
+                tempQuery.submitter = req.body.submitter;
+            }
+
+            if(req.body.assignee){
+                tempQuery.assignee = req.body.assignee;
+            }
+
+            if(req.body.status){
+                tempQuery.status = req.body.status;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+            if(req.body.sla_violated){
+                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            }
+        }
+
+        Ticket.find( tempQuery)
+            .skip(req.params.skip)
+            .limit(req.params.limit)
+            .exec(function (err, tickets) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+            }
+            res.end(jsonString);
+        });
+
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
+        res.end(jsonString);
+    }
 
 }
 
+module.exports.GetTicketDetailReportCount = function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
 
 
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
 
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        }catch(ex){
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
+        }
+
+        if(from > to){
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['created_at'] = { $gt: from, $lt: to };
+
+        if(req.body){
+
+            if(req.body.tag){
+                tempQuery.isolated_tags = [ req.body.tag];
+            }
+
+            if(req.body.channel){
+                tempQuery.channel =  req.body.channel;
+            }
+
+            if(req.body.priority){
+                tempQuery.priority = req.body.priority;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+            if(req.body.requester){
+                tempQuery.requester = req.body.requester;
+            }
+
+            if(req.body.submitter){
+                tempQuery.submitter = req.body.submitter;
+            }
+
+            if(req.body.assignee){
+                tempQuery.assignee = req.body.assignee;
+            }
+
+            if(req.body.status){
+                tempQuery.status = req.body.status;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+        }
+
+        Ticket.count( tempQuery, function (err, tickets) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            } else {
+
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+
+            }
+            res.end(jsonString);
+        });
+
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
+        res.end(jsonString);
+    }
+
+
+}
 
 
 

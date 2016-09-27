@@ -3,6 +3,7 @@
  */
 var redis = require('redis');
 var config = require('config');
+var util = require('util');
 
 client = redis.createClient(config.Redis.port, config.Redis.ip);
 client.auth(config.Redis.password);

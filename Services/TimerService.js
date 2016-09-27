@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var TimeEntry = require('dvp-mongomodels/model/TimeEntry').TimeEntry;
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
+var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var User = require('dvp-mongomodels/model/User');
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var moment = require('moment');
@@ -57,7 +58,47 @@ function CreateTimer(req, res){
                                                 res.end(jsonString);
                                             } else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Time entry saved successfully", true, form);
-                                                res.end(jsonString);
+                                                //res.end(jsonString);
+
+
+                                                /////////////////////////////////////////////////////////////////////////////////
+                                                var tEvent = TicketEvent({
+                                                    type: 'tracker',
+                                                    body: {
+                                                        "message": req.user.iss + " created time entry",
+                                                        "time": time
+                                                    }
+                                                });
+                                                ticket.events.push(tEvent);
+
+                                                ////////////////////////////////////////////////ticket matrix/////////////////////////////////////////
+
+                                                if(ticket.ticket_matrix) {
+
+                                                    ticket.ticket_matrix.last_updated = time;
+
+                                                    if(!ticket.ticket_matrix.worked_time)
+                                                        ticket.ticket_matrix.worked_time =0;
+                                                }
+
+
+                                                ticket.save(function (err, ticket_save) {
+                                                    if (err) {
+                                                        jsonString = messageFormatter.FormatMessage(err, "Fail Save Ticket", false, undefined);
+                                                    }
+                                                    else {
+                                                        if (ticket_save) {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Saved Successfully", true, ticket_save);
+
+                                                        }
+                                                        else {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
+                                                        }
+                                                    }
+                                                    res.end(jsonString);
+                                                });
+                                                ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
                                             }
                                         });
                                 } else {
@@ -73,12 +114,8 @@ function CreateTimer(req, res){
                                 jsonString = messageFormatter.FormatMessage(undefined, "User Not found", false, undefined);
                                 res.end(jsonString);
                             }
-
-
                         }
-
                 });
-
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, undefined);
@@ -573,7 +610,7 @@ function StopTimer(req, res){
                                     if (err) {
                                         jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
                                     }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessful", true, timer);
+                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfully", true, timer);
                                     }
                                     res.end(jsonString);
 
