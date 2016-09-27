@@ -4863,6 +4863,11 @@ module.exports.GetTicketDetailReport = function(req, res){
         Ticket.find( tempQuery)
             .skip(req.params.skip)
             .limit(req.params.limit)
+            .populate('assignee', 'name avatar')
+            .populate('assignee_group', 'name')
+            .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
+            .populate('submitter', 'name avatar')
+            .populate('collaborators', 'name avatar')
             .exec(function (err, tickets) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
