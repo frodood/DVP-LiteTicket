@@ -3177,6 +3177,8 @@ module.exports.CreateSubTicket = function (req, res) {
                             priority: req.body.priority,
                             status: "new",
                             requester: req.body.requester,
+                            assignee: req.body.assignee,
+                            assignee_group: req.body.assignee_group,
                             submitter: user.id,
                             company: company,
                             tenant: tenant,
@@ -3188,7 +3190,6 @@ module.exports.CreateSubTicket = function (req, res) {
                             tags: req.body.tags,
                             custom_fields: req.body.custom_fields,
                             comments: req.body.comments,
-                            SLAViolated: false,
                             events: [tEvent]
                         });
 
@@ -4141,7 +4142,6 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     tags: req.body.tags,
                     custom_fields: req.body.custom_fields,
                     comments: req.body.comments,
-                    SLAViolated: false,
                     events: [tEvent],
                     requester: undefined,
                     assignee: req.body.assignee
@@ -4648,7 +4648,7 @@ module.exports.GetTicketReport= function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = {$contains: req.body.tag};
+                tempQuery.isolated_tags = [ req.body.tag];
             }
 
             if(req.body.channel){
@@ -4669,7 +4669,6 @@ module.exports.GetTicketReport= function(req, res){
 
             {
                 $match: tempQuery,
-
 
             },
             {
@@ -4723,10 +4722,19 @@ module.exports.GetTicketReport= function(req, res){
                         }
                     },
                     average_response: {
-                        $avg: "$ticket_matrix.waited_time"
+                        $avg: {
+
+                            $cond: [{$ne:["$status","new"]}, "$ticket_matrix.waited_time", null]
+
+                        }
                     },
                     average_resolution: {
-                        $avg: "$ticket_matrix.resolution_time"
+
+                        $avg: {
+
+                            $cond: [{$and : [{$eq:["$status","closed"]},{$eq:["$status","solved"]}]}, "$ticket_matrix.resolution_time", null]
+
+                        }
                     }
                 }
             },{
