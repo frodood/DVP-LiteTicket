@@ -19,6 +19,7 @@
   "dependencies": {
     "amqp": "^0.2.6",
     "amqplib": "^0.4.1",
+    "array-unique": "^0.3.2",
     "async": "^2.0.1",
     "config": "^1.21.0",
     "cors": "^2.7.1",
@@ -26,7 +27,7 @@
     "deepcopy": "^0.6.3",
     "dvp-common": "^0.5.0",
     "dvp-dbmodels": "^0.2.4",
-    "dvp-mongomodels": "^2.0.6",
+    "dvp-mongomodels": "^2.0.7",
     "json-query": "^2.1.0",
     "moment": "^2.14.1",
     "mongoose": "^4.5.3",

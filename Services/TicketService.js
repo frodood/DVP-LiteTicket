@@ -1658,6 +1658,15 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                     ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
+
+                                                if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                    if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                        ticket.collaborators.push(user._id);
+                                                    }
+                                                }else{
+                                                    ticket.collaborators = [user._id];
+                                                }
                                             }
                                         }
 
@@ -1787,6 +1796,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 
 //////////////////////////////////////external method//////////////////////////////////////////////
+
 module.exports.AddCommentByReference = function (req, res) {
 
 
@@ -1882,8 +1892,21 @@ module.exports.AddCommentByReference = function (req, res) {
                                                     ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
+
+                                                if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                    if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                        ticket.collaborators.push(user._id);
+                                                    }
+                                                }else{
+                                                    ticket.collaborators = [user._id];
+                                                }
                                             }
                                         }
+
+
+
+
 
                                         ticket.comments.push(obj.id);
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
@@ -2076,8 +2099,20 @@ module.exports.AddComment = function (req, res) {
                                                     ticket.ticket_matrix.replies += 1;
                                                 else
                                                     ticket.ticket_matrix.replies =1;
+
+
+                                                if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                    if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                        ticket.collaborators.push(user._id);
+                                                    }
+                                                }else{
+                                                    ticket.collaborators = [user._id];
+                                                }
                                             }
                                         }
+
+
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
                                         ticket.save(function (err, rOrg) {
@@ -2383,6 +2418,16 @@ module.exports.AddCommentToComment = function (req, res) {
                                                                 ticket.ticket_matrix.replies += 1;
                                                             else
                                                                 ticket.ticket_matrix.replies =1;
+
+                                                            if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                                if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                                    ticket.collaborators.push(user._id);
+                                                                }
+                                                            }else{
+                                                                ticket.collaborators = [user._id];
+                                                            }
+
                                                         }
                                                     }
 
@@ -2476,7 +2521,7 @@ module.exports.ChangeStatus = function (req, res) {
                                 ticket.ticket_matrix.waited_time = time - ticket.ticket_matrix.created_at;
                             }
 
-                        }else if(ticket.status == 'closed' ||ticket.status == 'slved'){
+                        }else if(ticket.status == 'closed' ||ticket.status == 'solved'){
 
                             ticket.ticket_matrix.solved_at = time;
                             ticket.ticket_matrix.resolution_time = time - ticket.ticket_matrix.created_at;
@@ -3615,6 +3660,95 @@ module.exports.BulkStatusUpdate = function (req, res) {
     });
 };
 
+module.exports.WatchTicket = function (req, res){
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (user) {
+                Ticket.findOneAndUpdate({
+                    company: company,
+                    tenant: tenant,
+                    _id: req.params.id
+                }, {
+
+                    $addToSet: {watchers:user._id}
+
+                },function (err, recentticket) {
+                    if (err) {
+
+                        logger.error("Add to resent ticket failed ", err);
+                        jsonString = messageFormatter.FormatMessage(err, "Add watcher failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+
+                        logger.debug("Add to resent ticket succeed ");
+                        jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        res.end(jsonString);
+                    }
+
+                });
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+}
+
+module.exports.StopWatchTicket = function (req, res){
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (user) {
+                Ticket.findOneAndUpdate({
+                    company: company,
+                    tenant: tenant,
+                    _id: req.params.id
+                }, {
+
+                    $pull: {watchers:user._id}
+
+                },function (err, recentticket) {
+                    if (err) {
+
+                        logger.error("Add to resent ticket failed ", err);
+                        jsonString = messageFormatter.FormatMessage(err, "Add watcher failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+
+                        logger.debug("Add to resent ticket succeed ");
+                        jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        res.end(jsonString);
+                    }
+
+                });
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+}
+
+
 
 function ExecuteTriggerAsync(ticketId, eventType, data) {
     var deferred = q.defer();
@@ -4284,6 +4418,15 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                             ticket.ticket_matrix.replies += 1;
                                                         else
                                                             ticket.ticket_matrix.replies =1;
+
+                                                        if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                            if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                                ticket.collaborators.push(user._id);
+                                                            }
+                                                        }else{
+                                                            ticket.collaborators = [user._id];
+                                                        }
                                                     }
                                                 }
                                                 //////////////////////////////////////////////////////////////////////////////

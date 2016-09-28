@@ -6,6 +6,8 @@ var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var User = require('dvp-mongomodels/model/User');
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var moment = require('moment');
+var unique = require("array-unique");
+var util = require('util');
 
 function CreateTimer(req, res){
 
@@ -57,7 +59,7 @@ function CreateTimer(req, res){
                                                 jsonString = messageFormatter.FormatMessage(err, "Time entry saved failed", false, undefined);
                                                 res.end(jsonString);
                                             } else {
-                                                jsonString = messageFormatter.FormatMessage(undefined, "Time entry saved successfully", true, form);
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Time entry saved successfully", true, timeentry);
                                                 //res.end(jsonString);
 
 
@@ -66,7 +68,7 @@ function CreateTimer(req, res){
                                                     type: 'tracker',
                                                     body: {
                                                         "message": req.user.iss + " created time entry",
-                                                        "time": time
+                                                        "time": new Date()
                                                     }
                                                 });
                                                 ticket.events.push(tEvent);
@@ -75,11 +77,23 @@ function CreateTimer(req, res){
 
                                                 if(ticket.ticket_matrix) {
 
-                                                    ticket.ticket_matrix.last_updated = time;
+                                                    ticket.ticket_matrix.last_updated = new Date();
 
                                                     if(!ticket.ticket_matrix.worked_time)
                                                         ticket.ticket_matrix.worked_time =0;
                                                 }
+
+
+                                                if(ticket.collaborators && util.isArray(ticket.collaborators)){
+
+                                                    if(ticket.collaborators.indexOf(user._id) == -1) {
+                                                        ticket.collaborators.push(user._id);
+                                                    }
+                                                }else{
+                                                    ticket.collaborators = [user._id];
+                                                }
+
+
 
 
                                                 ticket.save(function (err, ticket_save) {
@@ -88,7 +102,7 @@ function CreateTimer(req, res){
                                                     }
                                                     else {
                                                         if (ticket_save) {
-                                                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Saved Successfully", true, ticket_save);
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Saved Successfully", true, timeentry);
 
                                                         }
                                                         else {
@@ -508,43 +522,58 @@ function PauseTimer(req, res){
         else {
             if (user) {
 
-                TimeEntry.findOne({user: user.id, running: true,last_event:'start', company: company, tenant: tenant}, function(err, timer) {
+                TimeEntry.findOne({user: user.id, _id: req.params.id, company: company, tenant: tenant}, function(err, timer) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Time entry Failed", false, undefined);
                         res.end(jsonString);
                     }else {
                         if (timer) {
-                            jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successfull", true, timer);
-                            var timeevent = {state:'pause', time: Date.now()};
 
-                            if(req.body && req.body.note){
 
-                                timeevent["note"] = req.body.note;
+                            if (timer.running && timer.last_event == 'start') {
+
+                                jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successfull", true, timer);
+                                var timeevent = {state: 'pause', time: Date.now()};
+
+                                if (req.body && req.body.note) {
+
+                                    timeevent["note"] = req.body.note;
+                                }
+
+                                var ms = moment(Date.now()).diff(moment(timer.last_event_date));
+                                var d = moment.duration(ms);
+                                var time = timer.time + d;
+                                TimeEntry.findOneAndUpdate(
+                                    {
+                                        user: user.id,
+                                        running: true,
+                                        last_event: 'start',
+                                        company: company,
+                                        tenant: tenant
+                                    },
+                                    {
+                                        last_event_date: Date.now(),
+                                        time: time,
+                                        last_event: 'pause',
+                                        $addToSet: {time_events: timeevent},
+
+                                    }, function (err, timer) {
+
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
+                                        } else {
+                                            jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfull", true, timer);
+                                        }
+                                        res.end(jsonString);
+
+                                    });
+                            } else {
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Time entry Found", false, undefined);
+                                res.end(jsonString);
                             }
-
-                            var ms = moment(Date.now()).diff(moment(timer.last_event_date));
-                            var d = moment.duration(ms);
-                            var time = timer.time + d;
-                            TimeEntry.findOneAndUpdate(
-                                {user: user.id, running: true,last_event:'start', company: company, tenant: tenant},
-                                {
-                                    last_event_date: Date.now(),
-                                    time: time,
-                                    last_event:'pause',
-                                    $addToSet:{time_events:timeevent},
-
-                                },function(err, timer) {
-
-                                    if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
-                                    }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry sucessfull", true, timer);
-                                    }
-                                    res.end(jsonString);
-
-                                });
                         }else{
-                            jsonString = messageFormatter.FormatMessage(undefined, "No Time entry Found", false, undefined);
+
+                            jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfull", true, timer);
                             res.end(jsonString);
                         }
                     }
@@ -575,48 +604,117 @@ function StopTimer(req, res){
         else {
             if (user) {
 
-                TimeEntry.findOne({user: user.id, running: true, company: company, tenant: tenant}, function(err, timer) {
+                TimeEntry.findOne({user: user.id, _id:req.params.id, company: company, tenant: tenant}, function(err, timer) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Time entry Failed", false, undefined);
                         res.end(jsonString);
                     }else {
                         if (timer) {
-                            jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successful", true, timer);
-                            var timeevent = {state:'stop', time: Date.now()};
+                            if (timer.running) {
+                                jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successful", true, timer);
+                                var timeevent = {state: 'stop', time: Date.now()};
 
-                              if(req.body && req.body.note){
+                                if (req.body && req.body.note) {
 
-                                  timeevent["note"] = req.body.note;
-                              }
+                                    timeevent["note"] = req.body.note;
+                                }
 
-                            var time = timer.time;
-                            if(timer.last_event == 'start') {
-                                var ms = moment(Date.now()).diff(moment(timer.last_event_date));
-                                var d = moment.duration(ms);
-                                time = timer.time + d;
+                                var time = timer.time;
+                                if (timer.last_event == 'start') {
+                                    var ms = moment(Date.now()).diff(moment(timer.last_event_date));
+                                    var d = moment.duration(ms);
+                                    time = timer.time + d;
+                                }
+
+                                TimeEntry.findOneAndUpdate(
+                                    {user: user.id, running: true, company: company, tenant: tenant},
+                                    {
+                                        last_event_date: Date.now(),
+                                        time: time,
+                                        last_event: 'stop',
+                                        running: false,
+                                        $addToSet: {time_events: timeevent}
+
+                                    }, function (err, timer) {
+
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
+                                            res.end(jsonString);
+                                        } else {
+
+                                            if (timer) {
+                                                jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfully", true, timer);
+
+                                                Ticket.findOne({
+                                                    company: company,
+                                                    tenant: tenant,
+                                                    _id: timer.ticket
+                                                }, function (err, ticket) {
+                                                    if (err) {
+
+                                                        jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
+                                                        res.end(jsonString);
+                                                    }
+                                                    else {
+                                                        if (ticket) {
+
+                                                            var tEvent = TicketEvent({
+                                                                type: 'tracker',
+                                                                body: {
+                                                                    "message": req.user.iss + " added time " + time,
+                                                                    "time": new Date()
+                                                                }
+                                                            });
+                                                            ticket.events.push(tEvent);
+
+
+                                                            ////////////////////////////////////////////////ticket matrix/////////////////////////////////////////
+
+                                                            if (ticket.ticket_matrix) {
+                                                                ticket.ticket_matrix.last_updated = new Date();
+                                                                ticket.ticket_matrix.worked_time = time;
+                                                            }
+
+                                                            ///////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                            ticket.save(function (err, rUser) {
+                                                                if (err) {
+                                                                    jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                                                                }
+                                                                else {
+                                                                    if (rUser) {
+                                                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, timer);
+                                                                    }
+                                                                    else {
+                                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, timer);
+                                                                    }
+                                                                }
+                                                                res.end(jsonString);
+                                                            });
+                                                        }
+                                                        else {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                                                            res.end(jsonString);
+                                                        }
+                                                    }
+
+                                                });
+
+                                            } else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Add Time entry Failed", false, timer);
+                                                res.end(jsonString);
+                                            }
+                                            ////////////////////////////update ticket////////////////////////////////////////////////////
+                                        }
+
+
+                                    });
+                            } else {
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Time entry Found", false, undefined);
+                                res.end(jsonString);
                             }
-
-                            TimeEntry.findOneAndUpdate(
-                                {user: user.id, running: true, company: company, tenant: tenant},
-                                {
-                                    last_event_date: Date.now(),
-                                    time: time,
-                                    last_event:'stop',
-                                    running: false,
-                                    $addToSet:{time_events:timeevent}
-
-                                },function(err, timer) {
-
-                                    if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "Add Time entry Failed", false, timer);
-                                    }else {
-                                        jsonString = messageFormatter.FormatMessage(err, "AddTime entry successfully", true, timer);
-                                    }
-                                    res.end(jsonString);
-
-                                });
                         }else{
-                            jsonString = messageFormatter.FormatMessage(undefined, "No Time entry Found", false, undefined);
+
+                            jsonString = messageFormatter.FormatMessage(err, "Get Time entry Successful", true, timer);
                             res.end(jsonString);
                         }
                     }

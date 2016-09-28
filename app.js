@@ -100,12 +100,12 @@ server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
 server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
+server.put('/DVP/API/:version/Ticket/:id/Watch', authorization({resource:"ticket", action:"write"}), ticketService.WatchTicket);
+server.put('/DVP/API/:version/Ticket/:id/StopWatch', authorization({resource:"ticket", action:"delete"}), ticketService.StopWatchTicket);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
 server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommentToComment);
 server.put('/DVP/API/:version/TicketByEngagement/:engagementid/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByEngagement);
-
 server.put('/DVP/API/:version/TicketByReference/:reference/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByReference);
-
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
 server.put('/DVP/API/:version/Ticket/Status/Bulk', authorization({resource:"ticket", action:"write"}), ticketService.BulkStatusUpdate);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
@@ -177,9 +177,9 @@ server.get('/DVP/API/:version/Timers/Ticket/:tid', authorization({resource:"time
 server.get('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"read"}), timerService.GetTime);
 server.put('/DVP/API/:version/Timer/:id/Ticket/:tid', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTicket);
 server.put('/DVP/API/:version/Timer/:id/Time/:time', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTime);
-server.put('/DVP/API/:version/MyTimer/pause', authorization({resource:"timer", action:"write"}), timerService.PauseTimer);
+server.put('/DVP/API/:version/MyTimer/:id/pause', authorization({resource:"timer", action:"write"}), timerService.PauseTimer);
 server.put('/DVP/API/:version/MyTimer/start', authorization({resource:"timer", action:"write"}), timerService.StartTimer);
-server.put('/DVP/API/:version/MyTimer/stop', authorization({resource:"timer", action:"write"}), timerService.StopTimer);
+server.put('/DVP/API/:version/MyTimer/:id/stop', authorization({resource:"timer", action:"write"}), timerService.StopTimer);
 
 
 
