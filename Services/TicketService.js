@@ -89,6 +89,7 @@ module.exports.CreateTicket = function (req, res) {
                         priority: req.body.priority,
                         status: "new",
                         submitter: user.id,
+
                         company: company,
                         tenant: tenant,
                         attachments: req.body.attachments,
@@ -105,8 +106,10 @@ module.exports.CreateTicket = function (req, res) {
                         due_at: req.body.due_at
                     });
 
+                    ticket.watchers =  [user.id];
                     if (req.body.requester) {
                         ticket.requester = req.body.requester;
+                        ticket.watchers.push(req.body.requester);
 
                     }
 
