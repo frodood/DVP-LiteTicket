@@ -1859,11 +1859,7 @@ module.exports.AddCommentByReference = function (req, res) {
                                 }
                                 else {
                                     if (obj.id) {
-
-
-
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
                                         var time = new Date().toISOString();
                                         ticket.updated_at = time;
@@ -1921,6 +1917,7 @@ module.exports.AddCommentByReference = function (req, res) {
                                             } else {
                                                 if (rOrg) {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
                                                 }
                                                 else {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
@@ -2274,6 +2271,84 @@ module.exports.AddAttachment = function (req, res) {
     });
 
 
+};
+
+module.exports.RemoveAttachment = function (req, res) {
+    logger.info("DVP-LiteTicket.RemoveAttachment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Ticket.findOne({_id: req.params.tid, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                Attachment.findOneAndRemove({_id: req.params.id},function (err, obj) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Delete Attachment.", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (obj && obj.id) {
+
+                            var time = new Date().toISOString();
+                            ticket.updated_at = time;
+
+                            var index = ticket.attachments.indexOf(obj.id);
+                            if (index > -1) {
+                                ticket.attachments.splice(index, 1);
+                            }
+
+                            var tEvent = TicketEvent({
+                                type: 'status',
+                                body: {
+                                    "message": req.user.iss + " Removed Attachment " + obj.id,
+                                    "time": time
+                                }
+                            });
+                            ticket.events.push(tEvent);
+
+
+                            ///////////////////////////////////ticket matrix////////////////////////////////
+                            if (ticket.ticket_matrix) {
+                                ticket.ticket_matrix.last_updated = time;
+                            }
+
+                            /////////////////////////////////////////////////////////////////////////////////////////
+
+                            ticket.save(function (err, rOrg) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                } else {
+                                    if (rOrg) {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Attachment Successfully Map To Ticket", true, obj);
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                    }
+                                }
+                                res.end(jsonString);
+                            });
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+
+                });
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
 };
 
 module.exports.AddCommentToComment = function (req, res) {
@@ -5102,6 +5177,10 @@ module.exports.GetTicketDetailReportCount = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
+            if(req.body.sla_violated){
+                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            }
+
         }
 
         Ticket.count( tempQuery, function (err, tickets) {
@@ -5121,6 +5200,35 @@ module.exports.GetTicketDetailReportCount = function(req, res){
         jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
         res.end(jsonString);
     }
+
+
+}
+
+module.exports.GetTicketsByField = function(req, res) {
+
+
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    var tempQuery = {company: company, tenant: tenant};
+
+
+    if (req.params.key && req.params.value) {
+
+        tempQuery[req.params.key] = req.params.value;
+    }
+
+    Ticket.find(tempQuery, function (err, tickets) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+        }
+        res.end(jsonString);
+    });
 
 
 }

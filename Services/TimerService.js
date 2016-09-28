@@ -166,18 +166,54 @@ function GetTimesForUser(req, res){
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    TimeEntry.find({user: req.params.uid, company: company, tenant: tenant}, function(err, forms) {
-        if (err) {
-            jsonString = messageFormatter.FormatMessage(err, "Get Time entries Failed", false, undefined);
-        }else {
-            if (forms) {
-                jsonString = messageFormatter.FormatMessage(err, "Get Time entries Successful", true, forms);
-            }else{
-                jsonString = messageFormatter.FormatMessage(undefined, "No Time entries Found", false, undefined);
-            }
+
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
+
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        } catch (ex) {
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
         }
+
+        if (from > to) {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['startTime'] = {$gt: from, $lt: to};
+
+        tempQuery.user= req.params.uid;
+        tempQuery.company= company;
+        tempQuery.tenant= tenant;
+
+        TimeEntry.find(tempQuery, function (err, forms) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get Time entries Failed", false, undefined);
+            } else {
+                if (forms) {
+                    jsonString = messageFormatter.FormatMessage(err, "Get Time entries Successful", true, forms);
+                } else {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Time entries Found", false, undefined);
+                }
+            }
+            res.end(jsonString);
+        });
+
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
         res.end(jsonString);
-    });
+    }
 };
 function GetTimesForTicket(req, res){
 
