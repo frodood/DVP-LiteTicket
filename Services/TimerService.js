@@ -196,7 +196,7 @@ function GetTimesForUser(req, res){
         tempQuery.company= company;
         tempQuery.tenant= tenant;
 
-        TimeEntry.find(tempQuery, function (err, forms) {
+        TimeEntry.find(tempQuery).populate('user' , '-password').populate('ticket').exec(function (err, forms) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get Time entries Failed", false, undefined);
             } else {
