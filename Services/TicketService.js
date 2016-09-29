@@ -283,6 +283,76 @@ module.exports.GetAllTickets = function (req, res) {
 
 };
 
+module.exports.GetTicketSchema = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var userList = [];
+    var groupList = [];
+    var objList = [];
+
+    //////////////////////get users/////////////////////////////////////////////////////////////////////////////
+    User.find({company: company, tenant: tenant}).select({"username":1, "_id":1}).exec(function(err, users) {
+
+
+            if(!err && users){
+                userList = users;
+            }
+
+            UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+
+                if (!err && groups) {
+                    groupList = groups;
+                }
+
+                ///////////////////////////////////////get schema nad loop//////////////////////////////////////
+                Object.keys(Ticket.schema.paths).forEach(function(key){
+                    console.log(key);
+                    console.log(Ticket.schema.paths[key]);
+
+                    var item = {
+
+                        field: key,
+                        type: Ticket.schema.paths[key].instance,
+                    };
+
+                    if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
+
+                        // if(Ticket.schema.paths[key].options.ref == 'User'){
+
+                        item["type"] = "ObjectID";
+                        item["reference"] = Ticket.schema.paths[key].options.ref;
+
+                        // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
+
+                        //     item["type"] = "Select";
+                        //     item["values"] = groupList;
+                        //}
+                    }
+
+                    if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
+                        item["type"] = "Select";
+                        item["values"] = Ticket.schema.paths[key].enumValues;
+                    }
+
+                    objList.push(item);
+                });
+                var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
+                res.end(jsonString);
+            });
+
+        });
+
+//////////////////////get groups////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+};
+
 module.exports.GetTicketsByTimeRange = function (req, res) {
     logger.info("DVP-LiteTicket.GetTicketsByTimeRange Internal method ");
     var company = parseInt(req.user.company);
@@ -1859,11 +1929,7 @@ module.exports.AddCommentByReference = function (req, res) {
                                 }
                                 else {
                                     if (obj.id) {
-
-
-
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
                                         var time = new Date().toISOString();
                                         ticket.updated_at = time;
@@ -1921,6 +1987,7 @@ module.exports.AddCommentByReference = function (req, res) {
                                             } else {
                                                 if (rOrg) {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
                                                 }
                                                 else {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
@@ -2274,6 +2341,84 @@ module.exports.AddAttachment = function (req, res) {
     });
 
 
+};
+
+module.exports.RemoveAttachment = function (req, res) {
+    logger.info("DVP-LiteTicket.RemoveAttachment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Ticket.findOne({_id: req.params.tid, company: company, tenant: tenant}, function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail To Find Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (ticket) {
+
+                Attachment.findOneAndRemove({_id: req.params.id},function (err, obj) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Delete Attachment.", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (obj && obj.id) {
+
+                            var time = new Date().toISOString();
+                            ticket.updated_at = time;
+
+                            var index = ticket.attachments.indexOf(obj.id);
+                            if (index > -1) {
+                                ticket.attachments.splice(index, 1);
+                            }
+
+                            var tEvent = TicketEvent({
+                                type: 'status',
+                                body: {
+                                    "message": req.user.iss + " Removed Attachment " + obj.id,
+                                    "time": time
+                                }
+                            });
+                            ticket.events.push(tEvent);
+
+
+                            ///////////////////////////////////ticket matrix////////////////////////////////
+                            if (ticket.ticket_matrix) {
+                                ticket.ticket_matrix.last_updated = time;
+                            }
+
+                            /////////////////////////////////////////////////////////////////////////////////////////
+
+                            ticket.save(function (err, rOrg) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                } else {
+                                    if (rOrg) {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Attachment Successfully Map To Ticket", true, obj);
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                    }
+                                }
+                                res.end(jsonString);
+                            });
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+
+                });
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
 };
 
 module.exports.AddCommentToComment = function (req, res) {
@@ -5102,6 +5247,10 @@ module.exports.GetTicketDetailReportCount = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
+            if(req.body.sla_violated){
+                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            }
+
         }
 
         Ticket.count( tempQuery, function (err, tickets) {
@@ -5121,6 +5270,35 @@ module.exports.GetTicketDetailReportCount = function(req, res){
         jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
         res.end(jsonString);
     }
+
+
+}
+
+module.exports.GetTicketsByField = function(req, res) {
+
+
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    var tempQuery = {company: company, tenant: tenant};
+
+
+    if (req.params.key && req.params.value) {
+
+        tempQuery[req.params.key] = req.params.value;
+    }
+
+    Ticket.find(tempQuery, function (err, tickets) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+        }
+        res.end(jsonString);
+    });
 
 
 }

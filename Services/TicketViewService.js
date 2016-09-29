@@ -580,9 +580,7 @@ function GetTicketsByView(req, res){
                                                 item.value = new Date();
                                             }
                                         }
-
                                     }
-
 
 
                                     switch(item.operator){
@@ -621,30 +619,12 @@ function GetTicketsByView(req, res){
 
                                             break;
                                     }
-
                                 })
-
                             }
 
 
                             var mainQuery = {$and:[andQueryObject]};
-
-
-                            /*
-
-
-                             Test.find({
-                             $and: [
-                             { $or: [{a: 1}, {b: 1}] },
-                             { $or: [{c: 1}, {d: 1}] }
-                             ]
-                             }, function (err, results) {
-                             ...
-                             }
-                             */
-
                             var orQuery = { $or: [] };
-
                             if(view.conditions.any && Array.isArray(view.conditions.any) && view.conditions.any.length > 0){
                                 view.conditions.any.forEach(function(item){
 
@@ -652,33 +632,23 @@ function GetTicketsByView(req, res){
                                     //'is', 'less_than', 'greater_than','is_not','included','not_included', 'greater_than_or_equal','less_than_or_equal'
 
                                     if(item.value == '{me}'){
-
                                         item.value = user.id;
-
                                     }
 
                                     if(item.field == "created_at" || item.field == "updated_at:" || item.field == "due_at"){
-
-
                                         if(item.value == '{now}'){
-
                                             item.value = new Date();
 
                                         }else {
 
                                             try {
-
                                                 item.value = new Date(item.value);
 
                                             } catch (ex) {
-
                                                 item.value = new Date();
                                             }
                                         }
-
                                     }
-
-
 
 
                                     switch(item.operator){
