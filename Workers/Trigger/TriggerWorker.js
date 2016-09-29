@@ -128,8 +128,8 @@ function UpdateDashboardChangeStatus(data, tResult){
 }
 
 function UpdateDashboardChangeAssignee(data, tResult){
-    var assignee = tResult.assignee? tResult.assignee: "";
-    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
+    var assignee = tResult.assignee? tResult.assignee.username: "";
+    //var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
@@ -145,8 +145,8 @@ function UpdateDashboardChangeAssignee(data, tResult){
 }
 
 function UpdateDashboardChangeAssigneeGroup(data, tResult){
-    var assignee = tResult.assignee? tResult.assignee: "";
-    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
+    //var assignee = tResult.assignee? tResult.assignee: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group.name: "";
     data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, data);
