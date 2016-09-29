@@ -180,6 +180,7 @@ server.del('/DVP/API/:version/MyTimer', authorization({resource:"timer", action:
 server.get('/DVP/API/:version/MyTimers', authorization({resource:"timer", action:"read"}), timerService.GetMyTimes);
 server.get('/DVP/API/:version/Timers/User/:uid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForUser);
 server.get('/DVP/API/:version/Timers/Ticket/:tid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForTicket);
+server.get('/DVP/API/:version/Timers/Ticket/:tid/User/:uid', authorization({resource:"timer", action:"read"}), timerService.GetTimesForTicketByUser);
 server.get('/DVP/API/:version/Timer/:id', authorization({resource:"timer", action:"read"}), timerService.GetTime);
 server.put('/DVP/API/:version/Timer/:id/Ticket/:tid', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTicket);
 server.put('/DVP/API/:version/Timer/:id/Time/:time', authorization({resource:"timer", action:"write"}), timerService.UpdateMyTimerTime);

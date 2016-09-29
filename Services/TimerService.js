@@ -235,6 +235,26 @@ function GetTimesForTicket(req, res){
         res.end(jsonString);
     });
 };
+function GetTimesForTicketByUser(req, res){
+
+
+    logger.debug("DVP-LiteTicket.GetTimesForTicket Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    TimeEntry.find({user: req.params.uid,ticket: req.params.tid, company: company, tenant: tenant}, function(err, forms) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Time entries Failed", false, undefined);
+        }else {
+            if (forms) {
+                jsonString = messageFormatter.FormatMessage(err, "Get Time entries Successful", true, forms);
+            }else{
+                jsonString = messageFormatter.FormatMessage(undefined, "No Time entries Found", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+};
 function GetTime(req, res){
 
 
@@ -774,6 +794,7 @@ module.exports.CreateTimer =CreateTimer;
 module.exports.GetTimes = GetTimes;
 module.exports.GetTimesForUser = GetTimesForUser;
 module.exports.GetTimesForTicket = GetTimesForTicket;
+module.exports.GetTimesForTicketByUser = GetTimesForTicketByUserk
 module.exports.GetTime = GetTime;
 module.exports.GetMyTimer = GetMyTimer;
 module.exports.GetMyTimes = GetMyTimes;
