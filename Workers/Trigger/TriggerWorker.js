@@ -60,8 +60,8 @@ function GenerateFilterRegex(value){
 }
 
 function UpdateDashboardChangeStatus(data, tResult){
-    var assignee = tResult.assignee? tResult.assignee._id: "";
-    var assignee_group = tResult.assignee_group? tResult.assignee_group._id: "";
+    var assignee = tResult.assignee? tResult.assignee.username: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group.name: "";
     data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
