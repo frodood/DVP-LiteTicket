@@ -283,6 +283,76 @@ module.exports.GetAllTickets = function (req, res) {
 
 };
 
+module.exports.GetTicketSchema = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var userList = [];
+    var groupList = [];
+    var objList = [];
+
+    //////////////////////get users/////////////////////////////////////////////////////////////////////////////
+    User.find({company: company, tenant: tenant}).select({"username":1, "_id":1}).exec(function(err, users) {
+
+
+            if(!err && users){
+                userList = users;
+            }
+
+            UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+
+                if (!err && groups) {
+                    groupList = groups;
+                }
+
+                ///////////////////////////////////////get schema nad loop//////////////////////////////////////
+                Object.keys(Ticket.schema.paths).forEach(function(key){
+                    console.log(key);
+                    console.log(Ticket.schema.paths[key]);
+
+                    var item = {
+
+                        field: key,
+                        type: Ticket.schema.paths[key].instance,
+                    };
+
+                    if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
+
+                        // if(Ticket.schema.paths[key].options.ref == 'User'){
+
+                        item["type"] = "ObjectID";
+                        item["reference"] = Ticket.schema.paths[key].options.ref;
+
+                        // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
+
+                        //     item["type"] = "Select";
+                        //     item["values"] = groupList;
+                        //}
+                    }
+
+                    if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
+                        item["type"] = "Select";
+                        item["values"] = Ticket.schema.paths[key].enumValues;
+                    }
+
+                    objList.push(item);
+                });
+                var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
+                res.end(jsonString);
+            });
+
+        });
+
+//////////////////////get groups////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+};
+
 module.exports.GetTicketsByTimeRange = function (req, res) {
     logger.info("DVP-LiteTicket.GetTicketsByTimeRange Internal method ");
     var company = parseInt(req.user.company);
