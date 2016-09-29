@@ -60,8 +60,8 @@ function GenerateFilterRegex(value){
 }
 
 function UpdateDashboardChangeStatus(data, tResult){
-    var assignee = tResult.assignee? tResult.assignee.username: "";
-    var assignee_group = tResult.assignee_group? tResult.assignee_group.name: "";
+    var assignee = tResult.assignee? tResult.assignee: "";
+    var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
@@ -130,7 +130,7 @@ function UpdateDashboardChangeStatus(data, tResult){
 function UpdateDashboardChangeAssignee(data, tResult){
     var assignee = tResult.assignee? tResult.assignee.username: "";
     //var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
-    data = data? data.username:"";
+    data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s");
@@ -147,7 +147,7 @@ function UpdateDashboardChangeAssignee(data, tResult){
 function UpdateDashboardChangeAssigneeGroup(data, tResult){
     //var assignee = tResult.assignee? tResult.assignee: "";
     var assignee_group = tResult.assignee_group? tResult.assignee_group.name: "";
-    data = data? data.name:"";
+    data = data? data:"";
 
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, data);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, data);

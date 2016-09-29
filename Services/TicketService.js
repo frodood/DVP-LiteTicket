@@ -1298,7 +1298,7 @@ module.exports.PickTicket = function (req, res) {
     var tenant = parseInt(req.user.tenant);
 
     var jsonString;
-    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}).populate('assignee' , '-password').populate('assignee_group').exec(function (err, ticket) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
@@ -1355,7 +1355,7 @@ module.exports.PickTicket = function (req, res) {
                                     else {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
-                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
+                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee.username);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -2775,7 +2775,7 @@ module.exports.AssignToUser = function (req, res) {
                 res.end(jsonString);
             } else {
                 if (user) {
-                    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+                    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}).populate('assignee' , '-password').populate('assignee_group').exec(function (err, ticket) {
                         if (err) {
                             jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
                             res.end(jsonString);
@@ -2822,7 +2822,7 @@ module.exports.AssignToUser = function (req, res) {
                                     }else {
                                         if (obj) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
-                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee);
+                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee.username);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -2865,7 +2865,7 @@ module.exports.AssignToGroup = function (req, res) {
                 res.end(jsonString);
             } else {
                 if (group) {
-                    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+                    Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}).populate('assignee' , '-password').populate('assignee_group').exec(function (err, ticket) {
                         if (err) {
                             jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
                             res.end(jsonString);
@@ -2915,7 +2915,7 @@ module.exports.AssignToGroup = function (req, res) {
                                     }
                                     if (obj) {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To Group.", true, undefined);
-                                        ExecuteTrigger(req.params.id, "change_assignee_groups", oldTicket.assignee_group);
+                                        ExecuteTrigger(req.params.id, "change_assignee_groups", oldTicket.assignee_group.name);
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
