@@ -65,6 +65,8 @@ function CreateTimer(req, res){
 
                                                 /////////////////////////////////////////////////////////////////////////////////
                                                 var tEvent = TicketEvent({
+                                                    "author": req.user.iss,
+                                                    "create_at": Date.now(),
                                                     type: 'tracker',
                                                     body: {
                                                         "message": req.user.iss + " created time entry",
@@ -716,6 +718,8 @@ function StopTimer(req, res){
 
                                                             var tEvent = TicketEvent({
                                                                 type: 'tracker',
+                                                                "author": req.user.iss,
+                                                                "create_at": Date.now(),
                                                                 body: {
                                                                     "message": req.user.iss + " added time " + time,
                                                                     "time": new Date()
