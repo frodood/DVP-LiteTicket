@@ -190,7 +190,7 @@ function GetTimesForUser(req, res){
 
         var tempQuery = {company: company, tenant: tenant};
 
-        tempQuery['startTime'] = {$gt: from, $lt: to};
+        tempQuery['startTime'] = {$gte: from, $lte: to};
 
         tempQuery.user= req.params.uid;
         tempQuery.company= company;
