@@ -69,7 +69,10 @@ module.exports.CreateTicket = function (req, res) {
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
+
                         "message": req.user.iss + " Created Ticket",
                         "time": time
                     }
@@ -1253,7 +1256,10 @@ module.exports.DeActivateTicket = function (req, res) {
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
+
                         "message": req.user.iss + " Deactivate Ticket",
                         "time": time
                     }
@@ -1326,7 +1332,10 @@ module.exports.PickTicket = function (req, res) {
                                 ticket.updated_at = time;
                                 var tEvent = TicketEvent({
                                     type: 'status',
+                                    "author": req.user.iss,
+                                    "create_at": Date.now(),
                                     body: {
+
                                         "message": req.user.iss + " Pick Ticket From Group " + assigneeGroup,
                                         "time": time
                                     }
@@ -1450,6 +1459,8 @@ module.exports.UpdateTicket = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " made changes",
                         "time": time,
@@ -1519,6 +1530,8 @@ module.exports.UpdateFormSubmission = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " made changes",
                         "time": time,
@@ -1706,6 +1719,8 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                         ticket.comments.push(obj.id);
                                         var tEvent = TicketEvent({
                                             type: 'status',
+                                            "author": req.user.iss,
+                                            "create_at": Date.now(),
                                             body: {
                                                 "message": req.user.iss + " Make Comment " + obj.id,
                                                 "time": time
@@ -1936,6 +1951,8 @@ module.exports.AddCommentByReference = function (req, res) {
                                         ticket.comments.push(obj.id);
                                         var tEvent = TicketEvent({
                                             type: 'status',
+                                            "author": req.user.iss,
+                                            "create_at": Date.now(),
                                             body: {
                                                 "message": req.user.iss + " Make Comment " + obj.id,
                                                 "time": time
@@ -2144,6 +2161,8 @@ module.exports.AddComment = function (req, res) {
                                         ticket.comments.push(obj.id);
                                         var tEvent = TicketEvent({
                                             type: 'status',
+                                            "author": req.user.iss,
+                                            "create_at": Date.now(),
                                             body: {
                                                 "message": req.user.iss + " Make Comment " + obj.id,
                                                 "time": time
@@ -2289,6 +2308,8 @@ module.exports.AddAttachment = function (req, res) {
                                         ticket.attachments.push(obj.id);
                                         var tEvent = TicketEvent({
                                             type: 'status',
+                                            "author": req.user.iss,
+                                            "create_at": Date.now(),
                                             body: {
                                                 "message": req.user.iss + " Add Attachment " + obj.id,
                                                 "time": time
@@ -2376,6 +2397,8 @@ module.exports.RemoveAttachment = function (req, res) {
 
                             var tEvent = TicketEvent({
                                 type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
                                 body: {
                                     "message": req.user.iss + " Removed Attachment " + obj.id,
                                     "time": time
@@ -2541,6 +2564,8 @@ module.exports.AddCommentToComment = function (req, res) {
                                                     ticket.updated_at = time;
                                                     var tEvent = TicketEvent({
                                                         type: 'status',
+                                                        "author": req.user.iss,
+                                                        "create_at": Date.now(),
                                                         body: {
                                                             "message": req.user.iss + " Make Comment To Comment " + obj.id,
                                                             "time": time
@@ -2647,6 +2672,8 @@ module.exports.ChangeStatus = function (req, res) {
                     ticket.updated_at = time;
                     var tEvent = TicketEvent({
                         type: 'status',
+                        "author": req.user.iss,
+                        "create_at": Date.now(),
                         body: {
                             "message": req.user.iss + " Status Update ",
                             "time": time
@@ -2788,6 +2815,8 @@ module.exports.AssignToUser = function (req, res) {
 
                                 var tEvent = TicketEvent({
                                     type: 'status',
+                                    "author": req.user.iss,
+                                    "create_at": Date.now(),
                                     body: {
                                         "message": req.user.iss + " Ticket Assign To User " + user.name,
                                         "time": time
@@ -2877,6 +2906,8 @@ module.exports.AssignToGroup = function (req, res) {
                                 ticket.updated_at = time;
                                 var tEvent = TicketEvent({
                                     type: 'status',
+                                    "author": req.user.iss,
+                                    "create_at": Date.now(),
                                     body: {
                                         "message": req.user.iss + " Ticket Assign To Group " + group.name,
                                         "time": time
@@ -3229,6 +3260,8 @@ module.exports.MergeTicket = function (req, res) {
 
                             var tEvent = TicketEvent({
                                 type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
                                 body: {
                                     "message": req.user.iss + " Merge Ticket With " + req.params.ticketid,
                                     "time": time
@@ -3352,6 +3385,8 @@ module.exports.CreateSubTicket = function (req, res) {
                         var time = new Date().toISOString();
                         var tEvent = TicketEvent({
                             type: 'status',
+                            "author": req.user.iss,
+                            "create_at": Date.now(),
                             body: {
                                 "message": req.user.iss + " Create Sub Ticket",
                                 "time": time
@@ -3582,6 +3617,8 @@ module.exports.AttachTicket = function (req, res) {
 
                             var tEvent = TicketEvent({
                                 type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
                                 body: {
                                     "message": req.user.iss + " Attach Ticket With " + req.params.ticketid,
                                     "time": time
@@ -3656,6 +3693,8 @@ module.exports.DeAttachTicket = function (req, res) {
 
                             var tEvent = TicketEvent({
                                 type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
                                 body: {
                                     "message": req.user.iss + " Detach Ticket " + req.params.ticketid,
                                     "time": time
@@ -3714,6 +3753,8 @@ module.exports.AppendEngagement = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Append Engagement " + req.params.id,
                         "time": time
@@ -4044,6 +4085,8 @@ module.exports.AddCaseConfiguration = function (req, res) {
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " CaseConfiguration",
                         "time": time
@@ -4110,6 +4153,8 @@ module.exports.DeleteCaseConfiguration = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Delete CaseConfiguration",
                         "time": time
@@ -4165,6 +4210,8 @@ module.exports.CreateCase = function (req, res) {
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Create Case",
                         "time": time
@@ -4235,6 +4282,8 @@ module.exports.DeleteCase = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Delete Case",
                         "time": time
@@ -4287,6 +4336,8 @@ module.exports.AddTicketToCase = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Add Ticket To Case " + req.params.ticketid,
                         "time": time,
@@ -4341,6 +4392,8 @@ module.exports.RemoveTicketFromCase = function (req, res) {
 
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Remove Ticket From Case " + req.params.ticketid,
                         "time": time,
@@ -4401,6 +4454,8 @@ module.exports.CreateTicketWithComment = function (req, res) {
                 var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
                     body: {
                         "message": req.user.iss + " Created Ticket",
                         "time": time
@@ -4543,6 +4598,8 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                 ticket.comments.push(obj.id);
                                                 var tEvent = TicketEvent({
                                                     type: 'status',
+                                                    "author": req.user.iss,
+                                                    "create_at": Date.now(),
                                                     body: {
                                                         "message": req.user.iss + " Make Comment " + obj.id,
                                                         "time": time
@@ -4939,7 +4996,7 @@ module.exports.GetTicketReport= function(req, res){
 
         var tempQuery = {company: company, tenant: tenant};
 
-        tempQuery['created_at'] = { $gt: from, $lt: to };
+        tempQuery['created_at'] = { $gte: from, $lte: to };
 
         if(req.body){
 
@@ -5106,7 +5163,7 @@ module.exports.GetTicketDetailReport = function(req, res){
 
         var tempQuery = {company: company, tenant: tenant};
 
-        tempQuery['created_at'] = { $gt: from, $lt: to };
+        tempQuery['created_at'] = { $gte: from, $lte: to };
 
         if(req.body){
 
@@ -5207,7 +5264,7 @@ module.exports.GetTicketDetailReportCount = function(req, res){
 
         var tempQuery = {company: company, tenant: tenant};
 
-        tempQuery['created_at'] = { $gt: from, $lt: to };
+        tempQuery['created_at'] = { $gte: from, $lte: to };
 
         if(req.body){
 
