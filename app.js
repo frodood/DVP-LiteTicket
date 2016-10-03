@@ -76,7 +76,7 @@ server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", a
 
 
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
-server.get('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
+server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
 server.post('/DVP/API/:version/TicketDetailReport/data/:skip/:limit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReport);
 server.post('/DVP/API/:version/TicketDetailReport/count', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportCount);
 
@@ -153,13 +153,14 @@ server.put('/DVP/API/:version/Case/:id/RelatedTicket/:ticketid',authorization({r
 server.post('/DVP/API/:version/TagCategory', authorization({resource:"tag", action:"write"}), tagService.CreateTagCategory);
 server.get('/DVP/API/:version/TagCategory/:id', authorization({resource:"tag", action:"read"}), tagService.GetTagCategory);
 server.get('/DVP/API/:version/TagCategories', authorization({resource:"tag", action:"read"}), tagService.GetTagCategories);
+server.get('/DVP/API/:version/TagCategoriesWithoutData', authorization({resource:"tag", action:"read"}), tagService.GetTagCategoriesWithoutPopulation);
 server.del('/DVP/API/:version/TagCategory/:id', authorization({resource:"tag", action:"write"}), tagService.RemoveTagCategory);
 server.put('/DVP/API/:version/TagCategory/:id/Tag', authorization({resource:"tag", action:"write"}), tagService.CreateTagsToTagCategory);
 
 
 server.post('/DVP/API/:version/Tag', authorization({resource:"tag", action:"write"}), tagService.CreateTag);
 server.get('/DVP/API/:version/Tags', authorization({resource:"tag", action:"read"}), tagService.GetTags);
-server.get('/DVP/API/:version/TagsWithIDs', authorization({resource:"tag", action:"read"}), tagService.GetTagWithLimitedData);
+server.get('/DVP/API/:version/TagsWithoutData', authorization({resource:"tag", action:"read"}), tagService.GetTagsWithoutPopulation);
 server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"read"}), tagService.GetTag);
 server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.DeleteTag);
 server.post('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.CreateTagsToTag);

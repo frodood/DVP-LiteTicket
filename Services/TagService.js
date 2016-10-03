@@ -112,6 +112,37 @@ function GetTagCategories(req, res){
 };
 
 
+function GetTagCategoriesWithoutPopulation(req, res){
+
+    logger.debug("DVP-LiteTicket.GetTagCategories Internal method ");
+
+    var jsonString;
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    TagCategory.find({company:company,tenant:tenant}).exec(function (errAllTagCats,resAllTagCats) {
+
+        if(errAllTagCats)
+        {
+            jsonString=messageFormatter.FormatMessage(errAllTagCats, "Picking All tag categories failed", false, undefined);
+        }
+        else
+        {
+            if(resAllTagCats.length>0)
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "Picking All tag categories succeeded", true, resAllTagCats);
+            }
+            else
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "No tag categories found", false, resAllTagCats)
+            }
+
+        }
+        res.end(jsonString);
+    });
+
+};
+
 function CreateTag(req, res){
 
     logger.debug("DVP-LiteTicket.CreateTagCategory Internal method ");
@@ -142,6 +173,7 @@ function CreateTag(req, res){
     });
 
 };
+
 function GetTags(req, res){
 
     logger.debug("DVP-LiteTicket.GetTags Internal method ");
@@ -176,7 +208,9 @@ function GetTags(req, res){
 
 
 };
-function GetTagWithLimitedData(req, res){
+
+
+function GetTagsWithoutPopulation(req, res){
 
     logger.debug("DVP-LiteTicket.GetTags Internal method ");
 
@@ -210,6 +244,8 @@ function GetTagWithLimitedData(req, res){
 
 
 };
+
+
 function GetTag(req, res){
 
     logger.debug("DVP-LiteTicket.GetTag Internal method ");
@@ -233,6 +269,7 @@ function GetTag(req, res){
     });
 
 };
+
 function DeleteTag(req, res){
 
     logger.debug("DVP-LiteTicket.DeleteTag Internal method ");
@@ -486,7 +523,7 @@ module.exports.DetachTagsFromCategory = DetachTagsFromCategory;
 module.exports.GetTagCategory = GetTagCategory;
 module.exports.GetTagCategories = GetTagCategories;
 module.exports.CreateTagsToTagCategory = CreateTagsToTagCategory;
-module.exports.GetTagWithLimitedData = GetTagWithLimitedData;
-
+module.exports.GetTagCategoriesWithoutPopulation = GetTagCategoriesWithoutPopulation;
+module.exports.GetTagsWithoutPopulation = GetTagsWithoutPopulation;
 
 
