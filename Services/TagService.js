@@ -219,7 +219,7 @@ function GetTagsWithoutPopulation(req, res){
 
     var jsonString;
 
-    Tag.find({company:company,tenant:tenant}).populate("tags").exec(function (errAllTags,resAllTags) {
+    Tag.find({company:company,tenant:tenant}).exec(function (errAllTags,resAllTags) {
 
         if(errAllTags)
         {
