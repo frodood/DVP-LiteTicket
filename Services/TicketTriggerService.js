@@ -25,6 +25,7 @@ function CreateTrigger(req, res){
         title: req.body.title,
         Active: req.body.Active,
         priority: req.body.priority,
+        triggerEvent: req.body.triggerEvent,
         created_at: Date.now(),
         updated_at: Date.now(),
         company: company,
@@ -126,6 +127,7 @@ function UpdateTrigger(req,res){
                 trigger.title = req.body.title;
                 trigger.Active = req.body.Active;
                 trigger.priority = req.body.priority;
+                trigger.triggerEvent = req.body.triggerEvent;
                 trigger.updated_at = Date.now();
                 trigger.conditions = req.body.conditions;
                 trigger.actions = req.body.actions;
