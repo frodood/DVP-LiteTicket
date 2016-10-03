@@ -1364,7 +1364,7 @@ module.exports.PickTicket = function (req, res) {
                                     else {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
-                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee.username);
+                                            ExecuteTrigger(req.params.id, "change_assignee", "");
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -2851,7 +2851,8 @@ module.exports.AssignToUser = function (req, res) {
                                     }else {
                                         if (obj) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
-                                            ExecuteTrigger(req.params.id, "change_assignee", oldTicket.assignee.username);
+                                            var PreAssignee = oldTicket.assignee? oldTicket.assignee.username: "";
+                                            ExecuteTrigger(req.params.id, "change_assignee", PreAssignee);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -2946,7 +2947,8 @@ module.exports.AssignToGroup = function (req, res) {
                                     }
                                     if (obj) {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To Group.", true, undefined);
-                                        ExecuteTrigger(req.params.id, "change_assignee_groups", oldTicket.assignee_group.name);
+                                        var PreAssigneeGroup = oldTicket.assignee_group? oldTicket.assignee_group.name: "";
+                                        ExecuteTrigger(req.params.id, "change_assignee_groups", PreAssigneeGroup);
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
