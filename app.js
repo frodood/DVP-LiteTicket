@@ -159,6 +159,7 @@ server.put('/DVP/API/:version/TagCategory/:id/Tag', authorization({resource:"tag
 
 server.post('/DVP/API/:version/Tag', authorization({resource:"tag", action:"write"}), tagService.CreateTag);
 server.get('/DVP/API/:version/Tags', authorization({resource:"tag", action:"read"}), tagService.GetTags);
+server.get('/DVP/API/:version/TagsWithIDs', authorization({resource:"tag", action:"read"}), tagService.GetTagWithLimitedData);
 server.get('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"read"}), tagService.GetTag);
 server.del('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.DeleteTag);
 server.post('/DVP/API/:version/Tag/:id', authorization({resource:"tag", action:"write"}), tagService.CreateTagsToTag);

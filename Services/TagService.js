@@ -176,6 +176,40 @@ function GetTags(req, res){
 
 
 };
+function GetTagWithLimitedData(req, res){
+
+    logger.debug("DVP-LiteTicket.GetTags Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+
+    Tag.find({company:company,tenant:tenant}).exec(function (errAllTags,resAllTags) {
+
+        if(errAllTags)
+        {
+            jsonString=messageFormatter.FormatMessage(errAllTags, "Picking All tags failed", false, undefined);
+        }
+        else
+        {
+            if(resAllTags.length>0)
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "Picking All tags succeeded", true, resAllTags);
+            }
+            else
+            {
+                jsonString=messageFormatter.FormatMessage(undefined, "No tags found", false, resAllTags)
+            }
+
+        }
+        res.end(jsonString);
+    });
+
+
+
+
+};
 function GetTag(req, res){
 
     logger.debug("DVP-LiteTicket.GetTag Internal method ");
@@ -452,6 +486,7 @@ module.exports.DetachTagsFromCategory = DetachTagsFromCategory;
 module.exports.GetTagCategory = GetTagCategory;
 module.exports.GetTagCategories = GetTagCategories;
 module.exports.CreateTagsToTagCategory = CreateTagsToTagCategory;
+module.exports.GetTagWithLimitedData = GetTagWithLimitedData;
 
 
 
