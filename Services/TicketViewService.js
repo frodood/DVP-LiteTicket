@@ -33,7 +33,7 @@ function CreateTicketView(req, res){
                 var ticketview = TicketView({
                     title: req.body.title,
                     owner: user.id,
-                    active: req.body.Active,
+                    active: req.body.active,
                     created_at: Date.now(),
                     updated_at: Date.now(),
                     company: company,
@@ -121,7 +121,7 @@ function GetTicketView(req, res){
         else {
             if (user) {
 
-                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id, owner: user.id}, function (err, view) {
+                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, view) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Views Failed", false, undefined);
                         res.end(jsonString);
