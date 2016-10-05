@@ -113,12 +113,15 @@ function SendNotificationToCollaborators(company, tenant, internalAccessToken, c
                 if (err) {
                     console.log("Get User Failed");
                 } else {
-                    var client = {name: user.username};
-                    clientList.push(client);
+                    if(user) {
+                        clientList.push(user.username);
+                    }
                 }
                 if(count === collaboratorList.length){
-                    nData.Clients = clientList;
-                    BroadcastNotification(internalAccessToken, nData);
+                    if(clientList.length > 0) {
+                        nData.Clients = clientList;
+                        BroadcastNotification(internalAccessToken, nData);
+                    }
                 }
             });
         }
