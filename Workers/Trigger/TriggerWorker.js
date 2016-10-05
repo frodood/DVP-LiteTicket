@@ -93,9 +93,17 @@ function UpdateDashboardChangeStatus(data, tResult){
         });
 
         //set ticket reopn count
-        var pubMsgEReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total" + tResult.id);
-        redisHandler.Publish("events", pubMsgEReopen, function () {
-        });
+        var pubMsgNReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total" + tResult.id);
+        var pubMsgNRChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "via_"+tResult.channel, "param2", "Channel"+tResult.id);
+        var pubMsgNRTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+        var pubMsgNRUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "user_"+assignee, "param2", "User"+tResult.id);
+        var pubMsgNRUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
+
+        redisHandler.Publish("events", pubMsgNReopen, function () {});
+        redisHandler.Publish("events", pubMsgNRChannel, function () {});
+        redisHandler.Publish("events", pubMsgNRTags, function () {});
+        redisHandler.Publish("events", pubMsgNRUser, function () {});
+        redisHandler.Publish("events", pubMsgNRUGroup, function () {});
     }
 
     if(tResult && data && tResult.status != "new"){
