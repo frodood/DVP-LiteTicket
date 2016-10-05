@@ -19,6 +19,21 @@ queueConnection.on('ready', function () {
 
 });
 
+function PublishToQueue(sendObj, messageType){
+
+    console.log("From: "+ sendObj.from +" :: To: "+ sendObj.to);
+    try {
+        if(sendObj && sendObj.to) {
+            queueConnection.publish(messageType, sendObj, {
+                contentType: 'application/json'
+            });
+        }
+    }catch(exp){
+
+        console.log(exp);
+    }
+}
+
 function ReadDataFromTicket(ticket, pattern){
     var queryPath = pattern.slice(2, -1);
     var spQuery = queryPath.split(".");
@@ -26,7 +41,18 @@ function ReadDataFromTicket(ticket, pattern){
         var readValue = ticket;
         for(var i = 1; i < spQuery.length; i++){
             if(readValue || i === 1){
-                readValue = readValue[spQuery[i]];
+                if(Array.isArray(readValue)){
+                    for(var t = 0; t < readValue.length; t++){
+                        var rValue = readValue[t];
+                        if(rValue){
+                            readValue[t] = rValue[spQuery[i]];
+                        }else{
+                            readValue[t] = "";
+                        }
+                    }
+                }else {
+                    readValue = readValue[spQuery[i]];
+                }
             }else{
                 readValue = "";
                 break;
@@ -39,7 +65,7 @@ function ReadDataFromTicket(ticket, pattern){
     }
 }
 
-function SendEmail(ticket, template, emailData, callback){
+function SendMessage(ticket, template, messageData, messageType, callback){
     try{
         var queryRegex = "\\${ticket([.]([A-Z]*[a-z]*)*)*}";
         var queryPattern = new RegExp(queryRegex);
@@ -48,9 +74,13 @@ function SendEmail(ticket, template, emailData, callback){
             "tenant": ticket.tenant
         };
 
-        sendObj.from =  queryPattern.test(emailData.from)? ReadDataFromTicket(ticket, emailData.from) : emailData.from;
-        sendObj.to =  queryPattern.test(emailData.to)? ReadDataFromTicket(ticket, emailData.to) : emailData.to;
-        sendObj.subject = queryPattern.test(emailData.subject)? ReadDataFromTicket(ticket, emailData.subject) : emailData.subject;
+        var from = queryPattern.test(messageData.from)? ReadDataFromTicket(ticket, messageData.from) : messageData.from;
+        var to =  queryPattern.test(messageData.to)? ReadDataFromTicket(ticket, messageData.to) : messageData.to;
+        var subject = queryPattern.test(messageData.subject)? ReadDataFromTicket(ticket, messageData.subject) : messageData.subject;
+
+        sendObj.from =  from? from : "";
+        sendObj.to =  to? to : "";
+        sendObj.subject = subject? subject : "";
         if(template){
             sendObj.template = template;
             sendObj.body = "";
@@ -67,18 +97,19 @@ function SendEmail(ticket, template, emailData, callback){
             //}
         }else{
             sendObj.template = "";
-            sendObj.body = emailData.body;
+            sendObj.body = messageData.body;
         }
-        //CommonHandler.RbmqPublish("EMAILOUT", JSON.stringify(sendObj));
-        console.log("From: "+ sendObj.from +" :: To: "+ sendObj.to);
-        try {
-            queueConnection.publish("EMAILOUT", sendObj, {
-                contentType: 'application/json'
-            });
-        }catch(exp){
 
-            console.log(exp);
+        if(to && Array.isArray(to)){
+            for(var h = 0; h < to.length; h++){
+                sendObj.to =  to[h]? to[h] : "";
+                PublishToQueue(sendObj, messageType);
+            }
+        }else{
+            sendObj.to =  to? to : "";
+            PublishToQueue(sendObj, messageType);
         }
+
         callback(true);
     }catch(ex){
         console.log("Generate Email Failed :: "+ ex);
@@ -86,4 +117,4 @@ function SendEmail(ticket, template, emailData, callback){
     }
 }
 
-module.exports.SendEmail = SendEmail;
+module.exports.SendMessage = SendMessage;

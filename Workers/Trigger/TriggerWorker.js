@@ -167,14 +167,15 @@ function ExecuteOperations(ticketData, operationToExecute){
     switch(operationToExecute.name){
         case "AddInteraction":
             break;
-        case "SendMessage":
+        case "SendSms":
+            emailHandler.SendMessage(ticketData, operationToExecute.field, operationToExecute.value, "SMSOUT", function(){});
             break;
         case "PickAgent":
             var attributeIds = operationToExecute.value;
             PickAgent.AddRequest(ticketData.tenant, ticketData.company, ticketData.id, attributeIds, "1", "", function(){});
             break;
         case "SendEmail":
-            emailHandler.SendEmail(ticketData, operationToExecute.field, operationToExecute.value, function(){});
+            emailHandler.SendMessage(ticketData, operationToExecute.field, operationToExecute.value, "EMAILOUT", function(){});
             break;
         case "SendNotification":
             DvpNotification.SendNotification(ticketData, operationToExecute.field, operationToExecute.value);
@@ -488,46 +489,48 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                         mt.on('endMatchingTriggers', function () {
                                             var triggersToExecute = UniqueObjectArray(matchingTriggers, "title").sort(numSort);
                                             if (triggersToExecute.length > 0) {
-                                                var triggerToExecute = triggersToExecute[0];
-                                                if (triggerToExecute.actions.length > 0) {
-                                                    var newAssignee = "";
-                                                    var newAssignee_group = "";
-                                                    for (var i = 0; i < triggerToExecute.actions.length; i++) {
-                                                        var action = triggerToExecute.actions[i];
+                                                for(var f = 0; f < triggersToExecute.length; f++) {
+                                                    var triggerToExecute = triggersToExecute[f];
+                                                    if (triggerToExecute.actions.length > 0) {
+                                                        var newAssignee = "";
+                                                        var newAssignee_group = "";
+                                                        for (var i = 0; i < triggerToExecute.actions.length; i++) {
+                                                            var action = triggerToExecute.actions[i];
 
-                                                        switch (action.field) {
-                                                            case "assignee":
-                                                                newAssignee = action.value;
-                                                                break;
-                                                            case "assignee_group":
-                                                                newAssignee_group = action.value;
-                                                                break;
-                                                            default :
-                                                                tResult[action.field] = action.value;
-                                                                break;
+                                                            switch (action.field) {
+                                                                case "assignee":
+                                                                    newAssignee = action.value;
+                                                                    break;
+                                                                case "assignee_group":
+                                                                    newAssignee_group = action.value;
+                                                                    break;
+                                                                default :
+                                                                    tResult[action.field] = action.value;
+                                                                    break;
+                                                            }
                                                         }
+
+                                                        var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
+                                                        vag.on('validateUserAndGroupDone', function (updatedTicket) {
+                                                            Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
+                                                                if (err) {
+                                                                    console.log("Update ticket Failed: " + err);
+                                                                    jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
+                                                                    callback(jsonString);
+                                                                } else {
+                                                                    console.log("Update ticket Success: " + utResult);
+                                                                    jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
+                                                                    callback(jsonString);
+                                                                }
+                                                            });
+                                                        });
                                                     }
 
-                                                    var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
-                                                    vag.on('validateUserAndGroupDone', function (updatedTicket) {
-                                                        Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
-                                                            if (err) {
-                                                                console.log("Update ticket Failed: " + err);
-                                                                jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
-                                                                callback(jsonString);
-                                                            } else {
-                                                                console.log("Update ticket Success: " + utResult);
-                                                                jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
-                                                                callback(jsonString);
-                                                            }
-                                                        });
-                                                    });
-                                                }
-
-                                                if (triggerToExecute.operations.length > 0) {
-                                                    for (var j = 0; j < triggerToExecute.operations.length; j++) {
-                                                        var operationToExecute = triggerToExecute.operations[j];
-                                                        ExecuteOperations(ticketCopy, operationToExecute);
+                                                    if (triggerToExecute.operations.length > 0) {
+                                                        for (var j = 0; j < triggerToExecute.operations.length; j++) {
+                                                            var operationToExecute = triggerToExecute.operations[j];
+                                                            ExecuteOperations(ticketCopy, operationToExecute);
+                                                        }
                                                     }
                                                 }
                                             } else {
