@@ -121,6 +121,9 @@ server.get('/DVP/API/:version/TicketSearch/:SearchBy/:SearchValue/:Size/:Page', 
 server.get('/DVP/API/:version/TicketSearch/:text/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.SearchTickets);
 server.get('/DVP/API/:version/RecentTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetRecentTicket);
 server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUSerRecentTicket);
+server.get('/DVP/API/:version/ExternalUserTicketCounts/:requester',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUserTicketCounts);
+
+
 
 
 

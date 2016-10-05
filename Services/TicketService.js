@@ -5364,3 +5364,38 @@ module.exports.GetTicketsByField = function(req, res) {
 
 
 
+module.exports.GetExternalUserTicketCounts = function(req,res) {
+
+
+    logger.debug("DVP-Interactions.GetEngagement Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    var aggregator = [
+
+        {
+            $match: {requester: ObjectId(req.params.requester), company: company, tenant: tenant},
+
+        },
+
+        {
+            "$group": {_id: "$status", count: {$sum: 1}}
+        }
+    ];
+
+    Ticket.aggregate(aggregator, function (err, tickets) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket count Failed", false, undefined);
+        } else {
+
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket count Successful", true, tickets);
+
+        }
+        res.end(jsonString);
+    });
+
+
+}
