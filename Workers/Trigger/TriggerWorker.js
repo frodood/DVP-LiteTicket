@@ -175,7 +175,7 @@ function ExecuteOperations(ticketData, operationToExecute){
     switch(operationToExecute.name){
         case "AddInteraction":
             break;
-        case "SendSms":
+        case "SendMessage":
             emailHandler.SendMessage(ticketData, operationToExecute.field, operationToExecute.value, "SMSOUT", function(){});
             break;
         case "PickAgent":
