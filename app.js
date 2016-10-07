@@ -124,12 +124,8 @@ server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({reso
 server.get('/DVP/API/:version/ExternalUserTicketCounts/:requester',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUserTicketCounts);
 
 
-
-
-
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
 server.get('/DVP/API/:version/Ticket/:id/MergeTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetMergeTickets);
-
 
 server.post('/DVP/API/:version/Ticket/:id/SubTicket',authorization({resource:"ticket", action:"write"}), ticketService.CreateSubTicket);
 server.get('/DVP/API/:version/Ticket/:id/SubTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetSubTickets);
