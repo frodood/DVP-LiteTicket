@@ -3975,7 +3975,6 @@ function ExecuteTrigger(ticketId, eventType, data) {
     }
 
 }
-
 function ExecuteSlaAsync(ticketId, previousPriority) {
     var deferred = q.defer();
 
@@ -4010,8 +4009,6 @@ function ExecuteSla(ticketId, previousPriority) {
     }
 
 }
-
-
 function AddUserRecentTicket(company, tenant, id, tid){
     RecentTicket.findOneAndUpdate({
         company: company,
@@ -4037,7 +4034,6 @@ function AddUserRecentTicket(company, tenant, id, tid){
 
     });
 }
-
 function AddExternalUserRecentTicket(company,tenant,id, tid){
     ExternalUserRecentTicket.findOneAndUpdate({
         company: company,
@@ -5124,6 +5120,107 @@ module.exports.GetTicketReport= function(req, res){
             }
             res.end(jsonString);
         });
+
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
+        res.end(jsonString);
+    }
+
+}
+
+
+module.exports.GetTicketDetailReportAll = function(req, res){
+
+
+    logger.info("DVP-LiteTicket.GetTicketsByView Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
+
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        }catch(ex){
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
+        }
+
+        if(from > to){
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['created_at'] = { $gte: from, $lte: to };
+
+        if(req.body){
+
+            if(req.body.tag){
+                tempQuery.isolated_tags = [ req.body.tag];
+            }
+
+            if(req.body.channel){
+                tempQuery.channel =  req.body.channel;
+            }
+
+            if(req.body.priority){
+                tempQuery.priority = req.body.priority;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+            if(req.body.requester){
+                tempQuery.requester = req.body.requester;
+            }
+
+            if(req.body.submitter){
+                tempQuery.submitter = req.body.submitter;
+            }
+
+            if(req.body.assignee){
+                tempQuery.assignee = req.body.assignee;
+            }
+
+            if(req.body.status){
+                tempQuery.status = req.body.status;
+            }
+
+            if(req.body.type){
+                tempQuery.type = req.body.type;
+            }
+
+            if(req.body.sla_violated){
+                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            }
+        }
+
+        Ticket.find( tempQuery)
+            .populate('assignee', 'name avatar')
+            .populate('assignee_group', 'name')
+            .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
+            .populate('submitter', 'name avatar')
+            .populate('collaborators', 'name avatar')
+            .exec(function (err, tickets) {
+                if (err) {
+                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+                } else {
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+                }
+                res.end(jsonString);
+            });
 
     }else{
 

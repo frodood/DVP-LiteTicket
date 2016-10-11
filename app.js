@@ -78,6 +78,7 @@ server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", a
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
 server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
 server.post('/DVP/API/:version/TicketDetailReport/data/:skip/:limit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReport);
+server.post('/DVP/API/:version/TicketDetailReport/data', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportAll);
 server.post('/DVP/API/:version/TicketDetailReport/count', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportCount);
 
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
