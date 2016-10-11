@@ -694,7 +694,11 @@ function GetTicketsByView(req, res){
                             }
 
 
-                            mainQuery.$and.push(orQuery);
+
+                            if(orQuery.$or && Array.isArray(orQuery.$or) && orQuery.$or.length > 0 ) {
+                                mainQuery.$and.push(orQuery);
+                            }
+                            //mainQuery.$and.push(orQuery);
 
                             Ticket.find(mainQuery).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').exec( function (err, tickets){
                                 if (err) {
