@@ -931,7 +931,9 @@ function GetTicketCountByView(req, res){
                             }
 
 
-                            mainQuery.$and.push(orQuery);
+                            if(orQuery.$or && Array.isArray(orQuery.$or) && orQuery.$or.length > 0 ) {
+                                mainQuery.$and.push(orQuery);
+                            }
 
                             Ticket.count(mainQuery, function (err, tickets) {
                                 if (err) {
