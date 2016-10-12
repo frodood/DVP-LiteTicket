@@ -607,7 +607,7 @@ module.exports.GetAllTicketsByRequester = function (req, res) {
         tenant: tenant,
         requester: req.params.Requester,
         active: true
-    }).populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').skip(skip)
+    }).populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('assignee', 'name avatar').skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
