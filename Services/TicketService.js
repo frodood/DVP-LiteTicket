@@ -5236,8 +5236,8 @@ module.exports.GetTicketDetailReportAll = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
-            if(req.body.sla_violated){
-                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            if(req.body.sla_violated == true || req.body.sla_violated == false){
+                tempQuery.sla_violated = req.body.sla_violated;
             }
         }
 
@@ -5336,8 +5336,8 @@ module.exports.GetTicketDetailReport = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
-            if(req.body.sla_violated){
-                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            if(req.body.sla_violated == true || req.body.sla_violated == false){
+                tempQuery.sla_violated = req.body.sla_violated;
             }
         }
 
@@ -5437,8 +5437,8 @@ module.exports.GetTicketDetailReportCount = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
-            if(req.body.sla_violated){
-                tempQuery.ticket_matrix.type = req.body.sla_violated;
+            if(req.body.sla_violated == true || req.body.sla_violated == false){
+                tempQuery.sla_violated = req.body.sla_violated;
             }
 
         }
