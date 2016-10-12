@@ -5301,7 +5301,7 @@ module.exports.GetTicketDetailReport = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {"$in" : [req.body.tag]};
             }
 
             if(req.body.channel){
