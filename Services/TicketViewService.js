@@ -542,7 +542,7 @@ function GetTicketsByView(req, res){
         else {
             if (user) {
 
-                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}).exec(function (err, view) {
+                TicketView.findOne({company: company, tenant: tenant, _id: req.params.id}).sort({created_at: -1}).exec(function (err, view) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Ticket Views Failed", false, undefined);
                         res.end(jsonString);
