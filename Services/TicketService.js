@@ -5336,8 +5336,10 @@ module.exports.GetTicketDetailReport = function(req, res){
                 tempQuery.type = req.body.type;
             }
 
-            if(req.body.sla_violated == true || req.body.sla_violated == false){
-                tempQuery.sla_violated = req.body.sla_violated;
+            if(req.body.sla_violated == true ){
+                tempQuery.sla_violated = {$eq: true};
+            } else if(req.body.sla_violated == false ){
+                tempQuery.sla_violated = {$ne: true };
             }
         }
 
