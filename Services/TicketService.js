@@ -2138,13 +2138,16 @@ module.exports.AddComment = function (req, res) {
                                                 author: req.user.iss
                                             }
 
+
                                             if (req.body.channel == 'twitter') {
                                                 queueName = 'TWEETOUT';
                                             } else if (req.body.channel == 'sms') {
                                                 queueName = 'SMSOUT';
                                             }else if (req.body.channel == 'email') {
                                                 queueName = 'EMAILOUT';
-                                            } else {
+                                            } else if (req.body.channel == 'facebook-post') {
+                                                queueName = 'FACEBOOKOUT';
+                                            }else {
                                                 //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
                                                 //   res.end(jsonString);
                                                 //   return;
