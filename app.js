@@ -123,7 +123,7 @@ server.get('/DVP/API/:version/TicketSearch/:text/:Size/:Page', authorization({re
 server.get('/DVP/API/:version/RecentTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetRecentTicket);
 server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUSerRecentTicket);
 server.get('/DVP/API/:version/ExternalUserTicketCounts/:requester',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUserTicketCounts);
-
+server.put('/DVP/API/:version/Ticket/:id/EstimatedTime', authorization({resource:"ticket", action:"write"}), ticketService.setEstimatedTime);
 
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
 server.get('/DVP/API/:version/Ticket/:id/MergeTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetMergeTickets);

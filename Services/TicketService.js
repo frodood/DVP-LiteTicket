@@ -300,53 +300,53 @@ module.exports.GetTicketSchema = function (req, res) {
     User.find({company: company, tenant: tenant}).select({"username":1, "_id":1}).exec(function(err, users) {
 
 
-            if(!err && users){
-                userList = users;
+        if(!err && users){
+            userList = users;
+        }
+
+        UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+
+            if (!err && groups) {
+                groupList = groups;
             }
 
-            UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+            ///////////////////////////////////////get schema nad loop//////////////////////////////////////
+            Object.keys(Ticket.schema.paths).forEach(function(key){
+                console.log(key);
+                console.log(Ticket.schema.paths[key]);
 
-                if (!err && groups) {
-                    groupList = groups;
+                var item = {
+
+                    field: key,
+                    type: Ticket.schema.paths[key].instance,
+                };
+
+                if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
+
+                    // if(Ticket.schema.paths[key].options.ref == 'User'){
+
+                    item["type"] = "ObjectID";
+                    item["reference"] = Ticket.schema.paths[key].options.ref;
+
+                    // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
+
+                    //     item["type"] = "Select";
+                    //     item["values"] = groupList;
+                    //}
                 }
 
-                ///////////////////////////////////////get schema nad loop//////////////////////////////////////
-                Object.keys(Ticket.schema.paths).forEach(function(key){
-                    console.log(key);
-                    console.log(Ticket.schema.paths[key]);
+                if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
+                    item["type"] = "Select";
+                    item["values"] = Ticket.schema.paths[key].enumValues;
+                }
 
-                    var item = {
-
-                        field: key,
-                        type: Ticket.schema.paths[key].instance,
-                    };
-
-                    if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
-
-                        // if(Ticket.schema.paths[key].options.ref == 'User'){
-
-                        item["type"] = "ObjectID";
-                        item["reference"] = Ticket.schema.paths[key].options.ref;
-
-                        // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
-
-                        //     item["type"] = "Select";
-                        //     item["values"] = groupList;
-                        //}
-                    }
-
-                    if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
-                        item["type"] = "Select";
-                        item["values"] = Ticket.schema.paths[key].enumValues;
-                    }
-
-                    objList.push(item);
-                });
-                var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
-                res.end(jsonString);
+                objList.push(item);
             });
-
+            var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
+            res.end(jsonString);
         });
+
+    });
 
 //////////////////////get groups////////////////////////////////////////////////////////////////////////////
 
@@ -836,7 +836,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     }
 
                     //if(paramArr.length > 0)
-                     obj[status] = {$in: paramArr}
+                    obj[status] = {$in: paramArr}
                 }
 
 
@@ -844,21 +844,21 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
                 Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                    if (err) {
+                        if (err) {
 
-                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+                            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
 
-                    } else {
-
-                        if (tickets) {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
                         } else {
 
-                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                            if (tickets) {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+                            } else {
+
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                            }
                         }
-                    }
-                    res.end(jsonString);
-                });
+                        res.end(jsonString);
+                    });
 
                 /* }else{
 
@@ -915,21 +915,21 @@ module.exports.GetAllMyTickets = function (req, res) {
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                    if (err) {
+                        if (err) {
 
-                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                        res.end(jsonString);
-                    }
-                    else {
-                        if (tickets) {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                            res.end(jsonString);
                         }
                         else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                            if (tickets) {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
+                            }
+                            else {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                            }
+                            res.end(jsonString);
                         }
-                        res.end(jsonString);
-                    }
-                });
+                    });
 
 
             } else {
@@ -1198,34 +1198,34 @@ module.exports.GetTicketWithDetails = function (req, res) {
                 if (ticket) {
                     jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
 
-                        try {
+                    try {
 
-                            User.findOne({
-                                username: req.user.iss,
-                                company: company,
-                                tenant: tenant
-                            }, function (err, user) {
-                                if (err) {
-                                    jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
-                                    res.end(jsonString);
+                        User.findOne({
+                            username: req.user.iss,
+                            company: company,
+                            tenant: tenant
+                        }, function (err, user) {
+                            if (err) {
+                                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                                res.end(jsonString);
 
-                                } else {
-                                    if (user) {
-
-
-                                            AddUserRecentTicket(company, tenant,user.id,ticket.id);
+                            } else {
+                                if (user) {
 
 
-                                    }
+                                    AddUserRecentTicket(company, tenant,user.id,ticket.id);
+
+
                                 }
-                            });
-                        }
+                            }
+                        });
+                    }
 
-                        catch
-                            (exe) {
+                    catch
+                        (exe) {
 
-                            logger.error(exe);
-                        }
+                        logger.error(exe);
+                    }
 
                 }
                 else {
@@ -1763,18 +1763,18 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 
                                         ticket.save( function (err, rOrg) {
-                                                if (err) {
-                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                                } else {
-                                                    if (rOrg) {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
-                                                    }
-                                                    else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                                    }
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                            } else {
+                                                if (rOrg) {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
                                                 }
-                                                res.end(jsonString);
-                                            });
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                }
+                                            }
+                                            res.end(jsonString);
+                                        });
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
@@ -2014,26 +2014,26 @@ module.exports.AddCommentByReference = function (req, res) {
                                         });
 
                                         /*
-                                        Ticket.findOneAndUpdate({
-                                                company: company,
-                                                tenant: tenant,
-                                                reference: req.params.reference
-                                            },
-                                            {$addToSet: {comments: obj.id}}
-                                            , function (err, rOrg) {
-                                                if (err) {
-                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                                } else {
-                                                    if (rOrg) {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
-                                                        ExecuteTrigger(req.params.id, "add_comment", comment);
-                                                    }
-                                                    else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                                    }
-                                                }
-                                                res.end(jsonString);
-                                            });*/
+                                         Ticket.findOneAndUpdate({
+                                         company: company,
+                                         tenant: tenant,
+                                         reference: req.params.reference
+                                         },
+                                         {$addToSet: {comments: obj.id}}
+                                         , function (err, rOrg) {
+                                         if (err) {
+                                         jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                         } else {
+                                         if (rOrg) {
+                                         jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                         ExecuteTrigger(req.params.id, "add_comment", comment);
+                                         }
+                                         else {
+                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                         }
+                                         }
+                                         res.end(jsonString);
+                                         });*/
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
@@ -2137,9 +2137,9 @@ module.exports.AddComment = function (req, res) {
                                             }else if (req.body.channel == 'email') {
                                                 queueName = 'EMAILOUT';
                                             } else {
-                                             //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
-                                             //   res.end(jsonString);
-                                             //   return;
+                                                //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
+                                                //   res.end(jsonString);
+                                                //   return;
                                             }
                                             try {
 
@@ -2205,20 +2205,20 @@ module.exports.AddComment = function (req, res) {
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
                                         ticket.save(function (err, rOrg) {
-                                                if (err) {
-                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                                } else {
-                                                    if (rOrg) {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
-                                                        ExecuteTrigger(req.params.id, "add_comment", comment);
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                            } else {
+                                                if (rOrg) {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
 
-                                                    }
-                                                    else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                                    }
                                                 }
-                                                res.end(jsonString);
-                                            });
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                }
+                                            }
+                                            res.end(jsonString);
+                                        });
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
@@ -2326,18 +2326,18 @@ module.exports.AddAttachment = function (req, res) {
                                         /////////////////////////////////////////////////////////////////////////////////////////
 
                                         ticket.save( function (err, rOrg) {
-                                                if (err) {
-                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                                } else {
-                                                    if (rOrg) {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Attachment Successfully Map To Ticket", true, obj);
-                                                    }
-                                                    else {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                                    }
+                                            if (err) {
+                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                            } else {
+                                                if (rOrg) {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Attachment Successfully Map To Ticket", true, obj);
                                                 }
-                                                res.end(jsonString);
-                                            });
+                                                else {
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                }
+                                            }
+                                            res.end(jsonString);
+                                        });
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
@@ -3941,6 +3941,32 @@ module.exports.StopWatchTicket = function (req, res){
 
 
 
+module.exports.setEstimatedTime = function (req, res){
+
+    console.log("Hit");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    Ticket.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        _id: req.params.id
+    },{$set:{time_estimation:req.body.time_estimation}},{new: true}, function (err, resTicket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Related Ticket", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Estimated time updated", true, resTicket);
+            res.end(jsonString);
+        }
+    });
+}
+
+
+
 function ExecuteTriggerAsync(ticketId, eventType, data) {
     var deferred = q.defer();
 
@@ -4635,12 +4661,12 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                                 //////////////////////////////////////////////////////////////////////////////
 
                                                 ticket.save(function (err, rOrg) {
-                                                        if (err) {
-                                                            callBack(err, undefined);
-                                                        } else {
-                                                            callBack(undefined, rOrg);
-                                                        }
-                                                    });
+                                                    if (err) {
+                                                        callBack(err, undefined);
+                                                    } else {
+                                                        callBack(undefined, rOrg);
+                                                    }
+                                                });
                                             }
                                             else {
                                                 callBack(new Error("Invalid Data"), undefined);
@@ -5316,13 +5342,13 @@ module.exports.GetTicketDetailReport = function(req, res){
             .populate('submitter', 'name avatar')
             .populate('collaborators', 'name avatar')
             .exec(function (err, tickets) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
-            } else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
-            }
-            res.end(jsonString);
-        });
+                if (err) {
+                    jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+                } else {
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+                }
+                res.end(jsonString);
+            });
 
     }else{
 
