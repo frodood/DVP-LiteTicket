@@ -3430,7 +3430,7 @@ module.exports.CreateSubTicket = function (req, res) {
                                 attachments: req.body.attachments,
                                 related_tickets: req.body.related_tickets,
                                 merged_tickets: req.body.merged_tickets,
-                                engagement_session: ObjectId(req.body.engagement_session),
+                                engagement_session: req.body.engagement_session,
                                 channel: req.body.channel,
                                 tags: req.body.tags,
                                 custom_fields: req.body.custom_fields,
@@ -4620,7 +4620,7 @@ module.exports.CreateTicketWithComment = function (req, res) {
                                         attachments: com.attachments,
                                         channel: com.channel,
                                         channel_from: com.channel_from,
-                                        engagement_session: ObjectId(req.body.engagement_session),
+                                        engagement_session: req.body.engagement_session,
                                         created_at: new Date().toISOString(),
                                         meta_data: com.meta_data
                                     });
@@ -5512,7 +5512,7 @@ module.exports.GetExternalUserTicketCounts = function(req,res) {
     var aggregator = [
 
         {
-            $match: {requester: ObjectId(req.params.requester), company: company, tenant: tenant},
+            $match: {requester: mongoose.Types.ObjectId(req.params.requester), company: company, tenant: tenant},
 
         },
 
