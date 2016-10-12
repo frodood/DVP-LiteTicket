@@ -66,168 +66,176 @@ module.exports.CreateTicket = function (req, res) {
 
             if (user) {
 
-                var time = new Date().toISOString();
-                var tEvent = TicketEvent({
-                    type: 'status',
-                    "author": req.user.iss,
-                    "create_at": Date.now(),
-                    body: {
+                try {
 
-                        "message": req.user.iss + " Created Ticket",
-                        "time": time
-                    }
-                });
+                    var time = new Date().toISOString();
+                    var tEvent = TicketEvent({
+                        type: 'status',
+                        "author": req.user.iss,
+                        "create_at": Date.now(),
+                        body: {
 
-                reference.generate(tenant, company, function (done, id, key) {
-                    var ticket = Ticket({
-                        created_at: Date.now(),
-                        updated_at: Date.now(),
-                        tid: key,
-                        active: true,
-                        is_sub_ticket: false,
-                        type: req.body.type,
-                        subject: req.body.subject,
-                        reference: id,
-                        description: req.body.description,
-                        priority: req.body.priority,
-                        status: "new",
-                        submitter: user.id,
-
-                        company: company,
-                        tenant: tenant,
-                        attachments: req.body.attachments,
-                        related_tickets: req.body.related_tickets,
-                        merged_tickets: req.body.merged_tickets,
-                        engagement_session: req.body.engagement_session,
-                        channel: req.body.channel,
-                        tags: req.body.tags,
-                        custom_fields: req.body.custom_fields,
-                        comments: req.body.comments,
-                        events: [tEvent],
-                        assignee: req.body.assignee,
-                        assignee_group: req.body.assignee_group,
-                        due_at: req.body.due_at
+                            "message": req.user.iss + " Created Ticket",
+                            "time": time
+                        }
                     });
 
-                    ticket.watchers =  [user.id];
-                    if (req.body.requester) {
-                        ticket.requester = req.body.requester;
-                        ticket.watchers.push(req.body.requester);
+                    reference.generate(tenant, company, function (done, id, key) {
+                        var ticket = Ticket({
+                            created_at: Date.now(),
+                            updated_at: Date.now(),
+                            tid: key,
+                            active: true,
+                            is_sub_ticket: false,
+                            type: req.body.type,
+                            subject: req.body.subject,
+                            reference: id,
+                            description: req.body.description,
+                            priority: req.body.priority,
+                            status: "new",
+                            submitter: user.id,
 
-                    }
+                            company: company,
+                            tenant: tenant,
+                            attachments: req.body.attachments,
+                            related_tickets: req.body.related_tickets,
+                            merged_tickets: req.body.merged_tickets,
+                            engagement_session: req.body.engagement_session,
+                            channel: req.body.channel,
+                            tags: req.body.tags,
+                            custom_fields: req.body.custom_fields,
+                            comments: req.body.comments,
+                            events: [tEvent],
+                            assignee: req.body.assignee,
+                            assignee_group: req.body.assignee_group,
+                            due_at: req.body.due_at
+                        });
 
+                        ticket.watchers = [user.id];
+                        if (req.body.requester) {
+                            ticket.requester = req.body.requester;
+                            ticket.watchers.push(req.body.requester);
 
-                    /////////////////////////////ticket matrix//////////////////////
-                    var matrix = {
-
-                        created_at: ticket.created_at,
-                        last_updated:ticket.created_at,
-                        last_status_changed:ticket.created_at,
-                        waited_time: 0,
-                        worked_time: 0,
-                        resolution_time:0,
-                        sla_violated: false,
-                        reopens: 0,
-                        replies: 0,
-                        assignees: 0
-
-                    };
-
-                    if(req.body.assignee){
-                        matrix.assignees = 1;
-                    }else{
-
-                        matrix.assignees = 0;
-                    }
-
-                    if(req.body.assignee_group){
-                        matrix.groups = 1;
-                    }else{
-                        matrix.groups = 0;
-                    }
-
-
-                    ticket.ticket_matrix = matrix;
-
-
-                    if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
-
-
-                        var arr = [];
-                        req.body.tags.forEach(function(item){
-
-                            var tagArr = item.split('.');
-                            if(tagArr && tagArr.length > 0){
-
-                                tagArr.forEach(function(myTags){
-                                    ticket.isolated_tags.push(myTags);
-                                })
-                            }
-
-                        })
-
-                    }
-
-                    ////////////////////////////////////////////////////////////////
-
-                    ticket.save(function (err, client) {
-                        if (err) {
-                            jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         }
-                        else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
-                            ExecuteTrigger(client.id, "change_status", "new");
 
 
-                            /////////////////////////////////////////recent tickets////////////////////////////////////////////////
+                        /////////////////////////////ticket matrix//////////////////////
+                        var matrix = {
+
+                            created_at: ticket.created_at,
+                            last_updated: ticket.created_at,
+                            last_status_changed: ticket.created_at,
+                            waited_time: 0,
+                            worked_time: 0,
+                            resolution_time: 0,
+                            sla_violated: false,
+                            reopens: 0,
+                            replies: 0,
+                            assignees: 0
+
+                        };
+
+                        if (req.body.assignee) {
+                            matrix.assignees = 1;
+                        } else {
+
+                            matrix.assignees = 0;
+                        }
+
+                        if (req.body.assignee_group) {
+                            matrix.groups = 1;
+                        } else {
+                            matrix.groups = 0;
+                        }
 
 
-                            if(client) {
-                                AddUserRecentTicket(company, tenant,user.id,client.id);
-                                if(req.body.requester)
-                                    AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
+                        ticket.ticket_matrix = matrix;
+
+
+                        if (req.body.tags && util.isArray(req.body.tags) && req.body.tags.length > 0) {
+
+
+                            var arr = [];
+                            req.body.tags.forEach(function (item) {
+
+                                var tagArr = item.split('.');
+                                if (tagArr && tagArr.length > 0) {
+
+                                    tagArr.forEach(function (myTags) {
+                                        ticket.isolated_tags.push(myTags);
+                                    })
+                                }
+
+                            })
+
+                        }
+
+                        ////////////////////////////////////////////////////////////////
+
+                        ticket.save(function (err, client) {
+                            if (err) {
+                                jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                             }
+                            else {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
+                                ExecuteTrigger(client.id, "change_status", "new");
 
-                            /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                            ////////////////////////////////////////add note to engagement session async//////////////////////////
-                            try {
-                                EngagementSession.findOneAndUpdate({
-                                    engagement_id: req.body.engagement_session,
-                                    company: company,
-                                    tenant: tenant
-                                }, {
-                                    $addToSet: {
-                                        notes: {
-                                            body: '#TID ' + ticket.reference,
-                                            author: req.user.iss,
-                                            created_at: Date.now(),
+                                /////////////////////////////////////////recent tickets////////////////////////////////////////////////
+
+
+                                if (client) {
+                                    AddUserRecentTicket(company, tenant, user.id, client.id);
+                                    if (req.body.requester)
+                                        AddExternalUserRecentTicket(company, tenant, req.body.requester, client.id);
+                                }
+
+                                /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                                ////////////////////////////////////////add note to engagement session async//////////////////////////
+                                try {
+                                    EngagementSession.findOneAndUpdate({
+                                        engagement_id: req.body.engagement_session,
+                                        company: company,
+                                        tenant: tenant
+                                    }, {
+                                        $addToSet: {
+                                            notes: {
+                                                body: '#TID ' + ticket.reference,
+                                                author: req.user.iss,
+                                                created_at: Date.now(),
+                                            }
                                         }
-                                    }
-                                }, function (err, notes) {
-                                    if (err) {
+                                    }, function (err, notes) {
+                                        if (err) {
 
-                                        logger.error("Append Note To EngagementSession Failed", err);
+                                            logger.error("Append Note To EngagementSession Failed", err);
 
-                                    } else {
+                                        } else {
 
-                                        logger.debug("Append Note To EngagementSession Success");
+                                            logger.debug("Append Note To EngagementSession Success");
 
-                                    }
+                                        }
 
-                                });
-                            } catch (excep) {
+                                    });
+                                } catch (excep) {
 
-                                logger.error("Append Note To EngagementSession Failed", excep);
+                                    logger.error("Append Note To EngagementSession Failed", excep);
+                                }
+
+
+                                //////////////////////////////////////////////////////////////////////////////////////////////////////
+                                ExecuteSla(client.id, undefined);
                             }
-
-
-                            //////////////////////////////////////////////////////////////////////////////////////////////////////
-                            ExecuteSla(client.id, undefined);
-                        }
-                        res.end(jsonString);
+                            res.end(jsonString);
+                        });
                     });
-                });
+                }catch(ex){
+
+                    jsonString = messageFormatter.FormatMessage(ex, "Exception fired", false, undefined);
+                    res.end(jsonString);
+
+                }
 
             } else {
 
