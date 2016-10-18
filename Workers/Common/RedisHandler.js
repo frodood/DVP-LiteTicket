@@ -35,7 +35,7 @@ var Publish = function(pattern, message, callback){
 };
 
 
-var SearchKeys = function (searchString, callback) {
+var SearchKeys = function (searchString, ignore, callback) {
     var result = [];
     try {
         client.keys(searchString, function (err, replies) {
@@ -44,6 +44,18 @@ var SearchKeys = function (searchString, callback) {
             } else {
                 console.log(replies.length + " replies:");
                 if (replies.length > 0) {
+                    if(ignore && ignore.length > 0){
+                        for(var i = 0; i < ignore.length; i++){
+                            var regexStr = util.format("^.*%s.*$", ignore[i]);
+                            var pattern_regex = new RegExp(regexStr);
+
+                            for(var j =0; j < replies.length; j++){
+                                if(replies[j].search(pattern_regex) === 0){
+                                    replies.splice(j,1);
+                                }
+                            }
+                        }
+                    }
                     client.mget(replies, function(err, result){
                         if(err){
                             callback(err, []);

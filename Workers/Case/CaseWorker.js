@@ -13,7 +13,8 @@ var util = require('util');
 var GetCurrentTicketCount = function(tenant, company, caseConfRule, callback){
     logger.info("DVP-LiteTicket.CaseWorker.GetCurrentTicketCount Internal method ");
     var searchKey = util.format("CONCURRENT:%d:%d:*:tags_*%s*:*", tenant, company, caseConfRule);
-    redisHandler.SearchKeys(searchKey, function(err, result){
+    var ignoreKey = ["CLOSEDTICKET", "SOLVEDTICKET"];
+    redisHandler.SearchKeys(searchKey, ignoreKey, function(err, result){
         var currentCount = 0;
         if(err){
             logger.error("GetCurrentTicketCount:: "+err);
