@@ -14,7 +14,7 @@ var PickAgent = require('./PickAgent.js');
 var DvpNotification = require('./DvpNotification.js');
 var restClientHandler = require('./RestClient.js');
 var SlaWorker = require('../SLA/SLAWorker.js');
-var redisHandler = require('../Trigger/RedisHandler.js');
+var redisHandler = require('../Common/RedisHandler.js');
 var deepcopy = require("deepcopy");
 var emailHandler = require('./EmailHandler.js');
 
@@ -95,7 +95,7 @@ function UpdateDashboardChangeStatus(data, tResult){
         //set ticket reopn count
         var pubMsgNReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total" + tResult.id);
         var pubMsgNRChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "via_"+tResult.channel, "param2", "Channel"+tResult.id);
-        var pubMsgNRTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+        var pubMsgNRTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "tags_"+tResult.tags.join(".").replace(/ /g,''), "param2", "Tags"+tResult.id);
         var pubMsgNRUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "user_"+assignee, "param2", "User"+tResult.id);
         var pubMsgNRUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
@@ -109,7 +109,7 @@ function UpdateDashboardChangeStatus(data, tResult){
     if(tResult && data && tResult.status != "new"){
         var pubMsgETotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "total", "total", "Total"+tResult.id);
         var pubMsgEChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
-        var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+        var pubMsgETags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "tags_"+tResult.tags.join(".").replace(/ /g,''), "param2", "Tags"+tResult.id);
         var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "user_"+assignee, "param2", "User"+tResult.id);
         var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End"+data, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 
@@ -124,7 +124,7 @@ function UpdateDashboardChangeStatus(data, tResult){
     //create new window ==> until close
     var pubMsgNTotal = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "total", "total", "Total"+tResult.id);
     var pubMsgNChannel = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "via_"+tResult.channel, "param2", "Channel"+tResult.id);
-    var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join("."), "param2", "Tags"+tResult.id);
+    var pubMsgNTags = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "tags_"+tResult.tags.join(".").replace(/ /g,''), "param2", "Tags"+tResult.id);
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_"+assignee, "param2", "User"+tResult.id);
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_"+assignee_group, "param2", "UGroup"+tResult.id);
 

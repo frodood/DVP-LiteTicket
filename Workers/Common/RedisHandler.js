@@ -13,6 +13,7 @@ client.on("error", function (err) {
 });
 
 client.on("connect", function (err) {
+    client.select(config.Redis.redisDB, redis.print);
     console.log("Redis Connect Success");
 });
 
@@ -33,4 +34,34 @@ var Publish = function(pattern, message, callback){
     }
 };
 
+
+var SearchKeys = function (searchString, callback) {
+    var result = [];
+    try {
+        client.keys(searchString, function (err, replies) {
+            if (err) {
+                callback(err, result);
+            } else {
+                console.log(replies.length + " replies:");
+                if (replies.length > 0) {
+                    client.mget(replies, function(err, result){
+                        if(err){
+                            callback(err, []);
+                        }else{
+                            callback(null, result);
+                        }
+                    });
+                } else {
+                    callback(null, result);
+                }
+            }
+        });
+    }catch(err) {
+        console.log("Redis Publish Err:: " + err);
+        callback(err, result);
+    }
+};
+
+
 module.exports.Publish = Publish;
+module.exports.SearchKeys = SearchKeys;

@@ -21,6 +21,7 @@ var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSe
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var slaWorker = require('../Workers/SLA/SLAWorker.js');
+var caseWorker = require('../Workers/Case/CaseWorker');
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
 var format = require('stringformat');
@@ -176,13 +177,17 @@ module.exports.CreateTicket = function (req, res) {
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
-                            ExecuteTrigger(client.id, "change_status", "new");
 
 
                             /////////////////////////////////////////recent tickets////////////////////////////////////////////////
 
 
                             if(client) {
+                                ExecuteTrigger(client.id, "change_status", "new");
+                                ExecuteCase(client);
+
+
+
                                 AddUserRecentTicket(company, tenant,user.id,client.id);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
@@ -4086,6 +4091,41 @@ function AddExternalUserRecentTicket(company,tenant,id, tid){
     });
 }
 
+
+function ExecuteCaseAsync(ticket) {
+    var deferred = q.defer();
+
+    try {
+
+        caseWorker.ExecuteCase(ticket, function (err, reply) {
+            deferred.resolve(reply);
+        })
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteCaseAsync Internal method." + ticket.tid, jsonString, ex);
+    }
+
+    /*setTimeout(function() {
+     deferred.resolve('hello world');
+     }, 500);*/
+
+    return deferred.promise;
+}
+function ExecuteCase(ticket) {
+    try {
+
+        logger.info("DVP-LiteTicket.ExecuteCase Internal method." + ticket.tid);
+        ExecuteCaseAsync(ticket).then(function (err, val) {
+            logger.info("DVP-LiteTicket.ExecuteCase Internal method. reply : " + val);
+        });
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteCase Internal method." + ticket.tid, jsonString, ex);
+    }
+
+}
 
 /* -----------------------------Case--------------------------------------------------*/
 

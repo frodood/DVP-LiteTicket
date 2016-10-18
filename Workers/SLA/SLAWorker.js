@@ -13,7 +13,7 @@ var config = require('config');
 var moment = require('moment');
 var RestClient = require('../Trigger/RestClient.js');
 var CommonWorker = require('../Trigger/TriggerWorker.js');
-var redisHandler = require('../Trigger/RedisHandler.js');
+var redisHandler = require('../Common/RedisHandler.js');
 
 function numSort(a, b) {
     return a.priority - b.priority;
