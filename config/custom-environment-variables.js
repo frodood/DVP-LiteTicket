@@ -15,7 +15,7 @@ module.exports = {
         "port": "SYS_REDIS_PORT",
         "user": "SYS_REDIS_USER",
         "password": "SYS_REDIS_PASSWORD",
-        "redisDB":"SYS_ARDS_REDIS_DB"
+        "redisDB":"SYS_REDIS_DB_ARDS"
     },
 
     "Security":
