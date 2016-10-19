@@ -143,8 +143,14 @@ server.del('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ti
 
 server.post('/DVP/API/:version/Case',authorization({resource:"ticket", action:"write"}), ticketService.CreateCase);
 server.del('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCase);
-server.put('/DVP/API/:version/Case/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.AddTicketToCase);
+server.put('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.AddTicketToCase);
 
+
+server.get('/DVP/API/:version/Cases',authorization({resource:"ticket", action:"read"}), ticketService.GetCases);
+server.get('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCase);
+
+server.get('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfigurations);
+server.get('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfiguration);
 
 
 /////////////////////////////////////////////Tags///////////////////////////////////////////////////////////////////////////////////////////////

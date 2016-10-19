@@ -4413,7 +4413,7 @@ module.exports.AddTicketToCase = function (req, res) {
                     "$set": {
                         "updated_at": Date.now()
                     },
-                    "$addToSet": {"events": tEvent, "related_tickets": req.params.ticketid}
+                    "$addToSet": {"events": tEvent, "related_tickets": req.query.ticketid}
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail Update Case.", false, undefined);
@@ -4494,6 +4494,119 @@ module.exports.RemoveTicketFromCase = function (req, res) {
 
     });
 };
+
+module.exports.GetCase = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCase Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Case.findOne({_id: req.params.id, company: company, tenant: tenant}).populate('related_tickets').exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Case Failed", false, undefined);
+
+        } else {
+
+            if (forms) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Case Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Case Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetCases = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCases Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Case.find({company: company, tenant: tenant}).exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
+
+        } else {
+
+            if (forms) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetCaseConfiguration = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCaseConfiguration Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    CaseConfiguration.findOne({_id: req.params.id, company: company, tenant: tenant}).exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get CaseConfiguration Failed", false, undefined);
+
+        } else {
+
+            if (forms) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get CaseConfiguration Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No CaseConfiguration Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetCaseConfigurations = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCaseConfigurations Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    CaseConfiguration.find({company: company, tenant: tenant}).exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get CaseConfigurations Failed", false, undefined);
+
+        } else {
+
+            if (forms) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get CaseConfigurations Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No CaseConfigurations Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
 
 /* -----------------------------Case--------------------------------------------------*/
 
