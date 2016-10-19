@@ -4500,7 +4500,7 @@ module.exports.GetCase = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Case.findOne({_id: req.params.id, company: company, tenant: tenant}).populate('related_tickets').exec(function (err, cases) {
+    Case.findOne({_id: req.params.id, company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Get Case Failed", false, undefined);
@@ -4528,7 +4528,7 @@ module.exports.GetCases = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Case.find({company: company, tenant: tenant}).exec(function (err, cases) {
+    Case.find({company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
