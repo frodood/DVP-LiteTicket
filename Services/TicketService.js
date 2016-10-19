@@ -4507,7 +4507,7 @@ module.exports.GetCase = function (req, res) {
 
         } else {
 
-            if (forms) {
+            if (cases) {
 
 
                 jsonString = messageFormatter.FormatMessage(err, "Get Case Successful", true, cases);
@@ -4535,7 +4535,7 @@ module.exports.GetCases = function (req, res) {
 
         } else {
 
-            if (forms) {
+            if (cases) {
 
 
                 jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
@@ -4563,7 +4563,7 @@ module.exports.GetCaseConfiguration = function (req, res) {
 
         } else {
 
-            if (forms) {
+            if (cases) {
 
 
                 jsonString = messageFormatter.FormatMessage(err, "Get CaseConfiguration Successful", true, cases);
@@ -4591,7 +4591,7 @@ module.exports.GetCaseConfigurations = function (req, res) {
 
         } else {
 
-            if (forms) {
+            if (cases) {
 
 
                 jsonString = messageFormatter.FormatMessage(err, "Get CaseConfigurations Successful", true, cases);
