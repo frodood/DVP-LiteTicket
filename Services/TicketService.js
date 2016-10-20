@@ -4214,7 +4214,7 @@ module.exports.DeleteCaseConfiguration = function (req, res) {
         }
         else {
             if (caseConfiguration) {
-
+                var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
                     "author": req.user.iss,
@@ -4343,7 +4343,7 @@ module.exports.DeleteCase = function (req, res) {
         }
         else {
             if (caseData) {
-
+                var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
                     "author": req.user.iss,
@@ -4397,13 +4397,13 @@ module.exports.AddTicketToCase = function (req, res) {
         }
         else {
             if (caseData) {
-
+                var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
                     "author": req.user.iss,
                     "create_at": Date.now(),
                     body: {
-                        "message": req.user.iss + " Add Ticket To Case " + req.params.ticketid,
+                        "message": req.user.iss + " Add Ticket To Case " + JSON.stringify(req.params.ticketid),
                         "time": time,
                         "differences": {}
                     }
@@ -4453,7 +4453,7 @@ module.exports.RemoveTicketFromCase = function (req, res) {
         }
         else {
             if (caseData) {
-
+                var time = new Date().toISOString();
                 var tEvent = TicketEvent({
                     type: 'status',
                     "author": req.user.iss,
