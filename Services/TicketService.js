@@ -4413,7 +4413,7 @@ module.exports.AddTicketToCase = function (req, res) {
                     "$set": {
                         "updated_at": Date.now()
                     },
-                    "$addToSet": {"events": tEvent, "related_tickets": req.query.ticketid}
+                    "$addToSet": {"events": tEvent, "related_tickets": {$each:req.query.ticketid}}
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail Update Case.", false, undefined);
