@@ -139,7 +139,7 @@ server.get('/DVP/API/:version/Ticket/Engagement/:EngagementId',authorization({re
 
 ///////////////////////////////Case////////////////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"write"}), ticketService.AddCaseConfiguration);
-server.del('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"write"}), ticketService.AddCaseConfiguration);
+server.del('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCaseConfiguration);
 
 server.post('/DVP/API/:version/Case',authorization({resource:"ticket", action:"write"}), ticketService.CreateCase);
 server.del('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCase);
