@@ -1194,7 +1194,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('merged_tickets')
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : {path: 'author', select:'name avatar'}}).exec(function (err, ticket) {
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]}).exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
