@@ -3831,22 +3831,48 @@ module.exports.BulkStatusUpdate = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    Ticket.update({
+
+    Ticket.find({
         company: company,
         tenant: tenant,
         active: true,
         _id: {
             $in: req.body.TicketIds
         }
-    }, {$set: {channel: req.body.Status}}, {multi: true}, function (err, sticket) {
+    }, function (err, tickets) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Related Ticket", false, undefined);
             res.end(jsonString);
         }
         else {
-            if (sticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                res.end(jsonString);
+            if (tickets) {
+                Ticket.update({
+                    company: company,
+                    tenant: tenant,
+                    active: true,
+                    _id: {
+                        $in: req.body.TicketIds
+                    }
+                }, {$set: {status: req.body.Status}}, {multi: true}, function (err, sticket) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Related Ticket", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (sticket) {
+                            for(var i =0; i < tickets.length; i++){
+                                var tckt = tickets[i];
+                                ExecuteTrigger(tckt._id.toString(), "change_status", tckt.status);
+                            }
+                            jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
+                            res.end(jsonString);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Related Ticket ID.", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Related Ticket ID.", false, undefined);
@@ -4356,7 +4382,8 @@ module.exports.DeleteCase = function (req, res) {
                 caseData.update({
                     "$set": {
                         "updated_at": Date.now(),
-                        "active": false
+                        "active": false,
+                        "status": "closed"
                     },
                     "$addToSet": {"events": tEvent}
                 }, function (err, rUser) {
@@ -4403,7 +4430,7 @@ module.exports.AddTicketToCase = function (req, res) {
                     "author": req.user.iss,
                     "create_at": Date.now(),
                     body: {
-                        "message": req.user.iss + " Add Ticket To Case " + JSON.stringify(req.params.ticketid),
+                        "message": req.user.iss + " Add Ticket To Case " + JSON.stringify(req.query.ticketid),
                         "time": time,
                         "differences": {}
                     }
@@ -4459,7 +4486,7 @@ module.exports.RemoveTicketFromCase = function (req, res) {
                     "author": req.user.iss,
                     "create_at": Date.now(),
                     body: {
-                        "message": req.user.iss + " Remove Ticket From Case " + req.params.ticketid,
+                        "message": req.user.iss + " Remove Ticket From Case " + JSON.stringify(req.query.ticketid),
                         "time": time,
                         "differences": {}
                     }
@@ -4470,7 +4497,7 @@ module.exports.RemoveTicketFromCase = function (req, res) {
                         "updated_at": Date.now()
                     },
                     "$addToSet": {"events": tEvent},
-                    "$pull": {"related_tickets": req.params.ticketid}
+                    "$pull": {"related_tickets": {$in : req.query.ticketid}}
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Remove Ticket.", false, undefined);
