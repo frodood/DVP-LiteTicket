@@ -10,7 +10,13 @@ var queueConnection = amqp.createConnection({
 });
 queueConnection.on('ready', function () {
 
-    logger.info("Coonection with the queue is OK");
+    logger.info("Conection with the queue is OK");
+
+});
+
+queueConnection.on('error', function (error) {
+
+    logger.error("Issue in amqp ", error);
 
 });
 
