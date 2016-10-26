@@ -1199,7 +1199,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('submitter', 'name avatar')
         .populate('collaborators', 'name avatar')
         .populate('merged_tickets')
-        .populate({path: 'engagement_session',populate : {path: 'notes'}})
+        .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
         .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]}).exec(function (err, ticket) {
             if (err) {
