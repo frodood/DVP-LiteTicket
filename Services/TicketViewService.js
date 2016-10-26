@@ -700,7 +700,7 @@ function GetTicketsByView(req, res){
                             }
                             //mainQuery.$and.push(orQuery);
 
-                            Ticket.find(mainQuery).sort({created_at: 1}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').exec( function (err, tickets){
+                            Ticket.find(mainQuery).sort({created_at: -1}).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').exec( function (err, tickets){
                                 if (err) {
                                     jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
                                 } else {
