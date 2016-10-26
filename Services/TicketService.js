@@ -113,7 +113,7 @@ module.exports.CreateTicket = function (req, res) {
                     ticket.watchers =  [user.id];
                     if (req.body.requester) {
                         ticket.requester = req.body.requester;
-                        ticket.watchers.push(req.body.requester);
+                        //ticket.watchers.push(req.body.requester);
 
                     }
 
