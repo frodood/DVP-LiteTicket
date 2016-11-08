@@ -17,6 +17,7 @@ var SlaWorker = require('../SLA/SLAWorker.js');
 var redisHandler = require('../Common/RedisHandler.js');
 var deepcopy = require("deepcopy");
 var emailHandler = require('./EmailHandler.js');
+var dvpInteraction = require('../Common/DvpInteractions');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -174,6 +175,7 @@ function ExecuteOperations(ticketData, operationToExecute){
     console.log("operationToExecute:: "+operationToExecute.name);
     switch(operationToExecute.name){
         case "AddInteraction":
+            dvpInteraction.AddInteraction(ticketData, operationToExecute.value);
             break;
         case "SendMessage":
             emailHandler.SendMessage(ticketData, operationToExecute.field, operationToExecute.value, "SMSOUT", function(){});

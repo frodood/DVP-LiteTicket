@@ -78,7 +78,10 @@ module.exports = {
         "notificationServiceVersion": "SYS_NOTIFICATIONSERVICE_VERSION",
         "scheduleWorkerHost": "SYS_SCHEDULEWORKER_HOST",
         "scheduleWorkerPort": "SYS_SCHEDULEWORKER_PORT",
-        "scheduleWorkerVersion": "SYS_SCHEDULEWORKER_VERSION"
+        "scheduleWorkerVersion": "SYS_SCHEDULEWORKER_VERSION",
+        "interactionServiceHost": "SYS_INTERACTIONS_HOST",
+        "interactionServicePort": "SYS_INTERACTIONS_PORT",
+        "interactionServiceVersion": "SYS_INTERACTIONS_VERSION"
     }
 };
 
