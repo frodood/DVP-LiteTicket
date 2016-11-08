@@ -36,6 +36,7 @@ var ObjectId = Schema.ObjectId;
 
 var async = require("async");
 var reference = require('dvp-common/Reference/ReferenceGen');
+var TicketTypes = require('dvp-mongomodels/model/TicketTypes').TicketTypes;
 
 ////////////////////////////rabbitmq//////////////////////////////////////////////////////
 var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
@@ -5717,3 +5718,187 @@ module.exports.GetExternalUserTicketCounts = function(req,res) {
 
 
 }
+
+
+//---------------------------------TicketTypes-------------------------------------------
+
+module.exports.CreateTicketTypes = function(req,res){
+    logger.info("DVP-LiteTicket.CreateTicketTypes Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    var tTypes = TicketTypes({
+        company: company,
+        tenant: tenant,
+        default_types: ['question','complain','incident','action'],
+        custom_types: req.body.custom_types,
+        created_at: Date.now(),
+        updated_at: Date.now()
+    });
+
+    try{
+        tTypes.save(function (err, ticketTypes) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Ticket types create failed", false, undefined);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Ticket types saved successfully", true, ticketTypes);
+            }
+            res.end(jsonString);
+        });
+    }catch(ex){
+        console.log(ex);
+        jsonString = messageFormatter.FormatMessage(ex, "Ticket types create failed", false, undefined);
+    }
+};
+
+module.exports.UpdateTicketTypes = function(req,res){
+    logger.info("DVP-LiteTicket.UpdateTicketTypes Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketTypes.findOne({_id: req.params.id, company: company, tenant: tenant}, function(err, ticketTypes){
+        if(err){
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Failed", false, undefined);
+            res.end(jsonString);
+        }else{
+            if(ticketTypes){
+                ticketTypes.custom_types = req.body.custom_types;
+                ticketTypes.updated_at = Date.now();
+
+                ticketTypes.update(ticketTypes, function (err, newTicketTypes) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket Types", false, undefined);
+                    }
+                    else {
+                        if (newTicketTypes) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Types Update Successfully", true, newTicketTypes);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Types Id.", false, newTicketTypes);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }else{
+                jsonString = messageFormatter.FormatMessage(err, "No Ticket Types Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.RemoveTicketTypes = function(req,res){
+    logger.info("DVP-LiteTicket.RemoveTicketTypes Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketTypes.findOne({_id: req.params.id, company: company, tenant: tenant}, function (err, ticketTypes) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            if (ticketTypes) {
+                ticketTypes.remove(function (err) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Delete Ticket Types Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket Types successfully deleted", true, undefined);
+                    }
+                    res.end(jsonString);
+                });
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Delete Ticket Types Failed, Ticket Types object is null", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.AddCustomType = function(req,res){
+    logger.info("DVP-LiteTicket.AddCustomType Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketTypes.findOneAndUpdate({_id: req.params.id,company: company, tenant: tenant}, { $addToSet :{
+        custom_types : req.body.custom_type}}, function (err, ticketTypes) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Add Custom Type Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Add Custom Type Successful", true, ticketTypes);
+        }
+        res.end(jsonString);
+    });
+};
+
+module.exports.RemoveCustomType = function(req,res){
+    logger.info("DVP-LiteTicket.RemoveCutomType Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketTypes.findOneAndUpdate({_id: req.params.id,company: company, tenant: tenant}, { $pull :{
+        custom_types : req.params.customtype}}, function (err, ticketTypes) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Delete Custom Type Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Delete Custom Type Successful", true, ticketTypes);
+        }
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetTicketTypes = function(req,res){
+    logger.info("DVP-LiteTicket.GetTicketTypes Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketTypes.findOne({company: company, tenant: tenant}, function (err, ticketTypes) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Success", true, ticketTypes);
+            res.end(jsonString);
+        }
+    });
+};
+
+module.exports.GetAvailableTypes = function(req,res){
+    logger.info("DVP-LiteTicket.GetAvailableTypes Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    GetAvailableTicketTypes(company, tenant, function(message, obj){
+        res.end(message);
+    });
+};
+
+
+var GetAvailableTicketTypes = function(company, tenant, callback){
+    var jsonString;
+    TicketTypes.findOne({company: company, tenant: tenant}, function (err, ticketTypes) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Failed", false, undefined);
+            callback(jsonString, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Success", true, ticketTypes);
+            callback(jsonString, ticketTypes);
+        }
+    });
+};
+
+module.exports.GetAvailableTicketTypes = GetAvailableTicketTypes;
