@@ -1947,6 +1947,11 @@ module.exports.AddCommentByReference = function (req, res) {
                                 created_at: Date.now(),
                                 meta_data: req.body.meta_data
                             });
+                            
+                            if(req.body.author){
+                   
+                                comment.author = req.body.author;
+                            }
 
                             logger.debug("Object to save as a comment is" + comment);
                             comment.save(function (err, obj) {
