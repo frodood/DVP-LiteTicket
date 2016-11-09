@@ -4996,24 +4996,44 @@ module.exports.CreateStatusFlow = function (req, res) {
 
                         } else {
                             if (!ticketFlow) {
-                                var ticketStatusFlow = TicketStatusFlow({
-                                    created_at: Date.now(),
-                                    updated_at: Date.now(),
-                                    company: company,
-                                    tenant: tenant,
-                                    type: req.body.type,
-                                    flow_nodes: req.body.flow_nodes
-                                });
-
-                                ticketStatusFlow.save(function (err, tsf) {
+                                TicketTypes.findOne({company: company, tenant: tenant}, function (err, ticketTypes) {
                                     if (err) {
-                                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
-                                    }
-                                    else {
-                                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
+                                        jsonString = messageFormatter.FormatMessage(err, "Check Ticket Types Availability", false, undefined);
+                                        res.end(jsonString);
+                                    } else {
+                                        if(ticketTypes){
 
+                                            if(ticketTypes.default_types.indexOf(req.body.type) > -1 || ticketTypes.custom_types.indexOf(req.body.type) > -1){
+
+                                                var ticketStatusFlow = TicketStatusFlow({
+                                                    created_at: Date.now(),
+                                                    updated_at: Date.now(),
+                                                    company: company,
+                                                    tenant: tenant,
+                                                    type: req.body.type,
+                                                    flow_nodes: req.body.flow_nodes
+                                                });
+
+                                                ticketStatusFlow.save(function (err, tsf) {
+                                                    if (err) {
+                                                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
+                                                    }
+                                                    else {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
+
+                                                    }
+                                                    res.end(jsonString);
+                                                });
+                                            }else{
+                                                jsonString = messageFormatter.FormatMessage(err, "No Ticket Types Found", false, undefined);
+                                                res.end(jsonString);
+                                            }
+
+                                        }else {
+                                            jsonString = messageFormatter.FormatMessage(err, "No Ticket Types Found", false, undefined);
+                                            res.end(jsonString);
+                                        }
                                     }
-                                    res.end(jsonString);
                                 });
                             } else {
                                 jsonString = messageFormatter.FormatMessage(undefined, "Flow Already Added", false, undefined);
@@ -5042,7 +5062,7 @@ module.exports.GetStatusFlow = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    TicketStatusFlow.findOne({company: company, tenant: tenant}).populate('flow_nodes.source')
+    TicketStatusFlow.find({company: company, tenant: tenant}).populate('flow_nodes.source')
         .populate('flow_nodes.targets').exec(function (err, stf) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
@@ -5679,7 +5699,7 @@ module.exports.GetTicketsByField = function(req, res) {
     });
 
 
-}
+};
 
 
 
@@ -5717,7 +5737,7 @@ module.exports.GetExternalUserTicketCounts = function(req,res) {
     });
 
 
-}
+};
 
 
 //---------------------------------TicketTypes-------------------------------------------
@@ -5729,12 +5749,13 @@ module.exports.CreateTicketTypes = function(req,res){
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
+    var customTypes = req.body.custom_types? req.body.custom_types: [];
 
     var tTypes = TicketTypes({
         company: company,
         tenant: tenant,
         default_types: ['question','complain','incident','action'],
-        custom_types: req.body.custom_types,
+        custom_types: customTypes,
         created_at: Date.now(),
         updated_at: Date.now()
     });
@@ -5895,7 +5916,11 @@ var GetAvailableTicketTypes = function(company, tenant, callback){
             jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Failed", false, undefined);
             callback(jsonString, undefined);
         } else {
-            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Success", true, ticketTypes);
+            var tTypes = [];
+            if (ticketTypes) {
+                tTypes = ticketTypes.default_types.concat(ticketTypes.custom_types);
+            }
+            jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Success", true, tTypes);
             callback(jsonString, ticketTypes);
         }
     });

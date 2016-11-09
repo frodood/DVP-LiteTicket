@@ -330,7 +330,7 @@ server.del('/DVP/API/:version/TicketTypes/:id', authorization({resource:"ticket"
 server.put('/DVP/API/:version/TicketTypes/:id', authorization({resource:"ticket", action:"write"}), ticketService.AddCustomType);
 server.del('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resource:"ticket", action:"delete"}), ticketService.RemoveCustomType);
 server.get('/DVP/API/:version/TicketTypes', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketTypes);
-server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"ticket", action:"read"}), ticketService.GetAvailableTicketTypes);
+server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"ticket", action:"read"}), ticketService.GetAvailableTypes);
 
 
 server.listen(port, function () {
