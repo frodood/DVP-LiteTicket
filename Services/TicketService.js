@@ -87,7 +87,7 @@ module.exports.CreateTicket = function (req, res) {
                     }
                 });
 
-                reference.generate(tenant, company, function (done, id, key) {
+                reference.generate(company, tenant, function (done, id, key) {
                     var ticket = Ticket({
                         created_at: Date.now(),
                         updated_at: Date.now(),
