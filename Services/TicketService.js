@@ -2025,26 +2025,52 @@ module.exports.AddCommentByReference = function (req, res) {
 
                                         ///////////////////ticket status///////////////////////////////////////////////////////////////
                                         if(req.body.status){
+                                            GetAvailableTicketTypes(company, tenant, function(msg, types){
 
-                                            ticket.status = req.body.status;
+                                                if(types && types.length > 0 && types.indexOf(req.body.status) > -1){
+
+                                                    ticket.status = req.body.status;
+
+                                                }
+
+                                                ticket.save( function (err, rOrg) {
+                                                    if (err) {
+                                                        jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                                    } else {
+                                                        if (rOrg) {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                            ExecuteTrigger(req.params.id, "add_comment", comment);
+                                                        }
+                                                        else {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                        }
+                                                    }
+                                                    res.end(jsonString);
+                                                });
+
+                                            });
+                                        }else{
+
+                                            ticket.save( function (err, rOrg) {
+                                                if (err) {
+                                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
+                                                } else {
+                                                    if (rOrg) {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
+                                                        ExecuteTrigger(req.params.id, "add_comment", comment);
+                                                    }
+                                                    else {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
+                                                    }
+                                                }
+                                                res.end(jsonString);
+                                            });
+
                                         }
 
                                         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-                                        ticket.save( function (err, rOrg) {
-                                            if (err) {
-                                                jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                            } else {
-                                                if (rOrg) {
-                                                    jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
-                                                    ExecuteTrigger(req.params.id, "add_comment", comment);
-                                                }
-                                                else {
-                                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                                }
-                                            }
-                                            res.end(jsonString);
-                                        });
+
 
                                     }
                                     else {
