@@ -5754,6 +5754,7 @@ module.exports.CreateTicketTypes = function(req,res){
     var tTypes = TicketTypes({
         company: company,
         tenant: tenant,
+        activate_default: true,
         default_types: ['question','complain','incident','action'],
         custom_types: customTypes,
         created_at: Date.now(),
@@ -5789,6 +5790,7 @@ module.exports.UpdateTicketTypes = function(req,res){
             res.end(jsonString);
         }else{
             if(ticketTypes){
+                ticketTypes.activate_default = req.body.activate_default;
                 ticketTypes.custom_types = req.body.custom_types;
                 ticketTypes.updated_at = Date.now();
 
@@ -5851,7 +5853,7 @@ module.exports.AddCustomType = function(req,res){
     var jsonString;
 
     TicketTypes.findOneAndUpdate({_id: req.params.id,company: company, tenant: tenant}, { $addToSet :{
-        custom_types : req.body.custom_type}}, function (err, ticketTypes) {
+        custom_types : req.params.customtype}}, function (err, ticketTypes) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Add Custom Type Failed", false, undefined);
         } else {
