@@ -2007,13 +2007,28 @@ module.exports.AddCommentByReference = function (req, res) {
                                             }
                                         }
 
-
-
-
-
-                                        ticket.comments.push(obj.id);
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
+                                        //////////////////////ticket attachments//////////////////////////////////////////////
+                                        if(req.body.attachments && req.body.attachments.length > 0){
+
+                                            if(!ticket.attachments)
+                                                ticket.attachments = [];
+
+
+                                            req.body.attachments.forEach(function(at) {
+                                                ticket.attachments.push(at);
+                                            });
+                                        }
+                                        /////////////////////////////////////////////////////////////////////////////////////////////////
+
+                                        ///////////////////ticket status///////////////////////////////////////////////////////////////
+                                        if(req.body.status){
+
+                                            ticket.status = req.body.status;
+                                        }
+
+                                        ///////////////////////////////////////////////////////////////////////////////////////////////
 
                                         ticket.save( function (err, rOrg) {
                                             if (err) {
@@ -2030,27 +2045,6 @@ module.exports.AddCommentByReference = function (req, res) {
                                             res.end(jsonString);
                                         });
 
-                                        /*
-                                         Ticket.findOneAndUpdate({
-                                         company: company,
-                                         tenant: tenant,
-                                         reference: req.params.reference
-                                         },
-                                         {$addToSet: {comments: obj.id}}
-                                         , function (err, rOrg) {
-                                         if (err) {
-                                         jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
-                                         } else {
-                                         if (rOrg) {
-                                         jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
-                                         ExecuteTrigger(req.params.id, "add_comment", comment);
-                                         }
-                                         else {
-                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
-                                         }
-                                         }
-                                         res.end(jsonString);
-                                         });*/
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
@@ -3990,8 +3984,6 @@ module.exports.StopWatchTicket = function (req, res){
     });
 }
 
-
-
 module.exports.setEstimatedTime = function (req, res){
 
     console.log("Hit");
@@ -4016,8 +4008,6 @@ module.exports.setEstimatedTime = function (req, res){
     });
 }
 
-
-
 function ExecuteTriggerAsync(ticketId, eventType, data) {
     var deferred = q.defer();
 
@@ -4038,6 +4028,7 @@ function ExecuteTriggerAsync(ticketId, eventType, data) {
 
     return deferred.promise;
 }
+
 function ExecuteTrigger(ticketId, eventType, data) {
     try {
 
@@ -4052,6 +4043,7 @@ function ExecuteTrigger(ticketId, eventType, data) {
     }
 
 }
+
 function ExecuteSlaAsync(ticketId, previousPriority) {
     var deferred = q.defer();
 
@@ -4072,6 +4064,7 @@ function ExecuteSlaAsync(ticketId, previousPriority) {
 
     return deferred.promise;
 }
+
 function ExecuteSla(ticketId, previousPriority) {
     try {
 
@@ -4086,6 +4079,7 @@ function ExecuteSla(ticketId, previousPriority) {
     }
 
 }
+
 function AddUserRecentTicket(company, tenant, id, tid){
     RecentTicket.findOneAndUpdate({
         company: company,
@@ -4111,6 +4105,7 @@ function AddUserRecentTicket(company, tenant, id, tid){
 
     });
 }
+
 function AddExternalUserRecentTicket(company,tenant,id, tid){
     ExternalUserRecentTicket.findOneAndUpdate({
         company: company,
@@ -4137,7 +4132,6 @@ function AddExternalUserRecentTicket(company,tenant,id, tid){
     });
 }
 
-
 function ExecuteCaseAsync(ticket) {
     var deferred = q.defer();
 
@@ -4158,6 +4152,7 @@ function ExecuteCaseAsync(ticket) {
 
     return deferred.promise;
 }
+
 function ExecuteCase(ticket) {
     try {
 

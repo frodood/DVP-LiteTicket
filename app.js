@@ -106,6 +106,7 @@ server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
 server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
+
 server.put('/DVP/API/:version/Ticket/:id/Watch', authorization({resource:"ticket", action:"write"}), ticketService.WatchTicket);
 server.put('/DVP/API/:version/Ticket/:id/StopWatch', authorization({resource:"ticket", action:"delete"}), ticketService.StopWatchTicket);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
