@@ -49,11 +49,11 @@ var connectionstring = util.format('mongodb://%s:%s@%s:%d/%s',mongouser,mongopas
 
 
 mongoose.connection.on('error', function (err) {
-    throw new Error(err);
+    console.error( new Error(err));
 });
 
 mongoose.connection.on('disconnected', function() {
-    throw new Error('Could not connect to database');
+    console.error( new Error('Could not connect to database'));
 });
 
 mongoose.connection.once('open', function() {
@@ -72,15 +72,11 @@ server.post('/DVP/API/:version/Ticket/Comments',authorization({resource:"ticket"
 server.put('/DVP/API/:version/Ticket/Comment/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateComment);
 server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTickets);
 server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketSchema);
-
-
-
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
 server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
 server.post('/DVP/API/:version/TicketDetailReport/data/:skip/:limit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReport);
 server.post('/DVP/API/:version/TicketDetailReport/data', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportAll);
 server.post('/DVP/API/:version/TicketDetailReport/count', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportCount);
-
 server.get('/DVP/API/:version/Tickets/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByTimeRange);
 server.get('/DVP/API/:version/Tickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatus);
 server.get('/DVP/API/:version/Tickets/:status/TimeRange/:fromDate/:toDate', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWithStatusTimeRange);
@@ -106,7 +102,6 @@ server.get('/DVP/API/:version/Ticket/:id/Audit', authorization({resource:"ticket
 server.put('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicket);
 server.put('/DVP/API/:version/Ticket/:id/FormSubmission', authorization({resource:"ticket", action:"write"}), ticketService.UpdateFormSubmission);
 server.put('/DVP/API/:version/Ticket/:id/Comment', authorization({resource:"ticket", action:"write"}), ticketService.AddComment);
-
 server.put('/DVP/API/:version/Ticket/:id/Watch', authorization({resource:"ticket", action:"write"}), ticketService.WatchTicket);
 server.put('/DVP/API/:version/Ticket/:id/StopWatch', authorization({resource:"ticket", action:"delete"}), ticketService.StopWatchTicket);
 server.put('/DVP/API/:version/Ticket/:id/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddAttachment);
@@ -125,36 +120,26 @@ server.get('/DVP/API/:version/RecentTickets',authorization({resource:"ticket", a
 server.get('/DVP/API/:version/ExternalUserRecentTickets/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUSerRecentTicket);
 server.get('/DVP/API/:version/ExternalUserTicketCounts/:requester',authorization({resource:"ticket", action:"read"}), ticketService.GetExternalUserTicketCounts);
 server.put('/DVP/API/:version/Ticket/:id/EstimatedTime', authorization({resource:"ticket", action:"write"}), ticketService.setEstimatedTime);
-
 server.put('/DVP/API/:version/Ticket/:id/MergeTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.MergeTicket);
 server.get('/DVP/API/:version/Ticket/:id/MergeTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetMergeTickets);
-
 server.post('/DVP/API/:version/Ticket/:id/SubTicket',authorization({resource:"ticket", action:"write"}), ticketService.CreateSubTicket);
 server.get('/DVP/API/:version/Ticket/:id/SubTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetSubTickets);
 server.get('/DVP/API/:version/Ticket/:id/RelatedTickets',authorization({resource:"ticket", action:"read"}), ticketService.GetAttachTickets);
 server.post('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"write"}), ticketService.AttachTicket);
 server.del('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"delete"}), ticketService.DeAttachTicket);
-
 server.put('/DVP/API/:version/Ticket/:id/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.AppendEngagement);
 server.get('/DVP/API/:version/Ticket/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketsByEngagementId);
-
 ///////////////////////////////Case////////////////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"write"}), ticketService.AddCaseConfiguration);
 server.del('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCaseConfiguration);
-
 server.post('/DVP/API/:version/Case',authorization({resource:"ticket", action:"write"}), ticketService.CreateCase);
 server.del('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCase);
 server.put('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.AddTicketToCase);
 server.del('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.RemoveTicketFromCase);
-
-
 server.get('/DVP/API/:version/Cases',authorization({resource:"ticket", action:"read"}), ticketService.GetCases);
 server.get('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCase);
-
 server.get('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfigurations);
 server.get('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfiguration);
-
-
 /////////////////////////////////////////////Tags///////////////////////////////////////////////////////////////////////////////////////////////
 
 
