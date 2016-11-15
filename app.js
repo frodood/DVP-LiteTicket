@@ -325,13 +325,13 @@ server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", act
 
 //////////////////////////////////////////////Ticket Types//////////////////////////////////////////////////////////////////////////////////
 
-server.post('/DVP/API/:version/TicketTypes', authorization({resource:"ticket", action:"write"}), ticketService.CreateTicketTypes);
-server.put('/DVP/API/:version/TicketTypes/:id', authorization({resource:"ticket", action:"write"}), ticketService.UpdateTicketTypes);
-server.del('/DVP/API/:version/TicketTypes/:id', authorization({resource:"ticket", action:"delete"}), ticketService.RemoveTicketTypes);
-server.put('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resource:"ticket", action:"write"}), ticketService.AddCustomType);
-server.del('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resource:"ticket", action:"delete"}), ticketService.RemoveCustomType);
-server.get('/DVP/API/:version/TicketTypes', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketTypes);
-server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"ticket", action:"read"}), ticketService.GetAvailableTypes);
+server.post('/DVP/API/:version/TicketTypes', authorization({resource:"tickettypes", action:"write"}), ticketService.CreateTicketTypes);
+server.put('/DVP/API/:version/TicketTypes/:id', authorization({resource:"tickettypes", action:"write"}), ticketService.UpdateTicketTypes);
+server.del('/DVP/API/:version/TicketTypes/:id', authorization({resource:"tickettypes", action:"delete"}), ticketService.RemoveTicketTypes);
+server.put('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resource:"tickettypes", action:"write"}), ticketService.AddCustomType);
+server.del('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resource:"tickettypes", action:"delete"}), ticketService.RemoveCustomType);
+server.get('/DVP/API/:version/TicketTypes', authorization({resource:"tickettypes", action:"read"}), ticketService.GetTicketTypes);
+server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"tickettypes", action:"read"}), ticketService.GetAvailableTypes);
 
 
 server.listen(port, function () {
