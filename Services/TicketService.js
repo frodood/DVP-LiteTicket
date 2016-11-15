@@ -5946,7 +5946,11 @@ var GetAvailableTicketTypes = function(company, tenant, callback){
         } else {
             var tTypes = [];
             if (ticketTypes) {
-                tTypes = ticketTypes.default_types.concat(ticketTypes.custom_types);
+                if(ticketTypes.activate_default) {
+                    tTypes = ticketTypes.default_types.concat(ticketTypes.custom_types);
+                }else{
+                    tTypes = ticketTypes.custom_types;
+                }
             }
             jsonString = messageFormatter.FormatMessage(err, "Get Ticket Types Success", true, tTypes);
             callback(jsonString, ticketTypes);
