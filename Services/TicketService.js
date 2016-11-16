@@ -4954,9 +4954,13 @@ module.exports.CreateStatusNode = function (req, res) {
 
 
                 var ticketStatusNode = TicketStatusNode({
+                    company: company,
+                    tenant: tenant,
+                    status_node: req.body.status_node,
+                    description: req.body.description,
+                    node_type: 'custom',
                     created_at: Date.now(),
-                    updated_at: Date.now(),
-                    status_node: req.body.status_node
+                    updated_at: Date.now()
                 });
 
                 ticketStatusNode.save(function (err, tsn) {
@@ -4983,13 +4987,89 @@ module.exports.GetStatusNodes = function (req, res) {
     logger.info("DVP-LiteTicket.GetStatusNodes Internal method ");
     var jsonString;
 
-    TicketStatusNode.find({}, function (err, stn) {
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    TicketStatusNode.find({
+        $and: [
+            { $or: [{company: company}, {company: -1}] },
+            { $or: [{tenant: tenant}, {tenant: -1}] }
+        ]
+    }, function (err, stn) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Get StatusNodes Failed", false, undefined);
         } else {
             jsonString = messageFormatter.FormatMessage(undefined, "Get StatusNodes Successful", true, stn);
         }
         res.end(jsonString);
+    });
+};
+
+module.exports.UpdateStatusNode = function(req,res){
+    logger.info("DVP-LiteTicket.UpdateStatusNode Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusNode.findOne({_id: req.params.id, company: company, tenant: tenant}, function(err, sNode){
+        if(err){
+            jsonString = messageFormatter.FormatMessage(err, "Finf Status Node Failed", false, undefined);
+            res.end(jsonString);
+        }else{
+            if(sNode){
+                sNode.status_node = req.body.status_node;
+                sNode.description = req.body.description;
+                sNode.updated_at = Date.now();
+
+                sNode.update(sNode, function (err, newSNode) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail Status Node Types", false, undefined);
+                    }
+                    else {
+                        if (newSNode) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Status Node Update Successfully", true, newSNode);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Status Node Update Failed", false, undefined);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }else{
+                jsonString = messageFormatter.FormatMessage(err, "No Status Node Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.RemoveStatusNode = function(req,res){
+    logger.info("DVP-LiteTicket.RemoveStatusNode Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusNode.findOne({_id: req.params.id, company: company, tenant: tenant}, function (err, sNode) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Status Node Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            if (sNode) {
+                sNode.remove(function (err) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Delete Status Node Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Status Node successfully deleted", true, undefined);
+                    }
+                    res.end(jsonString);
+                });
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Delete Status Node Failed, Node object is null", false, undefined);
+                res.end(jsonString);
+            }
+        }
     });
 };
 
@@ -5145,19 +5225,31 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
-        $pull: {
-            flow_nodes: {
-                _id: req.params.flownodeid
+    TicketStatusNode.findOne({_id: req.params.flownodeid}, function (err, fnode) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Node Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            if(fnode) {
+                    TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                        $pull: {
+                            flow_nodes: {
+                                _id: req.params.flownodeid
+                            }
+                        }
+                    }, function (err, tsf) {
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
+                        } else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
+                        }
+                        res.end(jsonString);
+                    });
+            }else{
+                jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
+                res.end(jsonString);
             }
         }
-    }, function (err, tsf) {
-        if (err) {
-            jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
-        } else {
-            jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
-        }
-        res.end(jsonString);
     });
 };
 
@@ -5783,6 +5875,15 @@ module.exports.CreateTicketTypes = function(req,res){
         activate_default: true,
         default_types: ['question','complain','incident','action'],
         custom_types: customTypes,
+        created_at: Date.now(),
+        updated_at: Date.now()
+    });
+
+    var tStatusNodes = TicketStatusNode({
+        company: company,
+        tenant: tenant,
+        activate_default: true,
+        custom_nodes: [],
         created_at: Date.now(),
         updated_at: Date.now()
     });
