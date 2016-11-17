@@ -281,6 +281,8 @@ server.put('/DVP/API/:version/FormSubmission/:reference/field/:field', authoriza
 
 server.post('/DVP/API/:version/TicketStatusNode',authorization({resource:"ticket", action:"write"}), ticketService.CreateStatusNode);
 server.get('/DVP/API/:version/TicketStatusNodes',authorization({resource:"ticket", action:"read"}), ticketService.GetStatusNodes);
+server.put('/DVP/API/:version/TicketStatusNode/:id',authorization({resource:"ticket", action:"write"}), ticketService.UpdateStatusNode);
+server.del('/DVP/API/:version/TicketStatusNode/:id',authorization({resource:"ticket", action:"delete"}), ticketService.RemoveStatusNode);
 
 
 server.post('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticket", action:"read"}), ticketService.CreateStatusFlow);
