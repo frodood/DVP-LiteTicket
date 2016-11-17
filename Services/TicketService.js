@@ -5014,7 +5014,7 @@ module.exports.UpdateStatusNode = function(req,res){
 
     TicketStatusNode.findOne({_id: req.params.id, company: company, tenant: tenant}, function(err, sNode){
         if(err){
-            jsonString = messageFormatter.FormatMessage(err, "Finf Status Node Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Find Status Node Failed", false, undefined);
             res.end(jsonString);
         }else{
             if(sNode){
@@ -5066,7 +5066,7 @@ module.exports.RemoveStatusNode = function(req,res){
                     res.end(jsonString);
                 });
             } else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Delete Status Node Failed, Node object is null", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Delete Status Node Failed, No Node object Found", false, undefined);
                 res.end(jsonString);
             }
         }
