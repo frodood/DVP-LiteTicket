@@ -1932,7 +1932,7 @@ module.exports.CreateSlotArray = function (req, res) {
         }
         else
         {
-            jsonString = messageFormatter.FormatMessage(undefined, "File Slot saving succeeded ", true, undefined);
+            jsonString = messageFormatter.FormatMessage(undefined, "File Slot saving succeeded ", true, response);
             res.end(jsonString);
         }
     });
