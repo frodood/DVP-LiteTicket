@@ -1927,12 +1927,12 @@ module.exports.CreateSlotArray = function (req, res) {
     fileSlotArray.save(function (err, response) {
         if(err)
         {
-            jsonString = messageFormatter.FormatMessage(err, "File Slot saving failed ", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get Slot Arrays failed ", false, undefined);
             res.end(jsonString);
         }
         else
         {
-            jsonString = messageFormatter.FormatMessage(undefined, "File Slot saving succeeded ", true, response);
+            jsonString = messageFormatter.FormatMessage(undefined, "Get Slot Arrays succeeded ", true, response);
             res.end(jsonString);
         }
     });
@@ -1941,7 +1941,7 @@ module.exports.CreateSlotArray = function (req, res) {
 
 module.exports.GetSlotArrays = function (req, res) {
 
-    logger.info("DVP-LiteTicket.GetTicketSlots Internal method ");
+    logger.info("DVP-LiteTicket.GetSlotArrays Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -1954,14 +1954,14 @@ module.exports.GetSlotArrays = function (req, res) {
     }).populate('slots').exec(function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail Get Slot Arrays", false, undefined);
         }
         else {
             if (respFSlot) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+                jsonString = messageFormatter.FormatMessage(undefined, "Get Slot Arrays", true, respFSlot);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Get Slot Arrays", false, undefined);
             }
         }
         res.end(jsonString);
@@ -1971,7 +1971,7 @@ module.exports.GetSlotArrays = function (req, res) {
 
 module.exports.GetSlotArray = function (req, res) {
 
-    logger.info("DVP-LiteTicket.GetTicketSlot Internal method ");
+    logger.info("DVP-LiteTicket.GetSlotArray Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -1985,14 +1985,14 @@ module.exports.GetSlotArray = function (req, res) {
     }).populate('slots').exec(function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Get Slot Array", false, undefined);
         }
         else {
             if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+                jsonString = messageFormatter.FormatMessage(undefined, "Get Slot Array", true, ticket);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Get Slot Array", false, undefined);
             }
         }
         res.end(jsonString);
@@ -2016,14 +2016,14 @@ module.exports.DeleteSlotArray = function (req, res) {
     }, function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Delete Slot Array", false, undefined);
         }
         else {
             if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+                jsonString = messageFormatter.FormatMessage(undefined, "Delete Slot Array", true, ticket);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail Delete Slot Array", false, undefined);
             }
         }
         res.end(jsonString);
@@ -2033,7 +2033,7 @@ module.exports.DeleteSlotArray = function (req, res) {
 
 module.exports.AddSlotToArray = function (req, res) {
 
-    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -2052,14 +2052,14 @@ module.exports.AddSlotToArray = function (req, res) {
     }}}, function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Add Slot To Array", false, undefined);
         }
         else {
             if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+                jsonString = messageFormatter.FormatMessage(undefined, "Add Slot To Array", true, ticket);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Add Slot To Array", false, undefined);
             }
         }
         res.end(jsonString);
@@ -2069,7 +2069,7 @@ module.exports.AddSlotToArray = function (req, res) {
 
 module.exports.RemoveSlotFromArray = function (req, res) {
 
-    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+    logger.info("DVP-LiteTicket.RemoveSlotFromArray Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -2087,14 +2087,14 @@ module.exports.RemoveSlotFromArray = function (req, res) {
     },function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Remove Slot From Array", false, undefined);
         }
         else {
             if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+                jsonString = messageFormatter.FormatMessage(undefined, "Remove Slot From Array", true, ticket);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Remove Slot From Array", false, undefined);
             }
         }
         res.end(jsonString);
