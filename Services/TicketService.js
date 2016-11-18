@@ -1951,7 +1951,7 @@ module.exports.GetSlotArrays = function (req, res) {
         company: company,
         tenant: tenant
 
-    }, function (err, respFSlot) {
+    }).populate('slots').exec(function (err, respFSlot) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
