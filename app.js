@@ -332,6 +332,9 @@ server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"ti
 server.post('/DVP/API/:version/SlotArray',authorization({resource:"ticket", action:"write"}), ticketService.CreateSlotArray);
 server.get('/DVP/API/:version/SlotArrays',authorization({resource:"ticket", action:"write"}), ticketService.GetSlotArrays);
 server.get('/DVP/API/:version/SlotArray/:name',authorization({resource:"ticket", action:"write"}), ticketService.GetSlotArray);
+server.del('/DVP/API/:version/SlotArray/:name',authorization({resource:"ticket", action:"write"}), ticketService.DeleteSlotArray);
+server.post('/DVP/API/:version/SlotArray/:name/slot',authorization({resource:"ticket", action:"write"}), ticketService.AddSlotToArray);
+server.del('/DVP/API/:version/SlotArray/:name/slot/slotname',authorization({resource:"ticket", action:"delete"}), ticketService.RemoveSlotFromArray);
 
 ///////// Slots/////////////////////////////////////////////////////////////////////////////////////////////////////
 
