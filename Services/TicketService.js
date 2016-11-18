@@ -18,6 +18,7 @@ var Case = require('dvp-mongomodels/model/CaseManagement').Case;
 var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConfiguration;
 
 var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
+var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
 
 
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
@@ -1981,7 +1982,109 @@ module.exports.GetSlotArray = function (req, res) {
         tenant: tenant,
         name:req.params.name
 
+    }).populate('slots').exec(function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.DeleteSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndRemove({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
     }, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.AddSlotToArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    },{$addToSet: {FileSlot:{
+        name: req.body.name,
+        fileType: req.body.fileType
+
+    }}}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.RemoveSlotFromArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }, {
+
+        $pull: {"slots.name":req.params.slotname}
+
+    },function (err, respFSlot) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
@@ -5593,7 +5696,6 @@ module.exports.GetTicketReport= function(req, res){
 
 }
 
-
 module.exports.GetTicketDetailReportAll = function(req, res){
 
 
@@ -5922,8 +6024,6 @@ module.exports.GetTicketsByField = function(req, res) {
 
 
 };
-
-
 
 module.exports.GetExternalUserTicketCounts = function(req,res) {
 
