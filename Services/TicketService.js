@@ -1208,7 +1208,8 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
         .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]})
-        .populate('slot_attachment','name tags fileType')
+        .populate({path:'slot_attachment.attachment',populate:'file url type'})
+
         .exec(function (err, ticket) {
             if (err) {
 
@@ -1216,7 +1217,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
             }
             else {
                 if (ticket) {
-                    jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+                    jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
 
                     try {
 
