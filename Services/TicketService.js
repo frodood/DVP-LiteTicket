@@ -1971,7 +1971,7 @@ module.exports.GetSlotArrays = function (req, res) {
 
 module.exports.GetSlotArray = function (req, res) {
 
-    logger.info("DVP-LiteTicket.GetTicketSlot Internal method ");
+    logger.info("DVP-LiteTicket.GetTicketSlotArray Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -1988,8 +1988,8 @@ module.exports.GetSlotArray = function (req, res) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
         }
         else {
-            if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
@@ -2019,8 +2019,8 @@ module.exports.DeleteSlotArray = function (req, res) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
         }
         else {
-            if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
@@ -2033,7 +2033,7 @@ module.exports.DeleteSlotArray = function (req, res) {
 
 module.exports.AddSlotToArray = function (req, res) {
 
-    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -2045,21 +2045,21 @@ module.exports.AddSlotToArray = function (req, res) {
         tenant: tenant,
         name:req.params.name
 
-    },{$addToSet: {FileSlot:{
+    },{$addToSet: {slots:{
         name: req.body.name,
         fileType: req.body.fileType
 
     }}}, function (err, respFSlot) {
         if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
         }
         else {
-            if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlot added to Array ", true, respFSlot);
             }
             else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To add FileSlot to Array", false, undefined);
             }
         }
         res.end(jsonString);
@@ -2082,7 +2082,7 @@ module.exports.RemoveSlotFromArray = function (req, res) {
 
     }, {
 
-        $pull: {"slots.name":req.params.slotname}
+        $pull: {slots:{"name":req.params.slotname}}
 
     },function (err, respFSlot) {
         if (err) {
@@ -2090,8 +2090,8 @@ module.exports.RemoveSlotFromArray = function (req, res) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
         }
         else {
-            if (ticket) {
-                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, ticket);
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
             }
             else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
