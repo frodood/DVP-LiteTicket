@@ -2104,6 +2104,74 @@ module.exports.RemoveSlotFromArray = function (req, res) {
 };
 
 
+
+module.exports.TicketAddAtachmentSlot= function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$set:  { 'slot_attachment.$.attachment': req.params.attachment }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
+module.exports.TicketDeleteAtachmentSlot = function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$unset:  { 'slot_attachment.$.attachment': 1 }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
 //////////////////////////////////////external method//////////////////////////////////////////////
 
 module.exports.AddCommentByReference = function (req, res) {

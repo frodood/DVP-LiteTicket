@@ -336,6 +336,14 @@ server.del('/DVP/API/:version/SlotArray/:name',authorization({resource:"ticket",
 server.post('/DVP/API/:version/SlotArray/:name/slot',authorization({resource:"ticket", action:"write"}), ticketService.AddSlotToArray);
 server.del('/DVP/API/:version/SlotArray/:name/slot/:slotname',authorization({resource:"ticket", action:"write"}), ticketService.RemoveSlotFromArray);
 
+server.put('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketAddAtachmentSlot);
+server.del('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketDeleteAtachmentSlot);
+
+
+
+
+
+
 ///////// Slots/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 server.listen(port, function () {
