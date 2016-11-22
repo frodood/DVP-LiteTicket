@@ -129,6 +129,12 @@ server.post('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization
 server.del('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"delete"}), ticketService.DeAttachTicket);
 server.put('/DVP/API/:version/Ticket/:id/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.AppendEngagement);
 server.get('/DVP/API/:version/Ticket/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketsByEngagementId);
+
+
+
+
+
+
 ///////////////////////////////Case////////////////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"write"}), ticketService.AddCaseConfiguration);
 server.del('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"write"}), ticketService.DeleteCaseConfiguration);
@@ -320,6 +326,25 @@ server.del('/DVP/API/:version/TicketTypes/:id/:customtype', authorization({resou
 server.get('/DVP/API/:version/TicketTypes', authorization({resource:"tickettypes", action:"read"}), ticketService.GetTicketTypes);
 server.get('/DVP/API/:version/AvailableTicketTypes', authorization({resource:"tickettypes", action:"read"}), ticketService.GetAvailableTypes);
 
+
+
+///////// Slots/////////////////////////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/SlotArray',authorization({resource:"ticket", action:"write"}), ticketService.CreateSlotArray);
+server.get('/DVP/API/:version/SlotArrays',authorization({resource:"ticket", action:"write"}), ticketService.GetSlotArrays);
+server.get('/DVP/API/:version/SlotArray/:name',authorization({resource:"ticket", action:"write"}), ticketService.GetSlotArray);
+server.del('/DVP/API/:version/SlotArray/:name',authorization({resource:"ticket", action:"write"}), ticketService.DeleteSlotArray);
+server.post('/DVP/API/:version/SlotArray/:name/slot',authorization({resource:"ticket", action:"write"}), ticketService.AddSlotToArray);
+server.del('/DVP/API/:version/SlotArray/:name/slot/:slotname',authorization({resource:"ticket", action:"write"}), ticketService.RemoveSlotFromArray);
+
+server.put('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketAddAtachmentSlot);
+server.del('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketDeleteAtachmentSlot);
+
+
+
+
+
+
+///////// Slots/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){

@@ -16,6 +16,11 @@ var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var Case = require('dvp-mongomodels/model/CaseManagement').Case;
 var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConfiguration;
+
+var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
+var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
+
+
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
@@ -1202,14 +1207,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('merged_tickets')
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]}).exec(function (err, ticket) {
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]})
+        .populate({path:'slot_attachment.attachment',populate:'file url type'})
+
+        .exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
             }
             else {
                 if (ticket) {
-                    jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+                    jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
 
                     try {
 
@@ -1898,6 +1906,274 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 //////////////////////////////////////external method//////////////////////////////////////////////
 
+
+
+module.exports.CreateSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.CreateSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+
+    var fileSlotArray =FileSlotArray({
+        company:company,
+        tenant:tenant,
+        tags:req.body.tags,
+        name:req.body.name
+    });
+
+    fileSlotArray.save(function (err, response) {
+        if(err)
+        {
+            jsonString = messageFormatter.FormatMessage(err, "File Slot saving failed ", false, undefined);
+            res.end(jsonString);
+        }
+        else
+        {
+            jsonString = messageFormatter.FormatMessage(undefined, "File Slot saving succeeded ", true, response);
+            res.end(jsonString);
+        }
+    });
+
+};
+
+module.exports.GetSlotArrays = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetTicketSlots Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.find({
+        company: company,
+        tenant: tenant
+
+    }, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.GetSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetTicketSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOne({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }).populate('slots').exec(function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.DeleteSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndRemove({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.AddSlotToArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    },{$addToSet: {slots:{
+        name: req.body.name,
+        fileType: req.body.fileType
+
+    }}}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlot added to Array ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To add FileSlot to Array", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.RemoveSlotFromArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }, {
+
+        $pull: {slots:{"name":req.params.slotname}}
+
+    },function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
+
+module.exports.TicketAddAtachmentSlot= function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$set:  { 'slot_attachment.$.attachment': req.params.attachment }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
+module.exports.TicketDeleteAtachmentSlot = function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$unset:  { 'slot_attachment.$.attachment': 1 }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+//////////////////////////////////////external method//////////////////////////////////////////////
+
 module.exports.AddCommentByReference = function (req, res) {
 
 
@@ -1948,9 +2224,9 @@ module.exports.AddCommentByReference = function (req, res) {
                                 created_at: Date.now(),
                                 meta_data: req.body.meta_data
                             });
-                            
+
                             if(req.body.author){
-                   
+
                                 comment.author = req.body.author;
                             }
 
@@ -5489,7 +5765,6 @@ module.exports.GetTicketReport= function(req, res){
 
 }
 
-
 module.exports.GetTicketDetailReportAll = function(req, res){
 
 
@@ -5818,8 +6093,6 @@ module.exports.GetTicketsByField = function(req, res) {
 
 
 };
-
-
 
 module.exports.GetExternalUserTicketCounts = function(req,res) {
 
