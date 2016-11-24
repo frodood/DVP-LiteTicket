@@ -16,6 +16,11 @@ var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var Case = require('dvp-mongomodels/model/CaseManagement').Case;
 var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConfiguration;
+
+var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
+var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
+
+
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
@@ -1202,14 +1207,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate('merged_tickets')
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]}).exec(function (err, ticket) {
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]})
+        .populate({path:'slot_attachment.attachment',populate:'file url type'})
+
+        .exec(function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
             }
             else {
                 if (ticket) {
-                    jsonString = messageFormatter.FormatMessage(undefined, "Find Ticket", true, ticket);
+                    jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
 
                     try {
 
@@ -1898,6 +1906,274 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 //////////////////////////////////////external method//////////////////////////////////////////////
 
+
+
+module.exports.CreateSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.CreateSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+
+    var fileSlotArray =FileSlotArray({
+        company:company,
+        tenant:tenant,
+        tags:req.body.tags,
+        name:req.body.name
+    });
+
+    fileSlotArray.save(function (err, response) {
+        if(err)
+        {
+            jsonString = messageFormatter.FormatMessage(err, "File Slot saving failed ", false, undefined);
+            res.end(jsonString);
+        }
+        else
+        {
+            jsonString = messageFormatter.FormatMessage(undefined, "File Slot saving succeeded ", true, response);
+            res.end(jsonString);
+        }
+    });
+
+};
+
+module.exports.GetSlotArrays = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetTicketSlots Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.find({
+        company: company,
+        tenant: tenant
+
+    }, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.GetSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetTicketSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOne({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }).populate('slots').exec(function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.DeleteSlotArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndRemove({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.AddSlotToArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    },{$addToSet: {slots:{
+        name: req.body.name,
+        fileType: req.body.fileType
+
+    }}}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlot added to Array ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To add FileSlot to Array", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+module.exports.RemoveSlotFromArray = function (req, res) {
+
+    logger.info("DVP-LiteTicket.DeleteSlotArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    FileSlotArray.findOneAndUpdate({
+        company: company,
+        tenant: tenant,
+        name:req.params.name
+
+    }, {
+
+        $pull: {slots:{"name":req.params.slotname}}
+
+    },function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
+
+module.exports.TicketAddAtachmentSlot= function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$set:  { 'slot_attachment.$.attachment': req.params.attachment }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
+module.exports.TicketDeleteAtachmentSlot = function(req, res){
+    logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.update({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id,
+        'slot_attachment.slot.name': req.params.slot,
+
+    },{$unset:  { 'slot_attachment.$.attachment': 1 }}, function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to add FileSlot to Array", false, undefined);
+        }
+        else {
+            if (respFSlot) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment added to slot ", true, respFSlot);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Attachment add to slot failed", false, undefined);
+            }
+        }
+        res.end(jsonString);
+    });
+
+};
+
+//////////////////////////////////////external method//////////////////////////////////////////////
+
 module.exports.AddCommentByReference = function (req, res) {
 
 
@@ -1948,9 +2224,9 @@ module.exports.AddCommentByReference = function (req, res) {
                                 created_at: Date.now(),
                                 meta_data: req.body.meta_data
                             });
-                            
+
                             if(req.body.author){
-                   
+
                                 comment.author = req.body.author;
                             }
 
@@ -4957,6 +5233,7 @@ module.exports.CreateStatusNode = function (req, res) {
                     company: company,
                     tenant: tenant,
                     status_node: req.body.status_node,
+                    name: req.body.status_node,
                     description: req.body.description,
                     node_type: 'custom',
                     created_at: Date.now(),
@@ -5019,6 +5296,7 @@ module.exports.UpdateStatusNode = function(req,res){
         }else{
             if(sNode){
                 sNode.status_node = req.body.status_node;
+                sNode.name = req.body.status_node;
                 sNode.description = req.body.description;
                 sNode.updated_at = Date.now();
 
@@ -5117,7 +5395,8 @@ module.exports.CreateStatusFlow = function (req, res) {
                                                     company: company,
                                                     tenant: tenant,
                                                     type: req.body.type,
-                                                    flow_nodes: req.body.flow_nodes
+                                                    flow_nodes: req.body.flow_nodes,
+                                                    flow_connections: req.body.flow_connections
                                                 });
 
                                                 ticketStatusFlow.save(function (err, tsf) {
@@ -5142,8 +5421,24 @@ module.exports.CreateStatusFlow = function (req, res) {
                                     }
                                 });
                             } else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Flow Already Added", false, undefined);
-                                res.end(jsonString);
+                                ticketFlow.type = req.body.type;
+                                ticketFlow.flow_nodes = req.body.flow_nodes;
+                                ticketFlow.flow_connections = req.body.flow_connections;
+
+                                ticketFlow.update(ticketFlow, function (err, newTSFlow) {
+                                    if (err) {
+                                        jsonString = messageFormatter.FormatMessage(err, "Fail to update Status Flow", false, undefined);
+                                    }
+                                    else {
+                                        if (newTSFlow) {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Flow Update Successfully", true, newTSFlow);
+                                        }
+                                        else {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Flow Update Failed", false, undefined);
+                                        }
+                                    }
+                                    res.end(jsonString);
+                                });
                             }
                         }
 
@@ -5168,8 +5463,8 @@ module.exports.GetStatusFlow = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    TicketStatusFlow.find({company: company, tenant: tenant}).populate('flow_nodes.source')
-        .populate('flow_nodes.targets').exec(function (err, stf) {
+    TicketStatusFlow.find({company: company, tenant: tenant}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
+        .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
             } else {
@@ -5177,6 +5472,55 @@ module.exports.GetStatusFlow = function (req, res) {
             }
             res.end(jsonString);
         });
+};
+
+module.exports.GetStatusFlowByType = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
+        .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
+            }
+            res.end(jsonString);
+        });
+};
+
+module.exports.GetStatusFlowNodesByType = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowNodesByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}}).exec(function (err, stf) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_nodes);
+            }
+            res.end(jsonString);
+        });
+};
+
+module.exports.GetStatusFlowNodesByConnections = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowNodesByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_connections);
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.AddNodeToStatusFlow = function (req, res) {
@@ -5198,7 +5542,49 @@ module.exports.AddNodeToStatusFlow = function (req, res) {
 
                 TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
                     $addToSet: {
-                        flow_nodes: req.body
+                        flow_nodes: {node: req.body.flow_node, position: req.body.position}
+                    }
+                }, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Add NodeToStatusFlow Failed", false, undefined);
+                    } else {
+                        if(tsf){
+                            tsf.flow_nodes.push(req.params.flownodeid);
+                        }
+                        jsonString = messageFormatter.FormatMessage(undefined, "Add NodeToStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.AddConnectionToStatusFlow = function (req, res) {
+    logger.info("DVP-LiteTicket.AddNodeToStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                    $addToSet: {
+                        flow_connections: req.body
                     }
                 }, function (err, tsf) {
                     if (err) {
@@ -5233,9 +5619,7 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
             if(fnode) {
                     TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
                         $pull: {
-                            flow_nodes: {
-                                _id: req.params.flownodeid
-                            }
+                            flow_nodes: {_id: req.params.flownodeid}
                         }
                     }, function (err, tsf) {
                         if (err) {
@@ -5245,6 +5629,41 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
                         }
                         res.end(jsonString);
                     });
+            }else{
+                jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.RemoveConnectionFromStatusFlow = function (req, res) {
+    logger.info("DVP-LiteTicket.RemoveNodeFromStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusNode.findOne({_id: req.params.flownodeid}, function (err, fnode) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Node Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            if(fnode) {
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                    $pull: {
+                        flow_nodes: {
+                            _id: req.params.flowconnid
+                        }
+                    }
+                }, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
             }else{
                 jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
                 res.end(jsonString);
@@ -5280,15 +5699,15 @@ var GetNextAvailableStatusList = function (tenant, company, type, currentStatus,
     var jsonString;
     var nextAvailableStatus = [];
 
-    TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_nodes.source')
-        .populate('flow_nodes.targets').exec(function (err, stf) {
+    TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_connections.source')
+        .populate('flow_connections.targets').exec(function (err, stf) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, nextAvailableStatus);
             } else {
                 if (stf) {
-                    for (var i = 0; i < stf.flow_nodes.length; i++) {
-                        if (stf.flow_nodes[i].source.status_node === currentStatus) {
-                            nextAvailableStatus.push(stf.flow_nodes[i].targets.status_node);
+                    for (var i = 0; i < stf.flow_connections.length; i++) {
+                        if (stf.flow_connections[i].source.status_node === currentStatus) {
+                            nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
                         }
                     }
                     jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
@@ -5488,7 +5907,6 @@ module.exports.GetTicketReport= function(req, res){
     }
 
 }
-
 
 module.exports.GetTicketDetailReportAll = function(req, res){
 
@@ -5818,8 +6236,6 @@ module.exports.GetTicketsByField = function(req, res) {
 
 
 };
-
-
 
 module.exports.GetExternalUserTicketCounts = function(req,res) {
 
