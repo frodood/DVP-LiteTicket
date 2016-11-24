@@ -4957,6 +4957,7 @@ module.exports.CreateStatusNode = function (req, res) {
                     company: company,
                     tenant: tenant,
                     status_node: req.body.status_node,
+                    name: req.body.status_node,
                     description: req.body.description,
                     node_type: 'custom',
                     created_at: Date.now(),
@@ -5019,6 +5020,7 @@ module.exports.UpdateStatusNode = function(req,res){
         }else{
             if(sNode){
                 sNode.status_node = req.body.status_node;
+                sNode.name = req.body.status_node;
                 sNode.description = req.body.description;
                 sNode.updated_at = Date.now();
 
@@ -5117,7 +5119,8 @@ module.exports.CreateStatusFlow = function (req, res) {
                                                     company: company,
                                                     tenant: tenant,
                                                     type: req.body.type,
-                                                    flow_nodes: req.body.flow_nodes
+                                                    flow_nodes: req.body.flow_nodes,
+                                                    flow_connections: req.body.flow_connections
                                                 });
 
                                                 ticketStatusFlow.save(function (err, tsf) {
@@ -5142,8 +5145,24 @@ module.exports.CreateStatusFlow = function (req, res) {
                                     }
                                 });
                             } else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Flow Already Added", false, undefined);
-                                res.end(jsonString);
+                                ticketFlow.type = req.body.type;
+                                ticketFlow.flow_nodes = req.body.flow_nodes;
+                                ticketFlow.flow_connections = req.body.flow_connections;
+
+                                ticketFlow.update(ticketFlow, function (err, newTSFlow) {
+                                    if (err) {
+                                        jsonString = messageFormatter.FormatMessage(err, "Fail to update Status Flow", false, undefined);
+                                    }
+                                    else {
+                                        if (newTSFlow) {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Flow Update Successfully", true, newTSFlow);
+                                        }
+                                        else {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Flow Update Failed", false, undefined);
+                                        }
+                                    }
+                                    res.end(jsonString);
+                                });
                             }
                         }
 
@@ -5168,8 +5187,8 @@ module.exports.GetStatusFlow = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-    TicketStatusFlow.find({company: company, tenant: tenant}).populate('flow_nodes.source')
-        .populate('flow_nodes.targets').exec(function (err, stf) {
+    TicketStatusFlow.find({company: company, tenant: tenant}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
+        .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
             } else {
@@ -5177,6 +5196,55 @@ module.exports.GetStatusFlow = function (req, res) {
             }
             res.end(jsonString);
         });
+};
+
+module.exports.GetStatusFlowByType = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
+        .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
+            }
+            res.end(jsonString);
+        });
+};
+
+module.exports.GetStatusFlowNodesByType = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowNodesByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}}).exec(function (err, stf) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_nodes);
+            }
+            res.end(jsonString);
+        });
+};
+
+module.exports.GetStatusFlowNodesByConnections = function (req, res) {
+    logger.info("DVP-LiteTicket.GetStatusFlowNodesByType Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_connections);
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.AddNodeToStatusFlow = function (req, res) {
@@ -5198,7 +5266,49 @@ module.exports.AddNodeToStatusFlow = function (req, res) {
 
                 TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
                     $addToSet: {
-                        flow_nodes: req.body
+                        flow_nodes: {node: req.body.flow_node, position: req.body.position}
+                    }
+                }, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Add NodeToStatusFlow Failed", false, undefined);
+                    } else {
+                        if(tsf){
+                            tsf.flow_nodes.push(req.params.flownodeid);
+                        }
+                        jsonString = messageFormatter.FormatMessage(undefined, "Add NodeToStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.AddConnectionToStatusFlow = function (req, res) {
+    logger.info("DVP-LiteTicket.AddNodeToStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                    $addToSet: {
+                        flow_connections: req.body
                     }
                 }, function (err, tsf) {
                     if (err) {
@@ -5233,9 +5343,7 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
             if(fnode) {
                     TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
                         $pull: {
-                            flow_nodes: {
-                                _id: req.params.flownodeid
-                            }
+                            flow_nodes: {_id: req.params.flownodeid}
                         }
                     }, function (err, tsf) {
                         if (err) {
@@ -5245,6 +5353,41 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
                         }
                         res.end(jsonString);
                     });
+            }else{
+                jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.RemoveConnectionFromStatusFlow = function (req, res) {
+    logger.info("DVP-LiteTicket.RemoveNodeFromStatusFlow Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    TicketStatusNode.findOne({_id: req.params.flownodeid}, function (err, fnode) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get Node Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+            if(fnode) {
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                    $pull: {
+                        flow_nodes: {
+                            _id: req.params.flowconnid
+                        }
+                    }
+                }, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
             }else{
                 jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
                 res.end(jsonString);
@@ -5280,15 +5423,15 @@ var GetNextAvailableStatusList = function (tenant, company, type, currentStatus,
     var jsonString;
     var nextAvailableStatus = [];
 
-    TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_nodes.source')
-        .populate('flow_nodes.targets').exec(function (err, stf) {
+    TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_connections.source')
+        .populate('flow_connections.targets').exec(function (err, stf) {
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, nextAvailableStatus);
             } else {
                 if (stf) {
-                    for (var i = 0; i < stf.flow_nodes.length; i++) {
-                        if (stf.flow_nodes[i].source.status_node === currentStatus) {
-                            nextAvailableStatus.push(stf.flow_nodes[i].targets.status_node);
+                    for (var i = 0; i < stf.flow_connections.length; i++) {
+                        if (stf.flow_connections[i].source.status_node === currentStatus) {
+                            nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
                         }
                     }
                     jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);

@@ -287,8 +287,13 @@ server.del('/DVP/API/:version/TicketStatusNode/:id',authorization({resource:"tic
 
 server.post('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.CreateStatusFlow);
 server.put('/DVP/API/:version/TicketStatusFlow/:id/FlowNode',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.AddNodeToStatusFlow);
+server.put('/DVP/API/:version/TicketStatusFlow/:id/FlowConnection',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.AddConnectionToStatusFlow);
 server.get('/DVP/API/:version/TicketStatusFlow',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.GetStatusFlow);
+server.get('/DVP/API/:version/TicketStatusFlow/:type',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.GetStatusFlowByType);
+server.get('/DVP/API/:version/TicketStatusFlow/:type/nodes',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.GetStatusFlowNodesByType);
+server.get('/DVP/API/:version/TicketStatusFlow/:type/connections',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.GetStatusFlowNodesByConnections);
 server.del('/DVP/API/:version/TicketStatusFlow/:id/FlowNode/:flownodeid',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.RemoveNodeFromStatusFlow);
+server.del('/DVP/API/:version/TicketStatusFlow/:id/FlowConnection/:flowconnid',authorization({resource:"ticketstatusflow", action:"read"}), ticketService.RemoveConnectionFromStatusFlow);
 
 server.get('/DVP/API/:version/TicketStatusFlow/NextAvailableStatus/:ticketType/:currentStatus',authorization({resource:"ticket", action:"read"}), ticketService.GetNextAvailableStatus);
 server.get('/DVP/API/:version/TicketStatusFlow/ValidateStatus/:ticketType/:currentStatus/:newStatus',authorization({resource:"ticket", action:"read"}), ticketService.ValidateStatusChange);
