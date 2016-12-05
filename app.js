@@ -344,12 +344,18 @@ server.del('/DVP/API/:version/SlotArray/:name/slot/:slotname',authorization({res
 server.put('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketAddAtachmentSlot);
 server.del('/DVP/API/:version/Ticket/:id/slot/:slot/attachment/:attachment',authorization({resource:"ticket", action:"write"}), ticketService.TicketDeleteAtachmentSlot);
 
-
-
-
-
-
 ///////// Slots/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////// Ticket Prefix/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+server.post('/DVP/API/:version/TicketPrefix',authorization({resource:"ticket", action:"write"}), ticketService.AddNewTicketPrefix);
+server.get('/DVP/API/:version/TicketPrefix/:prefix/Availability',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketPrefixAvailability);
+server.get('/DVP/API/:version/TicketPrefixes',authorization({resource:"ticket", action:"write"}), ticketService.GetAllTicketPrefixes);
+server.get('/DVP/API/:version/TicketPrefix/:prefix',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketPrefix);
+server.put('/DVP/API/:version/TicketPrefix/:prefix/Available',authorization({resource:"ticket", action:"write"}), ticketService.MakePrefixAvailable);
+///////// Ticket Prefix/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
