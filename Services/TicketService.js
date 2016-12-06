@@ -6109,9 +6109,12 @@ module.exports.GetTicketDetailReport = function(req, res){
             }
         }
 
+        var tempLimit = parseInt(req.params.limit);
+        var tempSkip = parseInt(req.params.skip);
+
         Ticket.find( tempQuery)
-            .skip(req.params.skip)
-            .limit(req.params.limit)
+            .skip(tempSkip)
+            .limit(tempLimit)
             .populate('assignee', 'name avatar')
             .populate('assignee_group', 'name')
             .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
