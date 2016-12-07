@@ -35,6 +35,28 @@ var q = require('q');
 var amqp = require('amqp');
 var moment = require("moment");
 var util = require('util');
+var redis=require('redis');
+
+var redisPort = config.Redis.port;
+var redisIp = config.Redis.ip;
+var redisPassword = config.Redis.password;
+
+
+var redisClient = redis.createClient(redisPort,redisIp);
+
+redisClient.auth(redisPassword, function (error) {
+    console.log("Redis Auth Error : "+error);
+});
+redisClient.on("error", function (err) {
+    console.log("Error " + err);
+
+
+});
+
+
+
+
+
 
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
@@ -42,6 +64,8 @@ var ObjectId = Schema.ObjectId;
 var async = require("async");
 var reference = require('dvp-common/Reference/ReferenceGen');
 var TicketTypes = require('dvp-mongomodels/model/TicketTypes').TicketTypes;
+
+var TicketPrefix = require('dvp-mongomodels/model/Ticket').TicketPrefix;
 
 ////////////////////////////rabbitmq//////////////////////////////////////////////////////
 var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
@@ -5498,13 +5522,13 @@ module.exports.GetStatusFlowNodesByType = function (req, res) {
     var jsonString;
 
     TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}}).exec(function (err, stf) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
-            } else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_nodes);
-            }
-            res.end(jsonString);
-        });
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf.flow_nodes);
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetStatusFlowNodesByConnections = function (req, res) {
@@ -5617,18 +5641,18 @@ module.exports.RemoveNodeFromStatusFlow = function (req, res) {
             res.end(jsonString);
         } else {
             if(fnode) {
-                    TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
-                        $pull: {
-                            flow_nodes: {_id: req.params.flownodeid}
-                        }
-                    }, function (err, tsf) {
-                        if (err) {
-                            jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
-                        } else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
-                        }
-                        res.end(jsonString);
-                    });
+                TicketStatusFlow.findOneAndUpdate({_id: req.params.id, company: company, tenant: tenant}, {
+                    $pull: {
+                        flow_nodes: {_id: req.params.flownodeid}
+                    }
+                }, function (err, tsf) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Delete NodeFromStatusFlow Failed", false, undefined);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Delete NodeFromStatusFlow Successful", true, tsf);
+                    }
+                    res.end(jsonString);
+                });
             }else{
                 jsonString = messageFormatter.FormatMessage(err, "No Node Found", false, undefined);
                 res.end(jsonString);
@@ -5778,7 +5802,7 @@ module.exports.GetTicketReport= function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -5945,7 +5969,7 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -6045,7 +6069,7 @@ module.exports.GetTicketDetailReport = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -6085,9 +6109,12 @@ module.exports.GetTicketDetailReport = function(req, res){
             }
         }
 
+        var tempLimit = parseInt(req.params.limit);
+        var tempSkip = parseInt(req.params.skip);
+
         Ticket.find( tempQuery)
-            .skip(req.params.skip)
-            .limit(req.params.limit)
+            .skip(tempSkip)
+            .limit(tempLimit)
             .populate('assignee', 'name avatar')
             .populate('assignee_group', 'name')
             .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
@@ -6146,7 +6173,7 @@ module.exports.GetTicketDetailReportCount = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -6476,3 +6503,177 @@ var GetAvailableTicketTypes = function(company, tenant, callback){
 };
 
 module.exports.GetAvailableTicketTypes = GetAvailableTicketTypes;
+
+
+// -------------------------------- Ticket Prefix ----------------------------------------
+module.exports.AddNewTicketPrefix = function (req, res) {
+
+    logger.info("DVP-LiteTicket.AddNewTicketPrefix Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+
+    var ticketPrefix =TicketPrefix({
+        company:company,
+        tenant:tenant,
+        name:req.body.name,
+        status:false
+    });
+
+    ticketPrefix.save(function (errPrefix, resPrefix) {
+        if(errPrefix)
+        {
+            jsonString = messageFormatter.FormatMessage(errPrefix, "Ticket prefix saving failed ", false, undefined);
+            res.end(jsonString);
+        }
+        else
+        {
+            jsonString = messageFormatter.FormatMessage(undefined, "Ticket prefix saving succeeded ", true, resPrefix);
+            res.end(jsonString);
+        }
+    });
+
+};
+module.exports.GetTicketPrefixAvailability= function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketPrefixAvailability Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    var tempQuery = {name: req.params.prefix};
+
+    TicketPrefix.find(tempQuery, function (errPrefix, resPrefix) {
+        if (errPrefix) {
+            jsonString = messageFormatter.FormatMessage(errPrefix, "Check Prefix availability failed", false, undefined);
+        } else {
+            if(resPrefix.length>0)
+            {
+                jsonString = messageFormatter.FormatMessage(undefined, "Check Prefix availability Successful", false, false);
+            }
+            else
+            {
+                jsonString = messageFormatter.FormatMessage(undefined, "Check Prefix availability Successful", true, true);
+            }
+
+        }
+        res.end(jsonString);
+    });
+
+
+};
+module.exports.GetAllTicketPrefixes= function(req, res){
+
+    logger.info("DVP-LiteTicket.GetAllTicketPrefixes Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    var tempQuery = {company:company , tenant:tenant};
+
+    TicketPrefix.find(tempQuery, function (errPrefix, resPrefix) {
+        if (errPrefix) {
+            jsonString = messageFormatter.FormatMessage(err, "Pick all prefixes failed", false, undefined);
+        } else {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Pick all prefixes Successful", true, resPrefix);
+
+
+        }
+        res.end(jsonString);
+    });
+
+
+};
+module.exports.GetTicketPrefix= function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketPrefix Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    var tempQuery = {company:company , tenant:tenant,name:req.params.prefix};
+
+    TicketPrefix.find(tempQuery, function (errPrefix, resPrefix) {
+        if (errPrefix) {
+            jsonString = messageFormatter.FormatMessage(err, "Pick prefix failed", false, undefined);
+        } else {
+
+            jsonString = messageFormatter.FormatMessage(undefined, "Pick prefix Successful", true, resPrefix);
+
+
+        }
+        res.end(jsonString);
+    });
+
+
+};
+module.exports.MakePrefixAvailable= function(req, res){
+
+    logger.info("DVP-LiteTicket.MakePrefixAvailable Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    var disableQuery = {company:company , tenant:tenant,status:true};
+    var enableQuery = {company:company , tenant:tenant,name:req.params.prefix};
+
+    TicketPrefix.update(disableQuery,
+        {
+            status:false
+        },
+        {
+            multi:true
+        },
+        function (errDisable, resDisable) {
+            if (errDisable) {
+                jsonString = messageFormatter.FormatMessage(errDisable, "Disable current prefix failed", false, undefined);
+                res.end(jsonString);
+            } else {
+
+
+                TicketPrefix.findOneAndUpdate(enableQuery,{status:true}, function (errDefault,resDefault) {
+
+                    if (errDefault) {
+                        jsonString = messageFormatter.FormatMessage(errDefault, "Set available prefix failed", false, undefined);
+                    }
+                    else
+                    {
+
+                        if(redisClient)
+                        {
+                            var prefixKey=tenant+"_"+company+"_ticketprefix";
+                            redisClient.set(prefixKey,req.params.prefix, function (errSet,resSet) {
+
+                                if(errSet)
+                                {
+                                    jsonString = messageFormatter.FormatMessage(errSet, "Default prefix cache recording failed", false, errSet);
+                                }
+                                else
+                                {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Default prefix cache recording successful", true, resDefault);
+                                }
+                                res.end(jsonString);
+                            });
+
+
+                        }
+                        else
+                        {
+                            jsonString = messageFormatter.FormatMessage(new Error("Redis client not responding"), "Default prefix cache recording failed/ Redis client not responding", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+
+                });
+
+
+            }
+
+        });
+
+
+};
