@@ -226,6 +226,7 @@ server.put('/DVP/API/:version/TicketView/:id/Filter/Any', authorization({resourc
 server.get('/DVP/API/:version/TicketView/:id/Filters/Any', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetFiltersAny);
 server.del('/DVP/API/:version/TicketView/:id/Filter/Any/:fid', authorization({resource:"ticketview", action:"delete"}), triggrService.RemoveFilterAny);
 server.get('/DVP/API/:version/TicketView/:id/Tickets', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByView);
+server.get('/DVP/API/:version/TicketView/:id/Tickets/:Size/:Page', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketsByViewWithPages);
 server.get('/DVP/API/:version/TicketView/:id/TicketCount', authorization({resource:"ticketview", action:"read"}), ticketViewService.GetTicketCountByView);
 
 

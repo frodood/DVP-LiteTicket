@@ -6012,9 +6012,11 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         Ticket.find( tempQuery)
             .populate('assignee', 'name avatar')
             .populate('assignee_group', 'name')
-            .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
+            .populate('requester', 'title gender name firstname lastname ssn address avatar phone email landnumber facebook twitter linkedin googleplus contacts tags')
+            .populate('engagement_session')
             .populate('submitter', 'name avatar')
             .populate('collaborators', 'name avatar')
+            .populate( {path: 'form_submission',populate : {path: 'form'}})
             .exec(function (err, tickets) {
                 if (err) {
                     jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
@@ -6029,6 +6031,9 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
         res.end(jsonString);
     }
+
+
+
 
 }
 
