@@ -6650,7 +6650,8 @@ module.exports.MakePrefixAvailable= function(req, res){
 
                         if(redisClient)
                         {
-                            var prefixKey=tenant+"_"+company+"_ticketprefix";
+
+                            var prefixKey=tenant+":"+company+":prefix:ticket";
                             redisClient.set(prefixKey,req.params.prefix, function (errSet,resSet) {
 
                                 if(errSet)
