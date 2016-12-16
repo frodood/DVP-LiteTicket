@@ -5802,7 +5802,7 @@ module.exports.GetTicketReport= function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -5969,7 +5969,7 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -6012,9 +6012,11 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         Ticket.find( tempQuery)
             .populate('assignee', 'name avatar')
             .populate('assignee_group', 'name')
-            .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
+            .populate('requester', 'title gender name firstname lastname ssn address avatar phone email landnumber facebook twitter linkedin googleplus contacts tags')
+            .populate('engagement_session')
             .populate('submitter', 'name avatar')
             .populate('collaborators', 'name avatar')
+            .populate( {path: 'form_submission',populate : {path: 'form'}})
             .exec(function (err, tickets) {
                 if (err) {
                     jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
@@ -6029,6 +6031,9 @@ module.exports.GetTicketDetailReportAll = function(req, res){
         jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
         res.end(jsonString);
     }
+
+
+
 
 }
 
@@ -6069,7 +6074,7 @@ module.exports.GetTicketDetailReport = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
@@ -6109,9 +6114,12 @@ module.exports.GetTicketDetailReport = function(req, res){
             }
         }
 
+        var tempLimit = parseInt(req.params.limit);
+        var tempSkip = parseInt(req.params.skip);
+
         Ticket.find( tempQuery)
-            .skip(req.params.skip)
-            .limit(req.params.limit)
+            .skip(tempSkip)
+            .limit(tempLimit)
             .populate('assignee', 'name avatar')
             .populate('assignee_group', 'name')
             .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
@@ -6170,7 +6178,7 @@ module.exports.GetTicketDetailReportCount = function(req, res){
         if(req.body){
 
             if(req.body.tag){
-                tempQuery.isolated_tags = [ req.body.tag];
+                tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
 
             if(req.body.channel){
