@@ -50,7 +50,8 @@ module.exports = {
         "vdomain": "LB_FRONTEND",
         "domain": "HOST_NAME",
         "port": "HOST_LITETICKET_PORT",
-        "version": "HOST_VERSION"
+        "version": "HOST_VERSION",
+        "HashKey":"HOST_HASHKEY"
     },
 
     "LBServer" : {
