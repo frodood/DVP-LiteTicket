@@ -5874,6 +5874,9 @@ module.exports.GetTicketReport= function(req, res){
             {
                 $group: {
                     _id: 0,
+                    count: {
+                        $sum: 1
+                    },
                     reopen: {
                         $sum: {
                             $cond: ['$ticket_matrix.reopens', 1, 0]
@@ -5941,6 +5944,7 @@ module.exports.GetTicketReport= function(req, res){
                 $project: {
                     _id: 0,
                     statistics: {
+                        total: '$count',
                         reopen: '$reopen',
                         sla_violated: '$sla_violated',
                         first_call_resolved: '$first_call_resolved',
