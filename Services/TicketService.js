@@ -4818,7 +4818,7 @@ module.exports.AddTicketToCase = function (req, res) {
                     "author": req.user.iss,
                     "create_at": Date.now(),
                     body: {
-                        "message": req.user.iss + " Add Ticket To Case " + JSON.stringify(req.query.ticketid),
+                        "message": req.user.iss + " Add Ticket To Case " + JSON.stringify(req.body.ticketid),
                         "time": time,
                         "differences": {}
                     }
@@ -4828,7 +4828,7 @@ module.exports.AddTicketToCase = function (req, res) {
                     "$set": {
                         "updated_at": Date.now()
                     },
-                    "$addToSet": {"events": tEvent, "related_tickets": {$each:req.query.ticketid}}
+                    "$addToSet": {"events": tEvent, "related_tickets": {$each:req.body.ticketid}}
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail Update Case.", false, undefined);
@@ -4874,7 +4874,7 @@ module.exports.RemoveTicketFromCase = function (req, res) {
                     "author": req.user.iss,
                     "create_at": Date.now(),
                     body: {
-                        "message": req.user.iss + " Remove Ticket From Case " + JSON.stringify(req.query.ticketid),
+                        "message": req.user.iss + " Remove Ticket From Case " + JSON.stringify(req.body.ticketid),
                         "time": time,
                         "differences": {}
                     }
@@ -4885,7 +4885,7 @@ module.exports.RemoveTicketFromCase = function (req, res) {
                         "updated_at": Date.now()
                     },
                     "$addToSet": {"events": tEvent},
-                    "$pull": {"related_tickets": {$in : req.query.ticketid}}
+                    "$pull": {"related_tickets": {$in : req.body.ticketid}}
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Remove Ticket.", false, undefined);
