@@ -4203,10 +4203,20 @@ module.exports.BulkStatusUpdate = function (req, res) {
                         if (sticket) {
                             for(var i =0; i < tickets.length; i++){
                                 var tckt = tickets[i];
-                                ExecuteTrigger(tckt._id.toString(), "change_status", tckt.status);
+                                if(req.body.specificOperations && req.body.specificOperations.length >0){
+                                    ExecuteTriggerSpecificOperationsAsync(tckt._id.toString(), "change_status", tckt.status, req.body.specificOperations).then(function (val) {
+                                        logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method. reply : " + val);
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
+                                        res.end(jsonString);
+                                    });
+                                }else {
+                                    ExecuteTriggerAsync(tckt._id.toString(), "change_status", tckt.status).then(function (val) {
+                                        logger.info("DVP-LiteTicket.ExecuteTrigger Internal method. reply : " + val);
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
+                                        res.end(jsonString);
+                                    });
+                                }
                             }
-                            jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                            res.end(jsonString);
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Related Ticket ID.", false, undefined);
@@ -4309,7 +4319,7 @@ module.exports.StopWatchTicket = function (req, res){
             }
         }
     });
-}
+};
 
 module.exports.setEstimatedTime = function (req, res){
 
@@ -4333,20 +4343,20 @@ module.exports.setEstimatedTime = function (req, res){
             res.end(jsonString);
         }
     });
-}
+};
 
-function ExecuteTriggerAsync(ticketId, eventType, data) {
+function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operations) {
     var deferred = q.defer();
 
     try {
 
-        triggerWorker.ExecuteTrigger(ticketId, eventType, data, function (reply) {
+        triggerWorker.ExecuteTriggerWithSpecificOperations(ticketId, eventType, data, operations, function (reply) {
             deferred.resolve(reply);
         })
     }
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
-        logger.error("DVP-LiteTicket.ExecuteTriggerAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        logger.error("DVP-LiteTicket.ExecuteTriggerSpecificOperationsAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
     }
 
     /*setTimeout(function() {
@@ -4356,17 +4366,17 @@ function ExecuteTriggerAsync(ticketId, eventType, data) {
     return deferred.promise;
 }
 
-function ExecuteTrigger(ticketId, eventType, data) {
+function ExecuteTriggerSpecificOperations(ticketId, eventType, data, operations) {
     try {
 
-        logger.info("DVP-LiteTicket.ExecuteTrigger Internal method." + ticketId + " " + eventType + " " + data);
-        ExecuteTriggerAsync(ticketId, eventType, data).then(function (val) {
-            logger.info("DVP-LiteTicket.ExecuteTrigger Internal method. reply : " + val);
+        logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method." + ticketId + " " + eventType + " " + data);
+        ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operations).then(function (val) {
+            logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method. reply : " + val);
         });
     }
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
-        logger.error("DVP-LiteTicket.ExecuteTrigger Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        logger.error("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
     }
 
 }
@@ -4491,6 +4501,42 @@ function ExecuteCase(ticket) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteCase Internal method." + ticket.tid, jsonString, ex);
+    }
+
+}
+
+function ExecuteTriggerAsync(ticketId, eventType, data) {
+    var deferred = q.defer();
+
+    try {
+
+        triggerWorker.ExecuteTrigger(ticketId, eventType, data, function (reply) {
+            deferred.resolve(reply);
+        })
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteTriggerAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+    }
+
+    /*setTimeout(function() {
+     deferred.resolve('hello world');
+     }, 500);*/
+
+    return deferred.promise;
+}
+
+function ExecuteTrigger(ticketId, eventType, data) {
+    try {
+
+        logger.info("DVP-LiteTicket.ExecuteTrigger Internal method." + ticketId + " " + eventType + " " + data);
+        ExecuteTriggerAsync(ticketId, eventType, data).then(function (val) {
+            logger.info("DVP-LiteTicket.ExecuteTrigger Internal method. reply : " + val);
+        });
+    }
+    catch (ex) {
+        var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
+        logger.error("DVP-LiteTicket.ExecuteTrigger Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
     }
 
 }

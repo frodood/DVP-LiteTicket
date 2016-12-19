@@ -525,12 +525,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                             Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
                                                                 if (err) {
                                                                     console.log("Update ticket Failed: " + err);
-                                                                    jsonString = messageFormatter.FormatMessage(err, "Update Ticket Failed", false, undefined);
-                                                                    callback(jsonString);
                                                                 } else {
                                                                     console.log("Update ticket Success: " + utResult);
-                                                                    jsonString = messageFormatter.FormatMessage(err, "Update Ticket Fields Success", true, undefined);
-                                                                    callback(jsonString);
                                                                 }
                                                             });
                                                         });
@@ -542,6 +538,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                             ExecuteOperations(ticketCopy, operationToExecute);
                                                         }
                                                     }
+
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "Execute Trigger Success", true, undefined);
+                                                    callback(jsonString);
                                                 }
                                             } else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
@@ -562,6 +561,64 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                 });
         }catch(ex){
             console.log(ex);
+            jsonString = messageFormatter.FormatMessage(ex, "ExecuteTrigger Failed", false, undefined);
+            callback(jsonString);
+        }
+    }else{
+        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID", false, undefined);
+        callback(jsonString);
+    }
+}
+
+function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, operations, callback){
+    var jsonString;
+
+    if(ticketId) {
+        try {
+            Ticket.findOne({_id: ticketId}).populate('requester' , '-password').populate('submitter' , '-password').populate('assignee' , '-password').populate('assignee_group collaborators watchers attachments comments').exec(function (err, tResult) {
+                //Ticket.findOne({_id: ticketId},function (err, tResult) {
+                if (err) {
+                    jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
+                    callback(jsonString);
+                } else {
+                    if (tResult) {
+
+                        var ticketCopy = deepcopy(tResult.toJSON());
+
+                        if (triggerEvent === "change_assignee") {
+                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                            UpdateDashboardChangeAssignee(data, tResult);
+                        } else if (triggerEvent === "change_status") {
+                            if (tResult.status === "closed") {
+                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                            }
+                            SlaWorker.UpdateSLAWhenStateChange(tResult);
+                            UpdateDashboardChangeStatus(data, tResult);
+                        } else if (triggerEvent === "change_assignee_groups") {
+                            UpdateDashboardChangeAssigneeGroup(data, tResult);
+                        } else if(triggerEvent === "add_comment"){
+                            ticketCopy.last_comment = data;
+                        }
+
+                        if (operations && operations.length > 0) {
+                            for (var j = 0; j < operations.length; j++) {
+                                var operationToExecute = operations[j];
+                                ExecuteOperations(ticketCopy, operationToExecute);
+                            }
+                        }
+
+                        jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Success", true, undefined);
+                        callback(jsonString);
+                    } else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
+                        callback(jsonString);
+                    }
+                }
+            });
+        }catch(ex){
+            console.log(ex);
+            jsonString = messageFormatter.FormatMessage(ex, "ExecuteTrigger Failed", false, undefined);
+            callback(jsonString);
         }
     }else{
         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID", false, undefined);
@@ -573,3 +630,4 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
 
 module.exports.ExecuteTrigger = ExecuteTrigger;
 module.exports.ExecuteOperations = ExecuteOperations;
+module.exports.ExecuteTriggerWithSpecificOperations = ExecuteTriggerWithSpecificOperations;
