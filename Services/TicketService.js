@@ -3035,7 +3035,7 @@ module.exports.ChangeStatus = function (req, res) {
 
                             if(old_state != 'new'){
 
-                                ticket.ticket_matrix.opened_at.reopens =  ticket.ticket_matrix.opened_at.reopens+1;
+                                ticket.ticket_matrix.reopens =  ticket.ticket_matrix.reopens+1;
                             }
                             else{
                                 ticket.ticket_matrix.opened_at = time;
