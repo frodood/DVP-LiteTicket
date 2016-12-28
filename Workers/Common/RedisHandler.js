@@ -17,6 +17,20 @@ client.on("connect", function (err) {
     console.log("Redis Connect Success");
 });
 
+
+
+dashboardClient = redis.createClient(config.DashboardRedis.port, config.DashboardRedis.ip);
+dashboardClient.auth(config.DashboardRedis.password);
+
+dashboardClient.on("error", function (err) {
+    console.log('error', 'Redis connection error :: %s', err);
+});
+
+dashboardClient.on("connect", function (err) {
+    dashboardClient.select(config.DashboardRedis.redisDB, redis.print);
+    console.log("Redis Connect Success");
+});
+
 var Publish = function(pattern, message, callback){
     try {
         client.publish(pattern, message, function (err, result) {
@@ -30,7 +44,7 @@ var Publish = function(pattern, message, callback){
         });
     }catch(err){
         console.log("Redis Publish Err:: "+ err);
-        callback(err, null);
+        callback(err, null);W
     }
 };
 
@@ -38,7 +52,7 @@ var Publish = function(pattern, message, callback){
 var SearchKeys = function (searchString, ignore, callback) {
     var result = [];
     try {
-        client.keys(searchString, function (err, replies) {
+        dashboardClient.keys(searchString, function (err, replies) {
             if (err) {
                 callback(err, result);
             } else {
@@ -56,7 +70,7 @@ var SearchKeys = function (searchString, ignore, callback) {
                             }
                         }
                     }
-                    client.mget(replies, function(err, result){
+                    dashboardClient.mget(replies, function(err, result){
                         if(err){
                             callback(err, []);
                         }else{

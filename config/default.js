@@ -18,6 +18,15 @@ module.exports = {
     "redisDB":8
   },
 
+  "DashboardRedis":
+  {
+    "ip": "172.16.11.7",
+    "port": 6379,
+    "user": "duo",
+    "password": "DuoS123",
+    "redisDB":8
+  },
+
 
   "Security":
   {
@@ -34,7 +43,8 @@ module.exports = {
     "vdomain": "127.0.0.1",
     "domain": "127.0.0.1",
     "port": "3636",
-    "version": "1.0.0.0"
+    "version": "1.0.0.0",
+    "HashKey":"ticket"
   },
 
   "LBServer" : {
