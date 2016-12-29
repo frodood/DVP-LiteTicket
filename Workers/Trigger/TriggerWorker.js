@@ -516,6 +516,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, callback){
                                                                     break;
                                                                 default :
                                                                     tResult[action.field] = action.value;
+                                                                    if(action.field === "status"){
+                                                                        UpdateDashboardChangeStatus(ticketCopy.status, tResult);
+                                                                    }
                                                                     break;
                                                             }
                                                         }
