@@ -1100,6 +1100,39 @@ module.exports.GetTicket = function (req, res) {
 
 };
 
+module.exports.GetTicketByIds = function (req, res) {
+    logger.info("DVP-LiteTicket.GetTicketByIds Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.find({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: { $in: req.params.ids }
+    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Tickets", false, undefined);
+            }
+        }
+        res.end(jsonString);
+
+
+    });
+
+
+};
+
 module.exports.GetRecentTicket = function(req, res){
 
     logger.info("DVP-LiteTicket.GetTicketView Internal method ");
