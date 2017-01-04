@@ -143,6 +143,7 @@ server.del('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action
 server.put('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.AddTicketToCase);
 server.del('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.RemoveTicketFromCase);
 server.get('/DVP/API/:version/Cases',authorization({resource:"ticket", action:"read"}), ticketService.GetCases);
+server.get('/DVP/API/:version/Cases/:limit/:skip',authorization({resource:"ticket", action:"read"}), ticketService.GetCasesWithLimit);
 server.get('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCase);
 server.get('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfigurations);
 server.get('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfiguration);

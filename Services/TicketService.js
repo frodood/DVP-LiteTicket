@@ -4938,12 +4938,71 @@ module.exports.GetCase = function (req, res) {
     });
 };
 
+module.exports.GetCase = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCase Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Case.findOne({_id: req.params.id, company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Case Failed", false, undefined);
+
+        } else {
+
+            if (cases) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Case Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Case Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
 module.exports.GetCases = function (req, res) {
     logger.debug("DVP-LiteTicket.GetCases Internal method ");
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Case.find({company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
+    Case.find({company: company, tenant: tenant}).populate('caseConfiguration').exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
+
+        } else {
+
+            if (cases) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetCasesWithLimit = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCases Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var tempLimit = parseInt(req.params.limit);
+    var tempSkip = parseInt(req.params.skip);
+    var jsonString;
+    Case.find({company: company, tenant: tenant}).skip(tempSkip)
+        .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
