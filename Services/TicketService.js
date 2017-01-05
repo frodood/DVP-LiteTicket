@@ -4675,8 +4675,7 @@ module.exports.DeleteCaseConfiguration = function (req, res) {
                     "$set": {
                         "updated_at": Date.now(),
                         "active": false
-                    },
-                    "$addToSet": {"events": tEvent}
+                    }
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Delete CaseConfiguration", false, undefined);
