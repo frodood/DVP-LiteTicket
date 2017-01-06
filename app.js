@@ -94,6 +94,7 @@ server.get('/DVP/API/:version/TicketSummery/Requester/:requester', authorization
 server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyGroupTickets);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
+server.get('/DVP/API/:version/TicketsByIds', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketByIds);
 server.put('/DVP/API/:version/Ticket/:id/MapToProfile/:Requester', authorization({resource:"ticket", action:"write"}), ticketService.MapTicketToProfile);
 server.get('/DVP/API/:version/Ticket/:id/Details', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketWithDetails);
 server.del('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"delete"}), ticketService.DeActivateTicket);
@@ -143,6 +144,7 @@ server.del('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action
 server.put('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.AddTicketToCase);
 server.del('/DVP/API/:version/Case/:id/RelatedTickets',authorization({resource:"ticket", action:"write"}), ticketService.RemoveTicketFromCase);
 server.get('/DVP/API/:version/Cases',authorization({resource:"ticket", action:"read"}), ticketService.GetCases);
+server.get('/DVP/API/:version/Cases/:limit/:skip',authorization({resource:"ticket", action:"read"}), ticketService.GetCasesWithLimit);
 server.get('/DVP/API/:version/Case/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCase);
 server.get('/DVP/API/:version/CaseConfiguration',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfigurations);
 server.get('/DVP/API/:version/CaseConfiguration/:id',authorization({resource:"ticket", action:"read"}), ticketService.GetCaseConfiguration);

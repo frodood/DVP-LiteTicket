@@ -1100,6 +1100,39 @@ module.exports.GetTicket = function (req, res) {
 
 };
 
+module.exports.GetTicketByIds = function (req, res) {
+    logger.info("DVP-LiteTicket.GetTicketByIds Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    Ticket.find({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: { $in: req.params.ids }
+    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+        }
+        else {
+            if (ticket) {
+                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, ticket);
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Tickets", false, undefined);
+            }
+        }
+        res.end(jsonString);
+
+
+    });
+
+
+};
+
 module.exports.GetRecentTicket = function(req, res){
 
     logger.info("DVP-LiteTicket.GetTicketView Internal method ");
@@ -4642,8 +4675,7 @@ module.exports.DeleteCaseConfiguration = function (req, res) {
                     "$set": {
                         "updated_at": Date.now(),
                         "active": false
-                    },
-                    "$addToSet": {"events": tEvent}
+                    }
                 }, function (err, rUser) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Delete CaseConfiguration", false, undefined);
@@ -4938,12 +4970,71 @@ module.exports.GetCase = function (req, res) {
     });
 };
 
+module.exports.GetCase = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCase Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    Case.findOne({_id: req.params.id, company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Case Failed", false, undefined);
+
+        } else {
+
+            if (cases) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Case Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Case Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
 module.exports.GetCases = function (req, res) {
     logger.debug("DVP-LiteTicket.GetCases Internal method ");
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
-    Case.find({company: company, tenant: tenant}).populate('related_tickets').populate('caseConfiguration').exec(function (err, cases) {
+    Case.find({company: company, tenant: tenant}).populate('caseConfiguration').exec(function (err, cases) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
+
+        } else {
+
+            if (cases) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetCasesWithLimit = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetCases Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var tempLimit = parseInt(req.params.limit);
+    var tempSkip = parseInt(req.params.skip);
+    var jsonString;
+    Case.find({company: company, tenant: tenant}).skip(tempSkip)
+        .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
         if (err) {
 
             jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
