@@ -6332,7 +6332,6 @@ module.exports.GetExternalUserTicketCounts = function(req,res) {
 
         {
             $match: {requester: mongoose.Types.ObjectId(req.params.requester), company: company, tenant: tenant},
-
         },
 
         {
