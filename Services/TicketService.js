@@ -825,8 +825,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
 
         } else {
 
-
-
             if(user && user.group) {
                 /*
                  UserGroup.find({"users": user.id}, function (error, groups) {
@@ -861,28 +859,26 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                  */
 
 
+
+
+
                 var obj = {
-                    company: company,
-                    tenant: tenant,
-                    assignee_group: user.group,
-                    active: true,
 
-                };
-
-                var paramArr;
-                if (req.query.status) {
-                    if (Array.isArray(req.query.status)) {
-                        paramArr = req.query.status;
-                    } else {
-                        paramArr = [req.query.status];
-                    }
-
-                    //if(paramArr.length > 0)
-                    obj[status] = {$in: paramArr}
+                    "company": company,
+                    "tenant": tenant,
+                    "assignee_group": user.group,
+                    "active": true,
+                    "status" :{$in: []}
                 }
 
+                if(Array.isArray(req.query.status)) {
+                    for (var i = 0; i < req.query.status.length; i++) {
+                        obj.status.$in.push(req.query.status[i]);
+                    }
+                }else{
 
-
+                    obj.status.$in.push(req.query.status);
+                }
 
                 Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
