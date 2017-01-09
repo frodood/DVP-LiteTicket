@@ -5562,7 +5562,7 @@ module.exports.CreateStatusFlow = function (req, res) {
 
                                                 ticketStatusFlow.save(function (err, tsf) {
                                                     if (err) {
-                                                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow create failed", false, undefined);
+                                                        jsonString = messageFormatter.FormatMessage(err, "TicketStatusFlow failed to save", false, undefined);
                                                     }
                                                     else {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "TicketStatusFlow saved successfully", true, tsf._doc);
