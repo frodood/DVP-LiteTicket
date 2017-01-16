@@ -51,7 +51,8 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
         company: company,
         tenant: tenant,
         active: true,
-        isolated_tags: { $all: caseConfig.tagArray }
+        isolated_tags: { $all: caseConfig.tagArray },
+        status: {$nin: ['closed', 'solved']}
     }, function (err, tickets) {
         if (err) {
             logger.error("Get Tickets By isolated_tags Failed :: "+ err);

@@ -67,7 +67,7 @@ var Publish = function(pattern, message, callback){
         });
     }catch(err){
         console.log("Redis Publish Err:: "+ err);
-        callback(err, null);W
+        callback(err, null);
     }
 };
 
