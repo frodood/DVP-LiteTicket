@@ -4,6 +4,10 @@
 var redis = require('redis');
 var config = require('config');
 var util = require('util');
+var bluebird = require('bluebird');
+
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 
 client = redis.createClient(config.Redis.port, config.Redis.ip);
 client.auth(config.Redis.password);
@@ -31,6 +35,24 @@ dashboardClient.on("connect", function (err) {
     console.log("Redis Connect Success");
 });
 
+function scanAsync(index, pattern, matchingKeys){
+    console.log("-------------------Using scanAsync---------------------");
+    return client.scanAsync(index, 'MATCH', pattern, 'COUNT', 1000).then(
+        function (replies) {
+            if(replies.length > 1) {
+                var match = matchingKeys.concat(replies[1]);
+                if (replies[0] === "0") {
+                    return match;
+                } else {
+                    return scanAsync(replies[0], pattern, match)
+                }
+            }else{
+                return matchingKeys;
+            }
+
+        });
+}
+
 var Publish = function(pattern, message, callback){
     try {
         client.publish(pattern, message, function (err, result) {
@@ -48,8 +70,46 @@ var Publish = function(pattern, message, callback){
     }
 };
 
-
 var SearchKeys = function (searchString, ignore, callback) {
+    var result = [];
+
+    var sPromise = scanAsync(0, searchString, []);
+    //var sPromise = client.scanrx(searchPattern).toArray().toPromise();
+    sPromise.then(function(replies){
+        //if (err) {
+        //    logger.error('Redis searchKeys error :: %s', err);
+        //    callback(err, result);
+        //} else {
+        logger.info('Redis searchKeys success :: replies:%s', replies.length);
+        if (replies && replies.length > 0) {
+
+            if(ignore && ignore.length > 0){
+                for(var i = 0; i < ignore.length; i++){
+                    var regexStr = util.format("^.*%s.*$", ignore[i]);
+                    var pattern_regex = new RegExp(regexStr);
+
+                    for(var j =0; j < replies.length; j++){
+                        if(replies[j].search(pattern_regex) === 0){
+                            replies.splice(j,1);
+                        }
+                    }
+                }
+            }
+
+            dashboardClient.mget(replies, function(err, result){
+                if(err){
+                    callback(err, []);
+                }else{
+                    callback(null, result);
+                }
+            });
+        } else {
+            callback(null, result);
+        }
+        //}
+    });
+};
+/*var SearchKeys = function (searchString, ignore, callback) {
     var result = [];
     try {
         dashboardClient.keys(searchString, function (err, replies) {
@@ -86,7 +146,7 @@ var SearchKeys = function (searchString, ignore, callback) {
         console.log("Redis Publish Err:: " + err);
         callback(err, result);
     }
-};
+};*/
 
 
 module.exports.Publish = Publish;

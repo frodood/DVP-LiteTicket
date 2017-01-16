@@ -4589,44 +4589,63 @@ module.exports.AddCaseConfiguration = function (req, res) {
 
             if (user) {
 
-                var time = new Date().toISOString();
-                var tEvent = TicketEvent({
-                    type: 'status',
-                    "author": req.user.iss,
-                    "create_at": Date.now(),
-                    body: {
-                        "message": req.user.iss + " CaseConfiguration",
-                        "time": time
-                    }
-                });
 
-                var caseConfiguration = CaseConfiguration({
-                    created_at: time,
-                    updated_at: time,
-                    active: true,
-                    configurationName: req.body.configurationName,
-                    description: req.body.description,
-                    submitter: user.id,
+                CaseConfiguration.findOne({
                     company: company,
                     tenant: tenant,
-                    configurationRule: req.body.configurationRule,
-                    threshold: req.body.threshold,
-                    events: [tEvent]
-                });
-
-                caseConfiguration.save(function (err, caseConfiguration) {
+                    active: true,
+                    configurationRule: req.body.configurationRule
+                }, function (err, caseConfiguration) {
                     if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "caseConfiguration failed", false, undefined);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Validate Case Configuration", false, undefined);
+                        res.end(jsonString);
                     }
                     else {
                         if (caseConfiguration) {
-                            jsonString = messageFormatter.FormatMessage(undefined, "caseConfiguration saved successfully", true, caseConfiguration);
-                        }
-                        else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save caseConfiguration.", false, caseConfiguration);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Case Configuration already exists", false, caseConfiguration);
+                            res.end(jsonString);
+                        }else{
+                            var time = new Date().toISOString();
+                            var tEvent = TicketEvent({
+                                type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
+                                body: {
+                                    "message": req.user.iss + " CaseConfiguration",
+                                    "time": time
+                                }
+                            });
+
+                            var caseConfiguration = CaseConfiguration({
+                                created_at: time,
+                                updated_at: time,
+                                active: true,
+                                configurationName: req.body.configurationName,
+                                description: req.body.description,
+                                submitter: user.id,
+                                company: company,
+                                tenant: tenant,
+                                configurationRule: req.body.configurationRule,
+                                threshold: req.body.threshold,
+                                events: [tEvent]
+                            });
+
+                            caseConfiguration.save(function (err, caseConfiguration) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "caseConfiguration failed", false, undefined);
+                                }
+                                else {
+                                    if (caseConfiguration) {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "caseConfiguration saved successfully", true, caseConfiguration);
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save caseConfiguration.", false, caseConfiguration);
+                                    }
+                                }
+                                res.end(jsonString);
+                            });
                         }
                     }
-                    res.end(jsonString);
                 });
 
             } else {
@@ -4778,7 +4797,7 @@ module.exports.DeleteCase = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }, function (err, caseData) {
+    }).populate('caseConfiguration').exec(function (err, caseData) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Case", false, undefined);
             res.end(jsonString);
@@ -4809,6 +4828,13 @@ module.exports.DeleteCase = function (req, res) {
                     else {
                         if (rUser) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Delete Case", true, undefined);
+                            CaseConfiguration.findOneAndUpdate({_id: caseData.caseConfiguration._id}, {active : false, updated_at : Date.now()}, function(err, org) {
+                                if (err) {
+                                    console.log("Deactivate Case Configuration Failed");
+                                }else{
+                                    console.log(err, "Deactivate Case Configuration Successful");
+                                }
+                            });
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Data.", false, undefined);
