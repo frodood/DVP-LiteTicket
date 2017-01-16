@@ -5,6 +5,7 @@ var redis = require('redis');
 var config = require('config');
 var util = require('util');
 var bluebird = require('bluebird');
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
