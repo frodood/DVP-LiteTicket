@@ -4626,6 +4626,8 @@ module.exports.AddCaseConfiguration = function (req, res) {
                                 company: company,
                                 tenant: tenant,
                                 configurationRule: req.body.configurationRule,
+                                activeTicketTypes: req.body.activeTicketTypes,
+                                configurationType: req.body.configurationType,
                                 threshold: req.body.threshold,
                                 events: [tEvent]
                             });
@@ -4651,6 +4653,65 @@ module.exports.AddCaseConfiguration = function (req, res) {
             } else {
 
                 jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.EditCaseConfiguration = function (req, res) {
+    logger.info("DVP-LiteTicket.EditCaseConfiguration Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+    CaseConfiguration.findOne({
+        company: company,
+        tenant: tenant,
+        active: true,
+        _id: req.params.id
+    }, function (err, caseConfiguration) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find CaseConfiguration", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (caseConfiguration) {
+                var time = new Date().toISOString();
+                var tEvent = TicketEvent({
+                    type: 'status',
+                    "author": req.user.iss,
+                    "create_at": Date.now(),
+                    body: {
+                        "message": req.user.iss + " Edit CaseConfiguration",
+                        "time": time
+                    }
+                });
+                caseConfiguration.update({
+                    "$set": {
+                        "updated_at": Date.now(),
+                        "description": req.body.description,
+                        "activeTicketTypes": req.body.activeTicketTypes
+                    }
+                }, function (err, rUser) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To update CaseConfiguration", false, undefined);
+                    }
+                    else {
+                        if (rUser) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Update CaseConfiguration", true, undefined);
+
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Data.", false, undefined);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Invalid CaseConfiguration ID.", false, undefined);
                 res.end(jsonString);
             }
         }

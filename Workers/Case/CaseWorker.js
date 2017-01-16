@@ -60,8 +60,16 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
 
             if (tickets) {
                 for(var i =0; i < tickets.length;i++){
-                    logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
-                    ticketArray.push(tickets[i]._id);
+                    if(caseConfig.activeTicketTypes && caseConfig.activeTicketTypes.length > 0){
+                        if(caseConfig.activeTicketTypes.indexOf(tickets[i].type) > -1){
+                            logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
+                            ticketArray.push(tickets[i]._id);
+                        }
+                    }else{
+
+                        logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
+                        ticketArray.push(tickets[i]._id);
+                    }
                 }
 
             } else {
@@ -186,7 +194,8 @@ var ExecuteCase = function(ticket, callback){
         CaseConfiguration.find({
             company: ticket.company,
             tenant: ticket.tenant,
-            active: true
+            active: true,
+            configurationType: 'automate'
         }, function (err, caseConfigs) {
             if (err) {
                 logger.error("Get Case Configurations Failed");
