@@ -77,7 +77,7 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
             }
         }
 
-        var time = new Date().toISOString();
+        var time = new Date();
         var tEvent = TicketEvent({
             type: 'status',
             "author": 'system',
@@ -88,12 +88,14 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
             }
         });
 
+        var caseName = util.format('%s-%d', caseConfig.configurationName, time.getTime());
+
         var caseInfo = Case({
-            created_at: time,
-            updated_at: time,
+            created_at: time.toISOString(),
+            updated_at: time.toISOString(),
             active: true,
             status: "new",
-            caseName: caseConfig.configurationName,
+            caseName: caseName,
             description: caseConfig.description,
             company: company,
             tenant: tenant,
@@ -124,7 +126,7 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
 
 var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
     logger.info("DVP-LiteTicket.CaseWorker.AddTicketToCase Internal method ");
-    Case.findOne({company: company, tenant: tenant, caseName: caseConf.configurationName, active: true}, function (err, caseData) {
+    Case.findOne({company: company, tenant: tenant, caseConfiguration: caseConf._id, active: true}, function (err, caseData) {
         if (err) {
             logger.error("Fail Find Case:: "+ err);
             callback(err, "Fail Find Case");

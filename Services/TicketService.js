@@ -4889,13 +4889,13 @@ module.exports.DeleteCase = function (req, res) {
                     else {
                         if (rUser) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Delete Case", true, undefined);
-                            CaseConfiguration.findOneAndUpdate({_id: caseData.caseConfiguration._id}, {active : false, updated_at : Date.now()}, function(err, org) {
-                                if (err) {
-                                    console.log("Deactivate Case Configuration Failed");
-                                }else{
-                                    console.log(err, "Deactivate Case Configuration Successful");
-                                }
-                            });
+                            //CaseConfiguration.findOneAndUpdate({_id: caseData.caseConfiguration._id}, {active : false, updated_at : Date.now()}, function(err, org) {
+                            //    if (err) {
+                            //        console.log("Deactivate Case Configuration Failed");
+                            //    }else{
+                            //        console.log(err, "Deactivate Case Configuration Successful");
+                            //    }
+                            //});
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Data.", false, undefined);
