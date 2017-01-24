@@ -223,8 +223,8 @@ var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
                         callback(err, "Get Current Ticket Count Failed");
                     }else{
                         if(caseConf.threshold && currentTickets.length >= caseConf.threshold){
-                            var ticketsToAdd = currentTickets.push(ticketInfo._id);
-                            CreateNewCase(ticketInfo.tenant, ticketInfo.company, caseConf, ticketsToAdd, function(err, msg){
+                            currentTickets.push(ticketInfo._id);
+                            CreateNewCase(ticketInfo.tenant, ticketInfo.company, caseConf, currentTickets, function(err, msg){
                                 callback(err, msg);
                             });
                         }else{
