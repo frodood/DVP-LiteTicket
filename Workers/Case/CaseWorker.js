@@ -133,39 +133,47 @@ var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
         }
         else {
             if (caseData) {
-                var time = new Date().toISOString();
-                var tEvent = TicketEvent({
-                    type: 'status',
-                    "author": 'system',
-                    "create_at": Date.now(),
-                    body: {
-                        "message": "System Add Ticket To Case " + ticketInfo._id,
-                        "time": time,
-                        "differences": {}
-                    }
-                });
 
-                caseData.update({
-                    "$set": {
-                        "updated_at": Date.now()
-                    },
-                    "$addToSet": {"events": tEvent, "related_tickets": ticketInfo._id}
-                }, function (err, rCase) {
-                    if (err) {
-                        logger.error("Fail Update Case:: "+ err);
-                        callback(err, "Fail Update Case");
-                    }
-                    else {
-                        if (rCase) {
-                            logger.info("Add Ticket To Case Success:: "+ rCase);
-                            callback(undefined, "Add Ticket To Case Success");
+                if(caseConf.activeTicketTypes.indexOf(ticketInfo.type) > -1) {
+                    logger.info("Ticket Id:: " + ticketInfo._id + " Added to Case");
+
+
+                    var time = new Date().toISOString();
+                    var tEvent = TicketEvent({
+                        type: 'status',
+                        "author": 'system',
+                        "create_at": Date.now(),
+                        body: {
+                            "message": "System Add Ticket To Case " + ticketInfo._id,
+                            "time": time,
+                            "differences": {}
+                        }
+                    });
+
+                    caseData.update({
+                        "$set": {
+                            "updated_at": Date.now()
+                        },
+                        "$addToSet": {"events": tEvent, "related_tickets": ticketInfo._id}
+                    }, function (err, rCase) {
+                        if (err) {
+                            logger.error("Fail Update Case:: " + err);
+                            callback(err, "Fail Update Case");
                         }
                         else {
-                            logger.info("Failed To Update Case:: "+ caseData._id);
-                            callback(undefined, "Failed To Update Case");
+                            if (rCase) {
+                                logger.info("Add Ticket To Case Success:: " + rCase);
+                                callback(undefined, "Add Ticket To Case Success");
+                            }
+                            else {
+                                logger.info("Failed To Update Case:: " + caseData._id);
+                                callback(undefined, "Failed To Update Case");
+                            }
                         }
-                    }
-                });
+                    });
+                }else{
+                    callback(undefined, "Ticket Not Matched");
+                }
             }
             else {
                 logger.info("Fail Find Case");
