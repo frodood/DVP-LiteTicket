@@ -10,9 +10,49 @@ var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var redisHandler = require('../Common/RedisHandler.js');
 var util = require('util');
 
-var GetCurrentTicketCount = function(tenant, company, caseConfRule, callback){
+var GetCurrentTicketCount = function(tenant, company, caseConfig, callback){
     logger.info("DVP-LiteTicket.CaseWorker.GetCurrentTicketCount Internal method ");
-    var searchKey = util.format("CONCURRENT:%d:%d:*:tags_*%s*:*", tenant, company, caseConfRule);
+
+    var ticketArray = [];
+    Ticket.find({
+        company: company,
+        tenant: tenant,
+        active: true,
+        isolated_tags: { $all: caseConfig.tagArray },
+        status: {$nin: ['closed', 'solved']}
+    }, function (err, tickets) {
+        if (err) {
+            logger.error("Get Tickets By isolated_tags Failed :: " + err);
+            callback(err, ticketArray);
+        } else {
+
+            if (tickets) {
+                for (var i = 0; i < tickets.length; i++) {
+                    if (caseConfig.activeTicketTypes && caseConfig.activeTicketTypes.length > 0) {
+                        if (caseConfig.activeTicketTypes.indexOf(tickets[i].type) > -1) {
+                            logger.info("Ticket Id:: " + tickets[i]._id + " Added to Case");
+                            ticketArray.push(tickets[i]._id);
+                        }
+                    } else {
+
+                        logger.info("Ticket Id:: " + tickets[i]._id + " Added to Case");
+                        ticketArray.push(tickets[i]._id);
+                    }
+                }
+
+            } else {
+                logger.info("Get Tickets By isolated_tags Failed");
+            }
+
+            callback(undefined, ticketArray);
+        }
+    });
+
+
+
+
+
+    /*var searchKey = util.format("CONCURRENT:%d:%d:*:tags_*%s*:*", tenant, company, caseConfRule);
     var ignoreKey = ["CLOSEDTICKET", "SOLVEDTICKET"];
     redisHandler.SearchKeys(searchKey, ignoreKey, function(err, result){
         var currentCount = 0;
@@ -40,42 +80,42 @@ var GetCurrentTicketCount = function(tenant, company, caseConfRule, callback){
                 callback(undefined, currentCount);
             }
         }
-    });
+    });*/
 };
 
-var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
+var CreateNewCase = function(tenant, company, caseConfig, ticketArray, callback){
     logger.info("DVP-LiteTicket.CaseWorker.CreateNewCase Internal method ");
 
-    var ticketArray = [ticketInfo._id];
-    Ticket.find({
-        company: company,
-        tenant: tenant,
-        active: true,
-        isolated_tags: { $all: caseConfig.tagArray },
-        status: {$nin: ['closed', 'solved']}
-    }, function (err, tickets) {
-        if (err) {
-            logger.error("Get Tickets By isolated_tags Failed :: "+ err);
-        } else {
-
-            if (tickets) {
-                for(var i =0; i < tickets.length;i++){
-                    if(caseConfig.activeTicketTypes && caseConfig.activeTicketTypes.length > 0){
-                        if(caseConfig.activeTicketTypes.indexOf(tickets[i].type) > -1){
-                            logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
-                            ticketArray.push(tickets[i]._id);
-                        }
-                    }else{
-
-                        logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
-                        ticketArray.push(tickets[i]._id);
-                    }
-                }
-
-            } else {
-                logger.info("Get Tickets By isolated_tags Failed");
-            }
-        }
+    //var ticketArray = [ticketInfo._id];
+    //Ticket.find({
+    //    company: company,
+    //    tenant: tenant,
+    //    active: true,
+    //    isolated_tags: { $all: caseConfig.tagArray },
+    //    status: {$nin: ['closed', 'solved']}
+    //}, function (err, tickets) {
+    //    if (err) {
+    //        logger.error("Get Tickets By isolated_tags Failed :: "+ err);
+    //    } else {
+    //
+    //        if (tickets) {
+    //            for(var i =0; i < tickets.length;i++){
+    //                if(caseConfig.activeTicketTypes && caseConfig.activeTicketTypes.length > 0){
+    //                    if(caseConfig.activeTicketTypes.indexOf(tickets[i].type) > -1){
+    //                        logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
+    //                        ticketArray.push(tickets[i]._id);
+    //                    }
+    //                }else{
+    //
+    //                    logger.info("Ticket Id:: "+tickets[i]._id +" Added to Case");
+    //                    ticketArray.push(tickets[i]._id);
+    //                }
+    //            }
+    //
+    //        } else {
+    //            logger.info("Get Tickets By isolated_tags Failed");
+    //        }
+    //    }
 
         var time = new Date();
         var tEvent = TicketEvent({
@@ -121,7 +161,7 @@ var CreateNewCase = function(tenant, company, caseConfig, ticketInfo, callback){
                 }
             }
         });
-    });
+    //});
 };
 
 var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
@@ -177,12 +217,14 @@ var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
             }
             else {
                 logger.info("Fail Find Case");
-                GetCurrentTicketCount(ticketInfo.tenant, ticketInfo.company, caseConf.configurationRule.replace(/ /g,''), function(err, currentCount){
+                //GetCurrentTicketCount(ticketInfo.tenant, ticketInfo.company, caseConf.configurationRule.replace(/ /g,''), function(err, currentCount){
+                GetCurrentTicketCount(ticketInfo.tenant, ticketInfo.company, caseConf, function(err, currentTickets){
                     if(err){
                         callback(err, "Get Current Ticket Count Failed");
                     }else{
-                        if(caseConf.threshold && currentCount >= caseConf.threshold){
-                            CreateNewCase(ticketInfo.tenant, ticketInfo.company, caseConf, ticketInfo, function(err, msg){
+                        if(caseConf.threshold && currentTickets.length >= caseConf.threshold){
+                            var ticketsToAdd = currentTickets.push(ticketInfo._id);
+                            CreateNewCase(ticketInfo.tenant, ticketInfo.company, caseConf, ticketsToAdd, function(err, msg){
                                 callback(err, msg);
                             });
                         }else{
