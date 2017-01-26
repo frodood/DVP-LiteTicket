@@ -233,56 +233,56 @@ module.exports.CreateTicket = function (req, res) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, undefined);
 
 
-                            ///////////////////////////////////////////recent tickets////////////////////////////////////////////////
-                            //
-                            //
-                            //if(client) {
-                            //    ExecuteTrigger(client.id, "change_status", "new");
-                            //    ExecuteCase(client);
-                            //
-                            //
-                            //
-                            //    AddUserRecentTicket(company, tenant,user.id,client.id);
-                            //    if(req.body.requester)
-                            //        AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
-                            //}
-                            //
-                            ///////////////////////////////////////////////////////////////////////////////////////////////////////
-                            //
-                            //////////////////////////////////////////add note to engagement session async//////////////////////////
-                            //try {
-                            //    EngagementSession.findOneAndUpdate({
-                            //        engagement_id: req.body.engagement_session,
-                            //        company: company,
-                            //        tenant: tenant
-                            //    }, {
-                            //        $addToSet: {
-                            //            notes: {
-                            //                body: '#TID ' + ticket.reference,
-                            //                author: req.user.iss,
-                            //                created_at: Date.now(),
-                            //            }
-                            //        }
-                            //    }, function (err, notes) {
-                            //        if (err) {
-                            //
-                            //            logger.error("Append Note To EngagementSession Failed", err);
-                            //
-                            //        } else {
-                            //
-                            //            logger.debug("Append Note To EngagementSession Success");
-                            //
-                            //        }
-                            //
-                            //    });
-                            //} catch (excep) {
-                            //
-                            //    logger.error("Append Note To EngagementSession Failed", excep);
-                            //}
-                            //
-                            //
-                            ////////////////////////////////////////////////////////////////////////////////////////////////////////
-                            //ExecuteSla(client.id, undefined);
+                            /////////////////////////////////////////recent tickets////////////////////////////////////////////////
+
+
+                            if(client) {
+                                ExecuteTrigger(client.id, "change_status", "new");
+                                ExecuteCase(client);
+
+
+
+                                AddUserRecentTicket(company, tenant,user.id,client.id);
+                                if(req.body.requester)
+                                    AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
+                            }
+
+                            /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                            ////////////////////////////////////////add note to engagement session async//////////////////////////
+                            try {
+                                EngagementSession.findOneAndUpdate({
+                                    engagement_id: req.body.engagement_session,
+                                    company: company,
+                                    tenant: tenant
+                                }, {
+                                    $addToSet: {
+                                        notes: {
+                                            body: '#TID ' + ticket.reference,
+                                            author: req.user.iss,
+                                            created_at: Date.now(),
+                                        }
+                                    }
+                                }, function (err, notes) {
+                                    if (err) {
+
+                                        logger.error("Append Note To EngagementSession Failed", err);
+
+                                    } else {
+
+                                        logger.debug("Append Note To EngagementSession Success");
+
+                                    }
+
+                                });
+                            } catch (excep) {
+
+                                logger.error("Append Note To EngagementSession Failed", excep);
+                            }
+
+
+                            //////////////////////////////////////////////////////////////////////////////////////////////////////
+                            ExecuteSla(client.id, undefined);
                         }
                         res.end(jsonString);
                     });
