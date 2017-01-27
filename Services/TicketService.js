@@ -97,6 +97,9 @@ module.exports.CreateTicket = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
+
+    var dateNow = moment();
+
     User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
         if (err) {
 
@@ -104,6 +107,11 @@ module.exports.CreateTicket = function (req, res) {
             res.end(jsonString);
 
         } else {
+
+            var secondsDiff = moment().diff(dateNow, 'seconds');
+            console.log("User pick time --- >"+secondsDiff);
+
+            var dataNow = moment();
 
             if (user) {
 
@@ -120,6 +128,11 @@ module.exports.CreateTicket = function (req, res) {
                 });
 
                 reference.generate(company, tenant, function (done, id, key) {
+
+                    var secondsDiff = moment().diff(dateNow, 'seconds');
+                    console.log("Reference generate time --- >"+secondsDiff);
+
+
                     var ticket = Ticket({
                         created_at: Date.now(),
                         updated_at: Date.now(),
@@ -216,7 +229,11 @@ module.exports.CreateTicket = function (req, res) {
                             jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         }
                         else {
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client._doc);
+
+                            var secondsDiff = moment().diff(dateNow, 'seconds');
+                            console.log("Ticket save time --- ->"+secondsDiff);
+                            //client._doc
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, undefined);
 
 
                             /////////////////////////////////////////recent tickets////////////////////////////////////////////////
