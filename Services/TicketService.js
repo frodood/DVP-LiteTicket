@@ -6226,17 +6226,22 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
             var tz = req.body.tz;
 
-            var tagCount = 0;
+            var tagCount = req.body.tagCount;
+
+            if(tagCount)
+            {
+                for (j = 0; j < tagCount; j++)
+                {
+                    tagHeaders.push('Tag' + (j + 1));
+                    tagOrder.push('Tag' + (j + 1));
+                }
+            }
 
             if(req.body.tag)
             {
-                for (j = 0; j < req.body.tag.length; j++) {
-                    tagHeaders.push('Tag' + (j + 1));
-                    tagOrder.push('Tag' + (j + 1));
-                    tagCount++;
-                }
                 tempQuery.isolated_tags = {$in: [req.body.tag]};
             }
+
 
             if(req.body.channel){
                 tempQuery.channel =  req.body.channel;
@@ -6318,6 +6323,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                         .populate('submitter', 'name avatar')
                                         .populate('collaborators', 'name avatar')
                                         .populate( {path: 'form_submission',populate : {path: 'form'}})
+                                        .maxTime(300000)
                                         .exec(function (err, tickets)
                                         {
                                             if (err)
@@ -6377,12 +6383,13 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                     }
 
 
-                                                    if (ticketInfo.isolated_tags) {
-                                                        for (i = 0; i < ticketInfo.isolated_tags.length; i++) {
-                                                            if (i >= tagCount) {
-                                                                break;
-                                                            }
-                                                            var tagName = 'Tag' + (i + 1);
+                                                    for(i=0; i < tagCount; i++)
+                                                    {
+                                                        var tagName = 'Tag' + (i + 1);
+                                                        ticketInfoTemp[tagName] = '';
+
+                                                        if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
+                                                        {
                                                             ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
                                                         }
                                                     }
@@ -6482,6 +6489,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                 .populate('submitter', 'name avatar')
                                 .populate('collaborators', 'name avatar')
                                 .populate( {path: 'form_submission',populate : {path: 'form'}})
+                                .maxTime(300000)
                                 .exec(function (err, tickets)
                                 {
                                     if (err)
@@ -6541,16 +6549,19 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 }
                                             }
 
+                                            for(i=0; i < tagCount; i++)
+                                            {
+                                                var tagName = 'Tag' + (i + 1);
+                                                ticketInfoTemp[tagName] = '';
 
-                                            if (ticketInfo.isolated_tags) {
-                                                for (i = 0; i < ticketInfo.isolated_tags.length; i++) {
-                                                    if (i >= $scope.tagCount) {
-                                                        break;
-                                                    }
-                                                    var tagName = 'Tag' + (i + 1);
+                                                if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
+                                                {
                                                     ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
                                                 }
                                             }
+
+
+
 
                                             if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
                                             {
