@@ -92,8 +92,13 @@ module.exports = {
         "scheduleWorkerVersion": "SYS_SCHEDULEWORKER_VERSION",
         "interactionServiceHost": "SYS_INTERACTIONS_HOST",
         "interactionServicePort": "SYS_INTERACTIONS_PORT",
-        "interactionServiceVersion": "SYS_INTERACTIONS_VERSION"
-    }
+        "interactionServiceVersion": "SYS_INTERACTIONS_VERSION",
+        "fileServiceHost": "SYS_FILESERVICE_HOST",
+        "fileServicePort": "SYS_FILESERVICE_PORT",
+        "fileServiceVersion":"SYS_FILESERVICE_VERSION"
+    },
+
+    "Token": "HOST_TOKEN"
 };
 
 //NODE_CONFIG_DIR
