@@ -1852,7 +1852,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                             }
                                         }
 
-                                        ticket.comments.push(obj.id);
+                                        //ticket.comments.push(obj.id);
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
 
