@@ -324,7 +324,7 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -900,7 +900,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     obj.status.$in.push(req.query.status);
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -971,7 +971,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -1096,7 +1096,7 @@ module.exports.GetTicket = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar firstname lastname').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
         }
@@ -1129,7 +1129,7 @@ module.exports.GetTicketByIds = function (req, res) {
         tenant: tenant,
         active: true,
         _id: { $in: req.params.ids }
-    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar firstname lastname').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
         }
@@ -1270,17 +1270,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
         active: true,
         _id: req.params.id
     }).populate('attachments')
-        .populate({path: 'sub_tickets', populate :{path: 'assignee', select: 'name avatar'}})
+        .populate({path: 'sub_tickets', populate :{path: 'assignee', select: 'name avatar firstname lastname'}})
         .populate('related_tickets')
-        .populate('assignee', 'name avatar')
+        .populate('assignee', 'name avatar firstname lastname')
         .populate('assignee_group', 'name')
-        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
-        .populate('submitter', 'name avatar')
-        .populate('collaborators', 'name avatar')
+        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts firstname lastname')
+        .populate('submitter', 'name avatar firstname lastname')
+        .populate('collaborators', 'name avatar firstname lastname')
         .populate('merged_tickets')
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]})
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar firstname lastname'},{path: 'attachments'}]})
         .populate({path:'slot_attachment.attachment',populate:'file url type'})
 
         .exec(function (err, ticket) {
@@ -1852,7 +1852,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                             }
                                         }
 
-                                        ticket.comments.push(obj.id);
+                                        //ticket.comments.push(obj.id);
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
 
