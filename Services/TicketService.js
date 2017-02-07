@@ -6219,8 +6219,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
         fileName = fileName.replace(/:/g, "-") + '.csv';
 
-        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated'];
-        var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated'];
+        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
+        var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
 
         if(req.body){
 
@@ -6322,6 +6322,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                         .populate('engagement_session')
                                         .populate('submitter', 'name avatar')
                                         .populate('collaborators', 'name avatar')
+                                        .populate('comments', 'body')
                                         .populate( {path: 'form_submission',populate : {path: 'form'}})
                                         .maxTime(300000)
                                         .exec(function (err, tickets)
@@ -6354,7 +6355,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                         status: ticketInfo.status,
                                                         priority: ticketInfo.priority,
                                                         type: ticketInfo.type,
-                                                        slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false)
+                                                        slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+                                                        description: ticketInfo.description
 
                                                     };
 
@@ -6381,6 +6383,33 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                             ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
                                                         }
                                                     }
+
+                                                    var tempComments = '';
+
+                                                    if(ticketInfo.comments && ticketInfo.comments.length > 0)
+                                                    {
+                                                        ticketInfo.comments.forEach(function(comment){
+                                                            if(tempComments)
+                                                            {
+                                                                if(comment.body)
+                                                                {
+                                                                    tempComments = tempComments + ',' + comment.body;
+                                                                }
+
+                                                            }
+                                                            else
+                                                            {
+                                                                if(comment.body)
+                                                                {
+                                                                    tempComments = comment.body;
+                                                                }
+
+                                                            }
+
+                                                        })
+                                                    }
+
+                                                    ticketInfoTemp.comments = tempComments;
 
 
                                                     for(i=0; i < tagCount; i++)
@@ -6521,7 +6550,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 status: ticketInfo.status,
                                                 priority: ticketInfo.priority,
                                                 type: ticketInfo.type,
-                                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false)
+                                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+                                                description: ticketInfo.description
 
                                             };
 
@@ -6548,6 +6578,33 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                     ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
                                                 }
                                             }
+
+                                            var tempComments = '';
+
+                                            if(ticketInfo.comments && ticketInfo.comments.length > 0)
+                                            {
+                                                ticketInfo.comments.forEach(function(comment){
+                                                    if(tempComments)
+                                                    {
+                                                        if(comment.body)
+                                                        {
+                                                            tempComments = tempComments + ',' + comment.body;
+                                                        }
+
+                                                    }
+                                                    else
+                                                    {
+                                                        if(comment.body)
+                                                        {
+                                                            tempComments = comment.body;
+                                                        }
+
+                                                    }
+
+                                                })
+                                            }
+
+                                            ticketInfoTemp.comments = tempComments;
 
                                             for(i=0; i < tagCount; i++)
                                             {
