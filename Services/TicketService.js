@@ -233,7 +233,7 @@ module.exports.CreateTicket = function (req, res) {
                             var secondsDiff = moment().diff(dateNow, 'seconds');
                             console.log("Ticket save time --- ->"+secondsDiff);
                             //client._doc
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, undefined);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, {_id:client._doc._id,reference:client._doc.reference});
 
 
                             /////////////////////////////////////////recent tickets////////////////////////////////////////////////
