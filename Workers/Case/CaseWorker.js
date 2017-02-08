@@ -174,7 +174,7 @@ var AddTicketToCase = function(tenant, company, caseConf, ticketInfo, callback){
         else {
             if (caseData) {
 
-                if(caseConf.activeTicketTypes.indexOf(ticketInfo.type) > -1) {
+                if(caseConf.activeTicketTypes && caseConf.activeTicketTypes.indexOf(ticketInfo.type) > -1) {
                     logger.info("Ticket Id:: " + ticketInfo._id + " Added to Case");
 
 
