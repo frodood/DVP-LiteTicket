@@ -20,7 +20,7 @@ module.exports = {
 
   "DashboardRedis":
   {
-    "ip": "172.16.11.7",
+    "ip": "104.131.67.21",
     "port": 6379,
     "user": "duo",
     "password": "DuoS123",
@@ -95,8 +95,13 @@ module.exports = {
       "scheduleWorkerVersion": "1.0.0.0",
       "interactionServiceHost": "interactions.app.veery.cloud",
       "interactionServicePort": "8080",
-      "interactionServiceVersion": "1.0.0.0"
-    }
+      "interactionServiceVersion": "1.0.0.0",
+      "fileServiceHost": "fileservice.app.veery.cloud",
+      "fileServicePort": 5645,
+      "fileServiceVersion":"1.0.0.0"
+    },
+
+  "Token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdWtpdGhhIiwianRpIjoiMTdmZTE4M2QtM2QyNC00NjQwLTg1NTgtNWFkNGQ5YzVlMzE1Iiwic3ViIjoiNTZhOWU3NTlmYjA3MTkwN2EwMDAwMDAxMjVkOWU4MGI1YzdjNGY5ODQ2NmY5MjExNzk2ZWJmNDMiLCJleHAiOjE4OTMzMDI3NTMsInRlbmFudCI6LTEsImNvbXBhbnkiOi0xLCJzY29wZSI6W3sicmVzb3VyY2UiOiJhbGwiLCJhY3Rpb25zIjoiYWxsIn1dLCJpYXQiOjE0NjEyOTkxNTN9.YiocvxO_cVDzH5r67-ulcDdBkjjJJDir2AeSe3jGYeA"
 
 
 
