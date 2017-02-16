@@ -2529,16 +2529,16 @@ module.exports.AddComment = function (req, res) {
                                             }else if (req.body.channel == 'facebook-post') {
                                                 queueName = 'FACEBOOKOUT';
 
-                                                if(req.body.contact && req.body.contact.contact_name){
+                                                if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
 
-                                                    message.from = req.body.contact.contact_name;
+                                                    message.from = req.body.contact.raw.id;
                                                 }
 
                                             } else if (req.body.channel == 'facebook-chat') {
                                                 queueName = 'FACEBOOKOUT';
-                                                if(req.body.contact && req.body.contact.contact_name){
+                                                if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
 
-                                                    message.from = req.body.contact.contact_name;
+                                                    message.from = req.body.contact.raw.id;
                                                 }
 
                                             }else {
@@ -2937,16 +2937,16 @@ module.exports.AddCommentToComment = function (req, res) {
                                                         }else if (req.body.channel == 'facebook-post') {
                                                             queueName = 'FACEBOOKOUT';
 
-                                                            if(req.body.contact && req.body.contact.contact_name){
+                                                            if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
 
-                                                                message.from = req.body.contact.contact_name;
+                                                                message.from = req.body.contact.raw.id;
                                                             }
                                                         } else if (req.body.channel == 'facebook-chat') {
                                                             queueName = 'FACEBOOKOUT';
 
-                                                            if(req.body.contact && req.body.contact.contact_name){
+                                                            if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
 
-                                                                message.from = req.body.contact.contact_name;
+                                                                message.from = req.body.contact.raw.id;
                                                             }
                                                         }else {
                                                             //jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
