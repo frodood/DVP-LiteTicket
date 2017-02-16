@@ -2528,8 +2528,19 @@ module.exports.AddComment = function (req, res) {
                                                 queueName = 'EMAILOUT';
                                             }else if (req.body.channel == 'facebook-post') {
                                                 queueName = 'FACEBOOKOUT';
+
+                                                if(req.body.contact && req.body.contact.contact_name){
+
+                                                    message.from = req.body.contact.contact_name;
+                                                }
+
                                             } else if (req.body.channel == 'facebook-chat') {
                                                 queueName = 'FACEBOOKOUT';
+                                                if(req.body.contact && req.body.contact.contact_name){
+
+                                                    message.from = req.body.contact.contact_name;
+                                                }
+
                                             }else {
                                                 //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
                                                 //   res.end(jsonString);
@@ -2925,8 +2936,18 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             queueName = 'EMAILOUT';
                                                         }else if (req.body.channel == 'facebook-post') {
                                                             queueName = 'FACEBOOKOUT';
+
+                                                            if(req.body.contact && req.body.contact.contact_name){
+
+                                                                message.from = req.body.contact.contact_name;
+                                                            }
                                                         } else if (req.body.channel == 'facebook-chat') {
                                                             queueName = 'FACEBOOKOUT';
+
+                                                            if(req.body.contact && req.body.contact.contact_name){
+
+                                                                message.from = req.body.contact.contact_name;
+                                                            }
                                                         }else {
                                                             //jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
                                                             //res.end(jsonString);
