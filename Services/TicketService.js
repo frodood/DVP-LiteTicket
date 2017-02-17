@@ -1936,7 +1936,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                                 if (rOrg) {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
 
-                                                                    Ticket.findOneAndUpdate({comments: {'$in':[obj.id]}},{$addToSet: {comments: obj.id}},function(err, comm){
+                                                                    Ticket.findOneAndUpdate({comments: {'$in':[rOrg.id]}},{$addToSet: {comments: obj.id}},function(err, comm){
 
                                                                         if(err){
 
