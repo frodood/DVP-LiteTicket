@@ -1806,10 +1806,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                 else {
                                     if (obj.id) {
 
-
-
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
                                         var time = new Date().toISOString();
                                         ticket.updated_at = time;
@@ -1938,12 +1935,28 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                             } else {
                                                                 if (rOrg) {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+
+                                                                    Ticket.findOneAndUpdate({comments: {'$in':[obj.id]}},{$addToSet: {comments: obj.id}},function(err, comm){
+
+                                                                        if(err){
+
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save but failed to push ticket", true, obj);
+                                                                        }else{
+
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+
+                                                                        }
+
+                                                                        res.end(jsonString);
+
+                                                                    });
                                                                 }
                                                                 else {
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
+                                                                    res.end(jsonString);
                                                                 }
                                                             }
-                                                            res.end(jsonString);
+
                                                         });
                                                 }
                                                 else {
