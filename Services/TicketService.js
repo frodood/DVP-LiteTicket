@@ -1665,7 +1665,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 
     logger.info("DVP-LiteTicket.AddCommentByEngagement Internal method ");
-    console.log("Request "+JSON.stringify(req));
+    //console.log("Request "+JSON.stringify(req));
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
