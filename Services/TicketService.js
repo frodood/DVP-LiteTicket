@@ -1283,7 +1283,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate({path: 'merged_tickets', populate :{path: 'assignee_group', select: 'name'}})
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar firstname lastname'},{path: 'attachments'},{path:'engagement_session'}]})
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar firstname lastname'},{path: 'author_external', select:'name avatar firstname lastname'},{path: 'attachments'},{path:'engagement_session'}]})
         .populate({path:'slot_attachment.attachment',populate:'file url type'})
 
         .exec(function (err, ticket) {
