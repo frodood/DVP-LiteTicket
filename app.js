@@ -92,8 +92,6 @@ if(util.isArray(mongoip)){
     connectionstring = util.format('mongodb://%s:%s@%s:%d/%s',mongouser,mongopass,mongoip,mongoport,mongodb)
 }
 
-var async = require("async");
-
 
 mongoose.connect(connectionstring,{server:{auto_reconnect:true}});
 
