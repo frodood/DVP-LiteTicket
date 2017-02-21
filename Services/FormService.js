@@ -45,6 +45,85 @@ function CreateForm(req, res) {
 
 
 };
+
+function UpdateForm(req, res) {
+
+    logger.debug("DVP-LiteTicket.UpdateForm Internal method ");
+    var jsonString;
+    var tenant = parseInt(req.user.tenant);
+    var company = parseInt(req.user.company);
+
+
+    if (req.body && req.params.name)
+    {
+
+        FormMaster.findOneAndUpdate({
+                name: req.params.name,
+                company: parseInt(company),
+                tenant: parseInt(tenant)
+            },
+            {
+                isolated_tag: req.body.isolated_tag
+            }, function (err, form) {
+                if (err) {
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, undefined);
+                    res.end(jsonString);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Update Form successful", true, form);
+                    res.end(jsonString);
+
+                }
+
+            });
+
+
+    } else {
+
+
+        jsonString = messageFormatter.FormatMessage(undefined, "Requred fields not found", false, undefined);
+        res.end(jsonString);
+
+    }
+
+
+};
+
+function GetFormByTag(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.GetFormByTag Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    FormMaster.findOne({isolated_tag: req.params.isolated_tag, company: company, tenant: tenant}, function (err, form) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, undefined);
+
+        } else {
+
+            if (form) {
+                var userObj;
+                jsonString = messageFormatter.FormatMessage(err, "Get Form Successful", true, form);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Form found", false, undefined);
+
+            }
+
+        }
+
+        res.end(jsonString);
+    });
+
+};
+
+
 function GetForms(req, res) {
 
 
@@ -615,5 +694,7 @@ module.exports.UpdateDynamicFieldSubmission = UpdateDynamicFieldSubmission;
 module.exports.CreateFormProfile = CreateFormProfile;
 module.exports.UpdateFormProfile = UpdateFormProfile;
 module.exports.GetFormProfile = GetFormProfile;
+module.exports.UpdateForm = UpdateForm;
+module.exports.GetFormByTag = GetFormByTag;
 
 

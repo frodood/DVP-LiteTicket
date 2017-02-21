@@ -263,7 +263,10 @@ server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization
 
 /////////////////////////////////////////////////////////////formMaster/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/FormMaster', authorization({resource:"forms", action:"write"}), formMaster.CreateForm);
+server.put('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"write"}), formMaster.UpdateForm);
 server.get('/DVP/API/:version/FormMasters', authorization({resource:"forms", action:"read"}), formMaster.GetForms);
+server.get('/DVP/API/:version/FormMasters/Tag/:isolated_tag', authorization({resource:"forms", action:"read"}), formMaster.GetFormByTag);
+
 server.get('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"read"}), formMaster.GetForm);
 server.del('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"delete"}), formMaster.DeleteForm);
 server.post('/DVP/API/:version/FormMaster/:name/field', authorization({resource:"forms", action:"write"}), formMaster.AddDynamicField);
@@ -322,7 +325,6 @@ server.post('/DVP/API/:version/SLA/ScheduleCallback', authorization({resource:"s
 server.get('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"read"}), formMaster.GetFormProfile);
 server.post('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.CreateFormProfile);
 server.put('/DVP/API/:version/FormProfile', authorization({resource:"forms", action:"write"}), formMaster.UpdateFormProfile);
-
 
 //////////////////////////////////////////////Ticket Types//////////////////////////////////////////////////////////////////////////////////
 
