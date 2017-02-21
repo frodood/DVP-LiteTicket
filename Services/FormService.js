@@ -54,11 +54,11 @@ function UpdateForm(req, res) {
     var company = parseInt(req.user.company);
 
 
-    if (req.body && req.params.name)
+    if (req.body && req.params.id)
     {
 
         FormMaster.findOneAndUpdate({
-                name: req.params.name,
+                _id: req.params.id,
                 company: parseInt(company),
                 tenant: parseInt(tenant)
             },
@@ -112,7 +112,7 @@ function GetFormByTag(req, res) {
 
             } else {
 
-                jsonString = messageFormatter.FormatMessage(undefined, "No Form found", false, undefined);
+                jsonString = messageFormatter.FormatMessage(undefined, "No Form found", true, undefined);
 
             }
 
