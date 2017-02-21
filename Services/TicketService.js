@@ -1674,6 +1674,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
     try {
         if (req.body.author)
             author = req.body.author;
+        console.log("Author "+author);
     } catch (exx) {
 
     }
@@ -1684,14 +1685,16 @@ module.exports.AddCommentByEngagement = function (req, res) {
         engagement_session: req.params.engagementid
     }, function (err, ticket) {
         if (err) {
-
+            console.log("No ticket found for engagement "+req.params.engagementid+" checking comments for engagement");
             //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
             Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
                 if (err) {
+                    console.log("No ticket or parent comment found for engagement "+req.params.engagementid);
                     jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                     res.end(jsonString);
                 }
                 else {
+                    console.log("No ticket by parent comment found for engagement "+req.params.engagementid);
                     if (comment) {
                         User.findOne({
                             username: author,
@@ -1699,6 +1702,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             tenant: tenant
                         }, function (err, user) {
                             if (err) {
+                                console.log("Error searching user to add comment "+req.body.author);
                                 jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                                 res.end(jsonString);
                             }
@@ -1722,21 +1726,26 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                     logger.debug("Object to save as a comment is" + comment);
                                     comment.save(function (err, obj) {
                                         if (err) {
+                                            console.log("Error in saving comment for eng.session "+req.body.engagement_session._id);
                                             jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                             res.end(jsonString);
                                         }
                                         else {
+                                            console.log("Comment saved for eng.session "+req.body.engagement_session._id);
                                             if (obj.id) {
                                                 Comment.findOneAndUpdate({_id: req.params.commentid},
                                                     {$addToSet: {sub_comment: obj.id}}
                                                     , function (err, rOrg) {
                                                         if (err) {
+                                                            console.log("Comment updating failed for eng.session, sub comment "+obj.id);
                                                             jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
                                                         } else {
                                                             if (rOrg) {
+                                                                console.log("Comment updated for eng.session, sub comment "+obj.id);
                                                                 jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
                                                             }
                                                             else {
+                                                                console.log("Invalid comment ID");
                                                                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
                                                             }
                                                         }
@@ -1744,6 +1753,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                     });
                                             }
                                             else {
+                                                console.log("Fail To Save Comment");
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
                                                 res.end(jsonString);
                                             }
@@ -1752,6 +1762,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                     });
                                 }
                                 else {
+                                    console.log("Get User Failed");
                                     jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                                     res.end(jsonString);
                                 }
@@ -1760,6 +1771,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
                     }
                     else {
+                        console.log("Fail To Find Parent Comment");
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                         res.end(jsonString);
                     }
@@ -1775,8 +1787,10 @@ module.exports.AddCommentByEngagement = function (req, res) {
         }
         else {
             if (ticket) {
+                console.log("Ticket found for engagement "+req.params.engagementid+" checking User");
                 User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
                     if (err) {
+                        console.log("Ticket found for engagement "+req.params.engagementid+" No User found");
                         jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                         res.end(jsonString);
                     }
@@ -1800,12 +1814,13 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             logger.debug("Object to save as a comment is" + comment);
                             comment.save(function (err, obj) {
                                 if (err) {
+                                    console.log("Ticket found for engagement "+req.params.engagementid+" Comment save failed");
                                     jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                     res.end(jsonString);
                                 }
                                 else {
                                     if (obj.id) {
-
+                                        console.log("Ticket found for engagement "+req.params.engagementid+" Comment saved");
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                                         var time = new Date().toISOString();
@@ -1858,12 +1873,15 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
                                         ticket.save( function (err, rOrg) {
                                             if (err) {
+                                                console.log("Ticket Updation failed");
                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
                                             } else {
                                                 if (rOrg) {
+                                                    console.log("Ticket Updation succeeded");
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
                                                 }
                                                 else {
+                                                    console.log("Ticket Updation failed,invalid ticket id ");
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
                                                 }
                                             }
@@ -1871,6 +1889,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                         });
                                     }
                                     else {
+                                        console.log("Ticket found,Fail To Save Comment");
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
                                         res.end(jsonString);
                                     }
@@ -1879,6 +1898,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             });
                         }
                         else {
+                            console.log("Ticket found,Get User Failed");
                             jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                             res.end(jsonString);
                         }
@@ -1889,10 +1909,12 @@ module.exports.AddCommentByEngagement = function (req, res) {
                 //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
                 Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
                     if (err) {
+                        console.log("No Ticket found for engagement "+req.params.engagementid+" checking comment failed");
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                         res.end(jsonString);
                     }
                     else {
+                        console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found");
                         if (comment) {
                             User.findOne({
                                 username: req.user.iss,
@@ -1900,6 +1922,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                 tenant: tenant
                             }, function (err, user) {
                                 if (err) {
+                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Invalid user");
                                     jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                                     res.end(jsonString);
                                 }
@@ -1922,27 +1945,32 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
                                         comment.save(function (err, obj) {
                                             if (err) {
+                                                console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving failed");
                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                                 res.end(jsonString);
                                             }
                                             else {
+
                                                 if (obj.id) {
+                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded");
                                                     Comment.findOneAndUpdate({engagement_session: req.params.engagementid},
                                                         {$addToSet: {sub_comment: obj.id}}
                                                         , function (err, rOrg) {
                                                             if (err) {
+                                                                console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation failed");
                                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
                                                             } else {
                                                                 if (rOrg) {
+                                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded");
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
 
                                                                     Ticket.findOneAndUpdate({comments: {'$in':[rOrg.id]}},{$addToSet: {comments: obj.id}},function(err, comm){
 
                                                                         if(err){
-
+                                                                            console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded, Error updating ticket");
                                                                             jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save but failed to push ticket", true, obj);
                                                                         }else{
-
+                                                                            console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded, Ticket updated");
                                                                             jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
 
                                                                         }
@@ -1952,6 +1980,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                                     });
                                                                 }
                                                                 else {
+                                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation failed, invalid comment id,");
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
                                                                     res.end(jsonString);
                                                                 }
