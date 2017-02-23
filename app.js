@@ -337,9 +337,13 @@ server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization
 
 /////////////////////////////////////////////////////////////formMaster/////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/FormMaster', authorization({resource:"forms", action:"write"}), formMaster.CreateForm);
-server.put('/DVP/API/:version/FormMaster/:id', authorization({resource:"forms", action:"write"}), formMaster.UpdateForm);
+server.put('/DVP/API/:version/FormMaster/:id', authorization({resource:"forms", action:"write"}), formMaster.AddOrUpdateIsolatedTagForm);
 server.get('/DVP/API/:version/FormMasters', authorization({resource:"forms", action:"read"}), formMaster.GetForms);
+server.get('/DVP/API/:version/FormMasters/IsolatedTagForms', authorization({resource:"forms", action:"read"}), formMaster.GetAllFormsByTags);
+
 server.get('/DVP/API/:version/FormMasters/Tag/:isolated_tag', authorization({resource:"forms", action:"read"}), formMaster.GetFormByTag);
+server.post('/DVP/API/:version/FormMasters/FormsByTags', authorization({resource:"forms", action:"read"}), formMaster.GetFormsByTags);
+server.del('/DVP/API/:version/FormMasters/IsolatedTag/:isolatedTag', authorization({resource:"forms", action:"delete"}), formMaster.DeleteIsolatedTagForm);
 
 server.get('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"read"}), formMaster.GetForm);
 server.del('/DVP/API/:version/FormMaster/:name', authorization({resource:"forms", action:"delete"}), formMaster.DeleteForm);
