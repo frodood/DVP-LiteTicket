@@ -772,10 +772,23 @@ function UpdateFormProfile(req, res){
     var tenant = parseInt(req.user.tenant);
     var company = parseInt(req.user.company);
 
+    var tempTicketForm = req.body.ticket_form;
+    var tempProfileForm = req.body.profile_form;
+
+    if(!tempProfileForm)
+    {
+        tempProfileForm = null;
+    }
+
+    if(!tempTicketForm)
+    {
+        tempTicketForm = null;
+    }
+
 
     FormProfile.findOneAndUpdate({company: company, tenant: tenant}, {
-        ticket_form: req.body.ticket_form,
-        profile_form: req.body.profile_form},
+        ticket_form: tempTicketForm,
+        profile_form: tempProfileForm},
         function(err, forms) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Form Profile Failed", false, undefined);
