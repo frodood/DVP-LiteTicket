@@ -233,7 +233,7 @@ module.exports.CreateTicket = function (req, res) {
                             var secondsDiff = moment().diff(dateNow, 'seconds');
                             console.log("Ticket save time --- ->"+secondsDiff);
                             //client._doc
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, undefined);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, {_id:client._doc._id,reference:client._doc.reference});
 
 
                             /////////////////////////////////////////recent tickets////////////////////////////////////////////////
@@ -324,7 +324,7 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
             if (err) {
 
@@ -900,7 +900,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     obj.status.$in.push(req.query.status);
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -971,7 +971,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -1096,7 +1096,7 @@ module.exports.GetTicket = function (req, res) {
         tenant: tenant,
         active: true,
         _id: req.params.id
-    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar firstname lastname').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
         }
@@ -1129,7 +1129,7 @@ module.exports.GetTicketByIds = function (req, res) {
         tenant: tenant,
         active: true,
         _id: { $in: req.params.ids }
-    }).populate('assignee', 'name avatar').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
+    }).populate('assignee', 'name avatar firstname lastname').populate('submitter', 'name avatar').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').sort({created_at: -1}).exec(function (err, ticket) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
         }
@@ -1270,17 +1270,20 @@ module.exports.GetTicketWithDetails = function (req, res) {
         active: true,
         _id: req.params.id
     }).populate('attachments')
-        .populate({path: 'sub_tickets', populate :{path: 'assignee', select: 'name avatar'}})
-        .populate('related_tickets')
-        .populate('assignee', 'name avatar')
+        .populate({path: 'sub_tickets', populate :{path: 'assignee', select: 'name avatar firstname lastname'}})
+        .populate({path: 'sub_tickets', populate :{path: 'assignee_group', select: 'name'}})
+        .populate({path:'related_tickets',populate:{path: 'assignee' , select : 'name avatar firstname lastname'}})
+        .populate({path:'related_tickets',populate:{path: 'assignee_group' , select : 'name'}})
+        .populate('assignee', 'name avatar firstname lastname')
         .populate('assignee_group', 'name')
-        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts')
-        .populate('submitter', 'name avatar')
-        .populate('collaborators', 'name avatar')
-        .populate('merged_tickets')
+        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts firstname lastname')
+        .populate('submitter', 'name avatar firstname lastname')
+        .populate('collaborators', 'name avatar firstname lastname')
+        .populate({path: 'merged_tickets', populate :{path: 'assignee', select: 'name avatar'}})
+        .populate({path: 'merged_tickets', populate :{path: 'assignee_group', select: 'name'}})
         .populate('engagement_session')
         .populate( {path: 'form_submission',populate : {path: 'form'}})
-        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar'},{path: 'attachments'}]})
+        .populate({path: 'comments',populate : [{path: 'author', select:'name avatar firstname lastname'},{path: 'author_external', select:'name avatar firstname lastname'},{path: 'attachments'},{path:'engagement_session'}]})
         .populate({path:'slot_attachment.attachment',populate:'file url type'})
 
         .exec(function (err, ticket) {
@@ -1662,6 +1665,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
 
     logger.info("DVP-LiteTicket.AddCommentByEngagement Internal method ");
+    //console.log("Request "+JSON.stringify(req));
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -1671,6 +1675,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
     try {
         if (req.body.author)
             author = req.body.author;
+        console.log("Author "+author);
     } catch (exx) {
 
     }
@@ -1681,14 +1686,16 @@ module.exports.AddCommentByEngagement = function (req, res) {
         engagement_session: req.params.engagementid
     }, function (err, ticket) {
         if (err) {
-
+            console.log("No ticket found for engagement "+req.params.engagementid+" checking comments for engagement");
             //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
             Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
                 if (err) {
+                    console.log("No ticket or parent comment found for engagement "+req.params.engagementid);
                     jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                     res.end(jsonString);
                 }
                 else {
+                    console.log("No ticket by parent comment found for engagement "+req.params.engagementid);
                     if (comment) {
                         User.findOne({
                             username: author,
@@ -1696,6 +1703,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             tenant: tenant
                         }, function (err, user) {
                             if (err) {
+                                console.log("Error searching user to add comment "+req.body.author);
                                 jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                                 res.end(jsonString);
                             }
@@ -1719,21 +1727,26 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                     logger.debug("Object to save as a comment is" + comment);
                                     comment.save(function (err, obj) {
                                         if (err) {
+                                            console.log("Error in saving comment for eng.session "+req.body.engagement_session._id);
                                             jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                             res.end(jsonString);
                                         }
                                         else {
+                                            console.log("Comment saved for eng.session "+req.body.engagement_session._id);
                                             if (obj.id) {
                                                 Comment.findOneAndUpdate({_id: req.params.commentid},
                                                     {$addToSet: {sub_comment: obj.id}}
                                                     , function (err, rOrg) {
                                                         if (err) {
+                                                            console.log("Comment updating failed for eng.session, sub comment "+obj.id);
                                                             jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
                                                         } else {
                                                             if (rOrg) {
+                                                                console.log("Comment updated for eng.session, sub comment "+obj.id);
                                                                 jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
                                                             }
                                                             else {
+                                                                console.log("Invalid comment ID");
                                                                 jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
                                                             }
                                                         }
@@ -1741,6 +1754,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                                     });
                                             }
                                             else {
+                                                console.log("Fail To Save Comment");
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
                                                 res.end(jsonString);
                                             }
@@ -1749,6 +1763,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                     });
                                 }
                                 else {
+                                    console.log("Get User Failed");
                                     jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                                     res.end(jsonString);
                                 }
@@ -1757,6 +1772,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
                     }
                     else {
+                        console.log("Fail To Find Parent Comment");
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                         res.end(jsonString);
                     }
@@ -1772,8 +1788,10 @@ module.exports.AddCommentByEngagement = function (req, res) {
         }
         else {
             if (ticket) {
+                console.log("Ticket found for engagement "+req.params.engagementid+" checking User");
                 User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
                     if (err) {
+                        console.log("Ticket found for engagement "+req.params.engagementid+" No User found");
                         jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                         res.end(jsonString);
                     }
@@ -1797,16 +1815,14 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             logger.debug("Object to save as a comment is" + comment);
                             comment.save(function (err, obj) {
                                 if (err) {
+                                    console.log("Ticket found for engagement "+req.params.engagementid+" Comment save failed");
                                     jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                     res.end(jsonString);
                                 }
                                 else {
                                     if (obj.id) {
-
-
-
+                                        console.log("Ticket found for engagement "+req.params.engagementid+" Comment saved");
                                         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
                                         var time = new Date().toISOString();
                                         ticket.updated_at = time;
@@ -1852,18 +1868,21 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                             }
                                         }
 
-                                        ticket.comments.push(obj.id);
+                                        //ticket.comments.push(obj.id);
                                         /////////////////////////////////ticket matrix///////////////////////////////////////
 
 
                                         ticket.save( function (err, rOrg) {
                                             if (err) {
+                                                console.log("Ticket Updation failed");
                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Map With Ticket.", false, undefined);
                                             } else {
                                                 if (rOrg) {
+                                                    console.log("Ticket Updation succeeded");
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
                                                 }
                                                 else {
+                                                    console.log("Ticket Updation failed,invalid ticket id ");
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, obj);
                                                 }
                                             }
@@ -1871,6 +1890,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                         });
                                     }
                                     else {
+                                        console.log("Ticket found,Fail To Save Comment");
                                         jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Comment", false, undefined);
                                         res.end(jsonString);
                                     }
@@ -1879,6 +1899,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                             });
                         }
                         else {
+                            console.log("Ticket found,Get User Failed");
                             jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                             res.end(jsonString);
                         }
@@ -1889,10 +1910,12 @@ module.exports.AddCommentByEngagement = function (req, res) {
                 //////////////////////////////////////check for comment/////////////////////////////////////////////////////////
                 Comment.findOne({engagement_session: req.params.engagementid}, function (err, comment) {
                     if (err) {
+                        console.log("No Ticket found for engagement "+req.params.engagementid+" checking comment failed");
                         jsonString = messageFormatter.FormatMessage(err, "Fail To Find Comment", false, undefined);
                         res.end(jsonString);
                     }
                     else {
+                        console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found");
                         if (comment) {
                             User.findOne({
                                 username: req.user.iss,
@@ -1900,6 +1923,7 @@ module.exports.AddCommentByEngagement = function (req, res) {
                                 tenant: tenant
                             }, function (err, user) {
                                 if (err) {
+                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Invalid user");
                                     jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
                                     res.end(jsonString);
                                 }
@@ -1922,25 +1946,47 @@ module.exports.AddCommentByEngagement = function (req, res) {
 
                                         comment.save(function (err, obj) {
                                             if (err) {
+                                                console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving failed");
                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Save Comment", false, undefined);
                                                 res.end(jsonString);
                                             }
                                             else {
+
                                                 if (obj.id) {
+                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded");
                                                     Comment.findOneAndUpdate({engagement_session: req.params.engagementid},
                                                         {$addToSet: {sub_comment: obj.id}}
                                                         , function (err, rOrg) {
                                                             if (err) {
+                                                                console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation failed");
                                                                 jsonString = messageFormatter.FormatMessage(err, "Fail To Map Sub-Comment With Comment.", false, undefined);
                                                             } else {
                                                                 if (rOrg) {
+                                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded");
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+
+                                                                    Ticket.findOneAndUpdate({comments: {'$in':[rOrg.id]}},{$addToSet: {comments: obj.id}},function(err, comm){
+
+                                                                        if(err){
+                                                                            console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded, Error updating ticket");
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save but failed to push ticket", true, obj);
+                                                                        }else{
+                                                                            console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation succeeded, Ticket updated");
+                                                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub-Comment Successfully Save", true, obj);
+
+                                                                        }
+
+                                                                        res.end(jsonString);
+
+                                                                    });
                                                                 }
                                                                 else {
+                                                                    console.log("No Ticket found for engagement "+req.params.engagementid+" Comment found, Sub comment saving succceded,Parent comment updation failed, invalid comment id,");
                                                                     jsonString = messageFormatter.FormatMessage(undefined, "Invalid Comment ID.", true, obj);
+                                                                    res.end(jsonString);
                                                                 }
                                                             }
-                                                            res.end(jsonString);
+
                                                         });
                                                 }
                                                 else {
@@ -2525,8 +2571,19 @@ module.exports.AddComment = function (req, res) {
                                                 queueName = 'EMAILOUT';
                                             }else if (req.body.channel == 'facebook-post') {
                                                 queueName = 'FACEBOOKOUT';
+
+                                                if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
+
+                                                    message.from = req.body.contact.raw.id;
+                                                }
+
                                             } else if (req.body.channel == 'facebook-chat') {
                                                 queueName = 'FACEBOOKOUT';
+                                                if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
+
+                                                    message.from = req.body.contact.raw.id;
+                                                }
+
                                             }else {
                                                 //   jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
                                                 //   res.end(jsonString);
@@ -2922,8 +2979,18 @@ module.exports.AddCommentToComment = function (req, res) {
                                                             queueName = 'EMAILOUT';
                                                         }else if (req.body.channel == 'facebook-post') {
                                                             queueName = 'FACEBOOKOUT';
+
+                                                            if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
+
+                                                                message.from = req.body.contact.raw.id;
+                                                            }
                                                         } else if (req.body.channel == 'facebook-chat') {
                                                             queueName = 'FACEBOOKOUT';
+
+                                                            if(req.body.contact && req.body.contact && req.body.contact.raw && req.body.contact.raw.id){
+
+                                                                message.from = req.body.contact.raw.id;
+                                                            }
                                                         }else {
                                                             //jsonString = messageFormatter.FormatMessage(undefined, "Given channel doesn,t support public comments", false, undefined);
                                                             //res.end(jsonString);
@@ -6219,8 +6286,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
         fileName = fileName.replace(/:/g, "-") + '.csv';
 
-        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated'];
-        var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated'];
+        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
+        var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
 
         if(req.body){
 
@@ -6322,6 +6389,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                         .populate('engagement_session')
                                         .populate('submitter', 'name avatar')
                                         .populate('collaborators', 'name avatar')
+                                        .populate('comments', 'body')
                                         .populate( {path: 'form_submission',populate : {path: 'form'}})
                                         .maxTime(300000)
                                         .exec(function (err, tickets)
@@ -6354,7 +6422,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                         status: ticketInfo.status,
                                                         priority: ticketInfo.priority,
                                                         type: ticketInfo.type,
-                                                        slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false)
+                                                        slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+                                                        description: ticketInfo.description
 
                                                     };
 
@@ -6381,6 +6450,33 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                             ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
                                                         }
                                                     }
+
+                                                    var tempComments = '';
+
+                                                    if(ticketInfo.comments && ticketInfo.comments.length > 0)
+                                                    {
+                                                        ticketInfo.comments.forEach(function(comment){
+                                                            if(tempComments)
+                                                            {
+                                                                if(comment.body)
+                                                                {
+                                                                    tempComments = tempComments + ',' + comment.body;
+                                                                }
+
+                                                            }
+                                                            else
+                                                            {
+                                                                if(comment.body)
+                                                                {
+                                                                    tempComments = comment.body;
+                                                                }
+
+                                                            }
+
+                                                        })
+                                                    }
+
+                                                    ticketInfoTemp.comments = tempComments;
 
 
                                                     for(i=0; i < tagCount; i++)
@@ -6521,7 +6617,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 status: ticketInfo.status,
                                                 priority: ticketInfo.priority,
                                                 type: ticketInfo.type,
-                                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false)
+                                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+                                                description: ticketInfo.description
 
                                             };
 
@@ -6548,6 +6645,33 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                     ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
                                                 }
                                             }
+
+                                            var tempComments = '';
+
+                                            if(ticketInfo.comments && ticketInfo.comments.length > 0)
+                                            {
+                                                ticketInfo.comments.forEach(function(comment){
+                                                    if(tempComments)
+                                                    {
+                                                        if(comment.body)
+                                                        {
+                                                            tempComments = tempComments + ',' + comment.body;
+                                                        }
+
+                                                    }
+                                                    else
+                                                    {
+                                                        if(comment.body)
+                                                        {
+                                                            tempComments = comment.body;
+                                                        }
+
+                                                    }
+
+                                                })
+                                            }
+
+                                            ticketInfoTemp.comments = tempComments;
 
                                             for(i=0; i < tagCount; i++)
                                             {
