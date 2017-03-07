@@ -1290,6 +1290,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
+                res.end(jsonString);
             }
             else {
                 if (ticket) {
@@ -1313,6 +1314,24 @@ module.exports.GetTicketWithDetails = function (req, res) {
                                     AddUserRecentTicket(company, tenant,user.id,ticket.id);
 
 
+                                    var commentArray = ticket.comments.filter(function(comment) {
+                                        var updatedComment;
+                                        if (!(comment.public === 'private' && comment.author.id!==user.id))
+                                        {
+                                            updatedComment = comment;
+                                        }
+                                        else
+                                        {
+                                            comment.body="Content unavailable";
+                                            updatedComment =comment;
+                                        }
+                                        return updatedComment;
+                                    });
+
+                                    ticket.comments=commentArray;
+
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
+                                    res.end(jsonString);
                                 }
                             }
                         });
@@ -1322,14 +1341,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
                         (exe) {
 
                         logger.error(exe);
+                        jsonString = messageFormatter.FormatMessage(exe, "Error in user search", false, undefined);
+                        res.end(jsonString);
                     }
 
                 }
                 else {
                     jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                    res.end(jsonString);
                 }
             }
-            res.end(jsonString);
+
         })
 };
 
@@ -5205,26 +5227,26 @@ module.exports.GetCasesWithLimit = function (req, res) {
     var jsonString;
     Case.find({company: company, tenant: tenant}).skip(tempSkip)
         .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
-        if (err) {
+            if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
-
-        } else {
-
-            if (cases) {
-
-
-                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
 
             } else {
 
-                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+                if (cases) {
 
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+                }
             }
-        }
 
-        res.end(jsonString);
-    });
+            res.end(jsonString);
+        });
 };
 
 module.exports.GetCaseConfiguration = function (req, res) {
