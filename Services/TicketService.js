@@ -1314,24 +1314,34 @@ module.exports.GetTicketWithDetails = function (req, res) {
                                     AddUserRecentTicket(company, tenant,user.id,ticket.id);
 
 
-                                    var commentArray = ticket.comments.filter(function(comment) {
-                                        var updatedComment;
-                                        if (!(comment.public === 'private' && comment.author.id!==user.id))
-                                        {
-                                            updatedComment = comment;
-                                        }
-                                        else
-                                        {
-                                            comment.body="Content unavailable";
-                                            updatedComment =comment;
-                                        }
-                                        return updatedComment;
-                                    });
+                                    if(ticket.comments)
+                                    {
+                                        var commentArray = ticket.comments.filter(function(comment) {
+                                            var updatedComment;
+                                            if (!(comment.public === 'private' && comment.author.id!==user.id))
+                                            {
+                                                updatedComment = comment;
+                                            }
+                                            else
+                                            {
+                                                comment.body="Content unavailable";
+                                                updatedComment =comment;
+                                            }
+                                            return updatedComment;
+                                        });
 
-                                    ticket.comments=commentArray;
+                                        ticket.comments=commentArray;
 
-                                    jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
-                                    res.end(jsonString);
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
+                                        res.end(jsonString); 
+                                    }
+                                    else
+                                    {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found, But no comment object found", true, ticket);
+                                        res.end(jsonString);
+                                    }
+
+
                                 }
                             }
                         });
