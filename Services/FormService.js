@@ -3,6 +3,7 @@ var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var FormMaster = require('dvp-mongomodels/model/FormMaster').FormMaster;
 var FormSubmission = require('dvp-mongomodels/model/FormMaster').FormSubmission;
 var FormProfile = require('dvp-mongomodels/model/FormMaster').FormProfile;
+var IsolatedTagForm = require('dvp-mongomodels/model/FormMaster').FormIsolatedTag;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
 
 function CreateForm(req, res) {
@@ -45,6 +46,204 @@ function CreateForm(req, res) {
 
 
 };
+
+function AddOrUpdateIsolatedTagForm(req, res) {
+
+    logger.debug("DVP-LiteTicket.UpdateForm Internal method ");
+    var jsonString;
+    var tenant = parseInt(req.user.tenant);
+    var company = parseInt(req.user.company);
+
+
+    if (req.body && req.params.id)
+    {
+        IsolatedTagForm.findOne({
+                isolated_tag: req.body.isolated_tag,
+                company: parseInt(company),
+                tenant: parseInt(tenant)
+            }, function (err1, isolatedTagFrm) {
+
+            if(isolatedTagFrm)
+            {
+                //update
+                isolatedTagFrm.dynamicForm = req.params.id;
+
+                isolatedTagFrm.update(isolatedTagFrm, function(err, updateRes)
+                {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Update Isolated Tag Form Failed", false, null);
+                        res.end(jsonString);
+
+                    } else {
+
+                        jsonString = messageFormatter.FormatMessage(null, "Update Form successful", true, updateRes);
+                        res.end(jsonString);
+
+                    }
+                })
+            }
+            else
+            {
+                if(err1)
+                {
+                    jsonString = messageFormatter.FormatMessage(err1, "Get isolated tag form error", false, null);
+                    res.end(jsonString);
+                }
+                else
+                {
+                    var isolatedTagForm = IsolatedTagForm({
+                        isolated_tag: req.body.isolated_tag,
+                        company: parseInt(company),
+                        tenant: parseInt(tenant),
+                        dynamicForm: req.params.id
+                    });
+
+                    isolatedTagForm.save(function (err, form) {
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Form save failed", false, undefined);
+                            res.end(jsonString);
+                        } else {
+
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "Form saved successfully", true, form);
+                            res.end(jsonString);
+                        }
+                    });
+                }
+            }
+
+
+            });
+
+
+    } else {
+
+
+        jsonString = messageFormatter.FormatMessage(undefined, "Requred fields not found", false, undefined);
+        res.end(jsonString);
+
+    }
+
+
+};
+
+function GetFormByTag(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.GetFormByTag Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    IsolatedTagForm.findOne({isolated_tag: req.params.isolated_tag, company: company, tenant: tenant}).populate('dynamicForm').exec(function (err, form) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Form Failed", false, null);
+
+        } else {
+
+            if (form) {
+                var userObj;
+                jsonString = messageFormatter.FormatMessage(err, "Get Form Successful", true, form);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(null, "No Form found", true, null);
+
+            }
+
+        }
+
+        res.end(jsonString);
+    });
+
+};
+
+function GetFormsByTags(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.GetFormsByTags Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var tagArr = req.body.isolated_tags;
+    var emptyArr = [];
+    var jsonString;
+    IsolatedTagForm.find({isolated_tag: { $in: tagArr }, company: company, tenant: tenant}).populate('dynamicForm').exec(function (err, forms) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Forms By Tags Failed", false, emptyArr);
+
+        } else {
+
+            if (forms) {
+                jsonString = messageFormatter.FormatMessage(err, "Get Forms By Tags Successful", true, forms);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(null, "No Forms for Tags found", true, emptyArr);
+
+            }
+
+        }
+
+        res.end(jsonString);
+    });
+
+};
+
+function GetAllFormsByTags(req, res) {
+
+
+    logger.debug("DVP-LiteTicket.GetFormsByTags Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var emptyArr = [];
+    var jsonString;
+    IsolatedTagForm.find({company: company, tenant: tenant}).populate('dynamicForm').exec(function (err, forms) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get Forms Failed", false, emptyArr);
+
+        } else {
+
+            if (forms) {
+                jsonString = messageFormatter.FormatMessage(err, "Get Forms Successful", true, forms);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(null, "No Forms found", true, emptyArr);
+
+            }
+
+        }
+
+        res.end(jsonString);
+    });
+
+};
+
+function DeleteIsolatedTagForm(req, res) {
+
+    logger.debug("DVP-LiteTicket.DeleteIsolatedTagForm Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    IsolatedTagForm.findOneAndRemove({isolated_tag: req.params.isolatedTag, company: company, tenant: tenant}, function (err, delForm) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Delete Isolated Tag Form failed", false, null);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Delete Isolated Tag Form Success", true, null);
+        }
+        res.end(jsonString);
+    });
+
+};
+
+
 function GetForms(req, res) {
 
 
@@ -573,10 +772,23 @@ function UpdateFormProfile(req, res){
     var tenant = parseInt(req.user.tenant);
     var company = parseInt(req.user.company);
 
+    var tempTicketForm = req.body.ticket_form;
+    var tempProfileForm = req.body.profile_form;
+
+    if(!tempProfileForm)
+    {
+        tempProfileForm = null;
+    }
+
+    if(!tempTicketForm)
+    {
+        tempTicketForm = null;
+    }
+
 
     FormProfile.findOneAndUpdate({company: company, tenant: tenant}, {
-        ticket_form: req.body.ticket_form,
-        profile_form: req.body.profile_form},
+        ticket_form: tempTicketForm,
+        profile_form: tempProfileForm},
         function(err, forms) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Form Profile Failed", false, undefined);
@@ -615,5 +827,10 @@ module.exports.UpdateDynamicFieldSubmission = UpdateDynamicFieldSubmission;
 module.exports.CreateFormProfile = CreateFormProfile;
 module.exports.UpdateFormProfile = UpdateFormProfile;
 module.exports.GetFormProfile = GetFormProfile;
+module.exports.AddOrUpdateIsolatedTagForm = AddOrUpdateIsolatedTagForm;
+module.exports.GetFormByTag = GetFormByTag;
+module.exports.GetFormsByTags = GetFormsByTags;
+module.exports.GetAllFormsByTags = GetAllFormsByTags;
+module.exports.DeleteIsolatedTagForm = DeleteIsolatedTagForm;
 
 
