@@ -26,6 +26,8 @@
     "cors": "^2.7.1",
     "deep-diff": "^0.3.4",
     "deepcopy": "^0.6.3",
+    "dust": "^0.3.0",
+    "dustjs-linkedin": "^2.7.5",
     "dvp-common": "^0.5.8",
     "dvp-dbmodels": "^0.2.4",
     "dvp-mongomodels": "^4.4.6",
