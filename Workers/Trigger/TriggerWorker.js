@@ -519,44 +519,58 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                 if (triggerToExecute.actions.length > 0) {
                                                     var newAssignee = "";
                                                     var newAssignee_group = "";
-                                                    for (var i = 0; i < triggerToExecute.actions.length; i++) {
-                                                        var action = triggerToExecute.actions[i];
 
-                                                        switch (action.field) {
-                                                            case "assignee":
-                                                                newAssignee = action.value;
-                                                                break;
-                                                            case "assignee_group":
-                                                                newAssignee_group = action.value;
-                                                                break;
-                                                            default :
-                                                                tResult[action.field] = action.value;
-                                                                if (action.field === "status") {
-                                                                    UpdateDashboardChangeStatus(ticketCopy.status, tResult);
-                                                                }
-                                                                break;
-                                                        }
-                                                    }
-
-                                                    var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
-                                                    vag.on('validateUserAndGroupDone', function (updatedTicket) {
-                                                        Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
-                                                            if (err) {
-                                                                console.log("Update ticket Failed: " + err);
-                                                            } else {
-                                                                console.log("Update ticket Success: " + utResult);
+                                                    var asyncvalidateUserAndGroupTasks = [];
+                                                    triggerToExecute.operations.forEach(function(action){
+                                                        asyncvalidateUserAndGroupTasks.push(function(callback){
+                                                            switch (action.field) {
+                                                                case "assignee":
+                                                                    newAssignee = action.value;
+                                                                    break;
+                                                                case "assignee_group":
+                                                                    newAssignee_group = action.value;
+                                                                    break;
+                                                                default :
+                                                                    tResult[action.field] = action.value;
+                                                                    if (action.field === "status") {
+                                                                        UpdateDashboardChangeStatus(ticketCopy.status, tResult);
+                                                                    }
+                                                                    break;
                                                             }
+                                                            callback();
                                                         });
                                                     });
+                                                    async.parallel(asyncvalidateUserAndGroupTasks, function(){
+                                                        console.log("asyncvalidateUserAndGroupTasks: ");
+                                                        var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
+                                                        vag.on('validateUserAndGroupDone', function (updatedTicket) {
+                                                            Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
+                                                                if (err) {
+                                                                    console.log("Update ticket Failed: " + err);
+                                                                } else {
+                                                                    console.log("Update ticket Success: " + utResult);
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+
                                                 }
 
                                                 if (triggerToExecute.operations.length > 0) {
-                                                    for (var j = 0; j < triggerToExecute.operations.length; j++) {
-                                                        var operationToExecute = triggerToExecute.operations[j];
-                                                        ExecuteOperations(ticketCopy, operationToExecute);
-                                                    }
-                                                }
+                                                    var asyncExecuteOperationsTasks = [];
+                                                    triggerToExecute.operations.forEach(function(operationToExecute){
+                                                        // We don't actually execute the async action here
+                                                        // We add a function containing it to an array of "tasks"
+                                                        asyncExecuteOperationsTasks.push(function(callback){
+                                                            ExecuteOperations(ticketCopy, operationToExecute);
+                                                            callback();
+                                                        });
+                                                    });
+                                                    async.parallel(asyncExecuteOperationsTasks, function(){
+                                                        console.log("ExecuteOperations Success: ");
+                                                    });
 
+                                                }
                                                 callbackparallel(jsonString);
                                             } else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
