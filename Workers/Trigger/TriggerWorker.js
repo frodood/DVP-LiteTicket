@@ -512,7 +512,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                             } else {
                                 if (trResult) {
 
-                                    function ExecuteCondition(triggerToExecute,callbackparallel) {
+                                    function ExecuteCondition(triggerToExecute, callbackparallel) {
                                         try {
 
                                             if (triggerToExecute) {
@@ -521,8 +521,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                     var newAssignee_group = "";
 
                                                     var asyncvalidateUserAndGroupTasks = [];
-                                                    triggerToExecute.operations.forEach(function(action){
-                                                        asyncvalidateUserAndGroupTasks.push(function(callback){
+                                                    triggerToExecute.operations.forEach(function (action) {
+                                                        asyncvalidateUserAndGroupTasks.push(function (callback) {
                                                             switch (action.field) {
                                                                 case "assignee":
                                                                     newAssignee = action.value;
@@ -540,7 +540,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                             callback();
                                                         });
                                                     });
-                                                    async.parallel(asyncvalidateUserAndGroupTasks, function(){
+                                                    async.parallel(asyncvalidateUserAndGroupTasks, function () {
                                                         console.log("asyncvalidateUserAndGroupTasks: ");
                                                         var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
                                                         vag.on('validateUserAndGroupDone', function (updatedTicket) {
@@ -558,82 +558,96 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
                                                 if (triggerToExecute.operations.length > 0) {
                                                     var asyncExecuteOperationsTasks = [];
-                                                    triggerToExecute.operations.forEach(function(operationToExecute){
+                                                    triggerToExecute.operations.forEach(function (operationToExecute) {
                                                         // We don't actually execute the async action here
                                                         // We add a function containing it to an array of "tasks"
-                                                        asyncExecuteOperationsTasks.push(function(callback){
+                                                        asyncExecuteOperationsTasks.push(function (callback) {
                                                             ExecuteOperations(ticketCopy, operationToExecute);
                                                             callback();
                                                         });
                                                     });
-                                                    async.parallel(asyncExecuteOperationsTasks, function(){
+                                                    async.parallel(asyncExecuteOperationsTasks, function () {
                                                         console.log("ExecuteOperations Success: ");
                                                     });
 
                                                 }
-                                                callbackparallel(jsonString);
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Trigger Execute Success", true, undefined);
+                                                callbackparallel(undefined,jsonString);
                                             } else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
-                                                callbackparallel(jsonString);
+                                                callbackparallel(undefined,jsonString);
                                             }
                                         }
-                                        catch (ex){
-
+                                        catch (ex) {
+                                            jsonString = messageFormatter.FormatMessage(ex, "No active trigger found", false, undefined);
+                                            callbackparallel(ex,jsonString);
                                         }
                                     }
 
                                     var asyncTasks = [];
-                                    trResult.forEach(function(trigger){
-                                        if (trigger.conditions.all && trigger.conditions.all.length > 0) {
-                                            asyncTasks.push(function(callbackparallel){
-                                                async.every(trigger.conditions.all, function(condition, callback) {
-                                                    AggregateCondition(tResult, condition.field, condition.value, condition.operator, function (aResult) {
-                                                        callback(undefined,aResult);
-                                                    });
-                                                }, function(err, results) {
-                                                    if(results)
-                                                        ExecuteCondition(trigger,callbackparallel);
-                                                    else
-                                                    {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "No Condition True", false, undefined);
-                                                        callbackparallel(jsonString);
-                                                    }
-                                                });
-                                            });
-                                        }
+                                    trResult.forEach(function (trigger) {
+                                        asyncTasks.push(function (callbackparallel) {
 
-                                        if (trigger.conditions.any && trigger.conditions.any.length > 0) {
-                                            asyncTasks.push(function(callbackparallel){
-                                                async.some(trigger.conditions.any, function(condition, callback) {
-                                                    AggregateCondition(tResult, condition.field, condition.value, condition.operator, function (aResult) {
-                                                        callback(undefined,aResult);
+                                            var conditionCollection = [];
+                                            if (trigger.conditions.all && trigger.conditions.all.length > 0) {
+                                                conditionCollection.push(function (callback) {
+                                                    async.every(trigger.conditions.all, function (condition, callback) {
+                                                        AggregateCondition(tResult, condition.field, condition.value, condition.operator, function (aResult) {
+                                                            callback(undefined, aResult);
+                                                        });
+                                                    }, function (err, results) {
+                                                        callback(null, results);
                                                     });
-                                                }, function(err, results) {
-                                                    if(results)
-                                                        ExecuteCondition(trigger,callbackparallel);
-                                                    else
-                                                    {
-                                                        jsonString = messageFormatter.FormatMessage(undefined, "No Condition True", false, undefined);
-                                                        callbackparallel(jsonString);
-                                                    }
+                                                })
+                                            }
+                                            if (trigger.conditions.any && trigger.conditions.any.length > 0) {
+                                                conditionCollection.push(function (callback) {
+                                                    async.some(trigger.conditions.any, function (condition, callback) {
+                                                        AggregateCondition(tResult, condition.field, condition.value, condition.operator, function (aResult) {
+                                                            callback(undefined, aResult);
+                                                        });
+                                                    }, function (err, results) {
+                                                        callback(null, results);
+                                                    });
+                                                })
+                                            }
+                                            async.parallel(conditionCollection,
+                                                function (err, results) {
+                                                    var dd = {data: trigger, result: results.length==2? (results[0] * results[1]):(results.length==0?false:results[0])};
+                                                    callbackparallel(undefined, dd);
                                                 });
+                                        });
 
-                                            });
-                                        }
                                     });
 
+                                    /*execution sequentially*/
+                                    async.series(asyncTasks, function (err, results) {
+                                        if (results) {
+                                            var taskList = [];
+                                            results.forEach(function (item) {
+                                                if (item && item.result) {
+                                                    taskList.push(function (callback) {
+                                                        ExecuteCondition(item.data,callback);
+                                                    });
+                                                }
+                                            });
 
-                                    async.parallel(asyncTasks, function(msg) {
-                                        sendResult(msg);
+                                            if(taskList.length>0)
+                                            {
+                                                async.series(taskList, function(err, results) {
+                                                    console.log("Process Complete")
+                                                });
+
+                                            }
+                                        }
                                     });
-
 
                                 } else {
                                     jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, Trigger object is null", false, undefined);
                                     sendResult(jsonString);
                                 }
                             }
-                        });
+                        }).sort({priority: -1});
                     } else {
                         jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
                         sendResult(jsonString);
