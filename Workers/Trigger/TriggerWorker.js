@@ -350,18 +350,28 @@ function AggregateCondition(obj, field, value, operator, callback) {
             value = false;
         }
 
+        var paths = Ticket.schema.paths;
+        var ticketvalue = obj[field];
+        if(paths && paths[field]){
+            if((typeof obj[field]) == (typeof {})){
+                value = new global[paths[field].instance](value);
+                ticketvalue = new global[paths[field].instance](ticketvalue);
+            }
+
+        }
+
         switch (operator) {
             case "is":
-                callback(obj[field] === value);
+                callback(ticketvalue === value);
                 break;
             case "less_than":
-                callback(obj[field] < value);
+                callback(ticketvalue < value);
                 break;
             case "greater_than":
-                callback(obj[field] > value);
+                callback(ticketvalue > value);
                 break;
             case "is_not":
-                callback(obj[field] != value);
+                callback(ticketvalue != value);
                 break;
             case "included":
                 if (field === "tags") {
@@ -380,10 +390,11 @@ function AggregateCondition(obj, field, value, operator, callback) {
                 }
                 break;
             case "greater_than_or_equal":
-                callback(obj[field] >= value);
+                //var temp = typeof obj[field];
+                callback(ticketvalue >= value);
                 break;
             case "less_than_or_equal":
-                callback(obj[field] <= value);
+                callback(ticketvalue <= value);
                 break;
             default :
                 callback(false);
@@ -521,7 +532,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                     var newAssignee_group = "";
 
                                                     var asyncvalidateUserAndGroupTasks = [];
-                                                    triggerToExecute.operations.forEach(function (action) {
+                                                    triggerToExecute.actions.forEach(function (action) {
                                                         asyncvalidateUserAndGroupTasks.push(function (callback) {
                                                             switch (action.field) {
                                                                 case "assignee":
@@ -537,12 +548,12 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                                     }
                                                                     break;
                                                             }
-                                                            callback();
+                                                            callback(tResult,newAssignee,newAssignee_group);
                                                         });
                                                     });
-                                                    async.parallel(asyncvalidateUserAndGroupTasks, function () {
+                                                    async.parallel(asyncvalidateUserAndGroupTasks, function (result,assignee,assigneeGroup) {
                                                         console.log("asyncvalidateUserAndGroupTasks: ");
-                                                        var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
+                                                        var vag = ValidateAssigneeAndGroup(result, triggerToExecute, assignee, assigneeGroup);
                                                         vag.on('validateUserAndGroupDone', function (updatedTicket) {
                                                             Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
                                                                 if (err) {
