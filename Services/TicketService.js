@@ -160,10 +160,10 @@ module.exports.CreateTicket = function (req, res) {
                         events: [tEvent],
                         assignee: req.body.assignee,
                         assignee_group: req.body.assignee_group,
-                        due_at: req.body.due_at
+                        due_at: req.body.due_at,
+                        watchers :  [user.id]
                     });
 
-                    ticket.watchers =  [user.id];
                     if (req.body.requester) {
                         ticket.requester = req.body.requester;
                         //ticket.watchers.push(req.body.requester);
@@ -242,9 +242,6 @@ module.exports.CreateTicket = function (req, res) {
                             if(client) {
                                 ExecuteTrigger(client.id, "change_status", "new");
                                 ExecuteCase(client);
-
-
-
                                 AddUserRecentTicket(company, tenant,user.id,client.id);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
@@ -1290,6 +1287,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
+                res.end(jsonString);
             }
             else {
                 if (ticket) {
@@ -1313,6 +1311,34 @@ module.exports.GetTicketWithDetails = function (req, res) {
                                     AddUserRecentTicket(company, tenant,user.id,ticket.id);
 
 
+                                    if(ticket.comments)
+                                    {
+                                        var commentArray = ticket.comments.filter(function(comment) {
+                                            var updatedComment;
+                                            if (!(comment.public === 'private' && comment.author.id!==user.id))
+                                            {
+                                                updatedComment = comment;
+                                            }
+                                            else
+                                            {
+                                                comment.body="Content unavailable";
+                                                updatedComment =comment;
+                                            }
+                                            return updatedComment;
+                                        });
+
+                                        ticket.comments=commentArray;
+
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
+                                        res.end(jsonString); 
+                                    }
+                                    else
+                                    {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found, But no comment object found", true, ticket);
+                                        res.end(jsonString);
+                                    }
+
+
                                 }
                             }
                         });
@@ -1322,14 +1348,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
                         (exe) {
 
                         logger.error(exe);
+                        jsonString = messageFormatter.FormatMessage(exe, "Error in user search", false, undefined);
+                        res.end(jsonString);
                     }
 
                 }
                 else {
                     jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                    res.end(jsonString);
                 }
             }
-            res.end(jsonString);
+
         })
 };
 
@@ -2222,8 +2251,6 @@ module.exports.RemoveSlotFromArray = function (req, res) {
 
 };
 
-
-
 module.exports.TicketAddAtachmentSlot= function(req, res){
     logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
 
@@ -2256,7 +2283,6 @@ module.exports.TicketAddAtachmentSlot= function(req, res){
     });
 
 };
-
 
 module.exports.TicketDeleteAtachmentSlot = function(req, res){
     logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
@@ -4473,6 +4499,7 @@ function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operat
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteTriggerSpecificOperationsAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4509,6 +4536,7 @@ function ExecuteSlaAsync(ticketId, previousPriority) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteSlaAsync Internal method." + ticketId, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4560,29 +4588,35 @@ function AddUserRecentTicket(company, tenant, id, tid){
 }
 
 function AddExternalUserRecentTicket(company,tenant,id, tid){
-    ExternalUserRecentTicket.findOneAndUpdate({
-        company: company,
-        tenant: tenant,
-        user: id
-    }, {
-
-        $setOnInsert: {
+    try {
+        ExternalUserRecentTicket.findOneAndUpdate({
             company: company,
-            tenant: tenant
-        },
-        $push: {
-            tickets: {$each:[tid], $slice: -10}
-        }
-    }, {upsert: true, new: true}, function (err, recentticket) {
-        if (err) {
+            tenant: tenant,
+            user: id
+        }, {
 
-            logger.error("Add to resent ticket failed ", err);
-        } else {
+            $setOnInsert: {
+                company: company,
+                tenant: tenant
+            },
+            $push: {
+                tickets: {$each:[tid], $slice: -10}
+            }
+        }, {upsert: true, new: true}, function (err, recentticket) {
+            if (err) {
 
-            logger.debug("Add to resent ticket succeeed ");
-        }
+                logger.error("Add to resent ticket failed ", err);
+            } else {
 
-    });
+                logger.debug("Add to resent ticket succeeed ");
+            }
+
+        });
+    }
+    catch (ex){
+        logger.error("Add to resent ticket failed ", ex);
+    }
+
 }
 
 function ExecuteCaseAsync(ticket) {
@@ -4597,6 +4631,7 @@ function ExecuteCaseAsync(ticket) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteCaseAsync Internal method." + ticket.tid, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4633,6 +4668,7 @@ function ExecuteTriggerAsync(ticketId, eventType, data) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteTriggerAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -5205,26 +5241,26 @@ module.exports.GetCasesWithLimit = function (req, res) {
     var jsonString;
     Case.find({company: company, tenant: tenant}).skip(tempSkip)
         .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
-        if (err) {
+            if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
-
-        } else {
-
-            if (cases) {
-
-
-                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
 
             } else {
 
-                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+                if (cases) {
 
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+                }
             }
-        }
 
-        res.end(jsonString);
-    });
+            res.end(jsonString);
+        });
 };
 
 module.exports.GetCaseConfiguration = function (req, res) {
