@@ -19,6 +19,8 @@ var deepcopy = require("deepcopy");
 var emailHandler = require('./EmailHandler.js');
 var dvpInteraction = require('../Common/DvpInteractions');
 var async = require('async');
+var OrganisationConfig = require('dvp-mongomodels/model/OrganisationConfig');
+var q = require('q');
 
 function numSort(a, b) {
     return a.priority - b.priority;
@@ -352,8 +354,8 @@ function AggregateCondition(obj, field, value, operator, callback) {
 
         var paths = Ticket.schema.paths;
         var ticketvalue = obj[field];
-        if(paths && paths[field]){
-            if((typeof obj[field]) == (typeof {})){
+        if (paths && paths[field]) {
+            if ((typeof obj[field]) == (typeof {})) {
                 value = new global[paths[field].instance](value);
                 ticketvalue = new global[paths[field].instance](ticketvalue);
             }
@@ -494,6 +496,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
         try {
             Ticket.findOne({_id: ticketId}).populate('requester', '-password').populate('submitter', '-password').populate('assignee', '-password').populate('assignee_group collaborators watchers attachments comments').exec(function (err, tResult) {
                 //Ticket.findOne({_id: ticketId},function (err, tResult) {
+
+
                 if (err) {
                     jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
                     sendResult(jsonString);
@@ -516,7 +520,8 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                         } else if (triggerEvent === "add_comment") {
                             ticketCopy.last_comment = data;
                         }
-                        Trigger.find({$and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]}, function (err, trResult) {
+
+                        function ExecuteSelectedTrigger(err, trResult) {
                             if (err) {
                                 jsonString = messageFormatter.FormatMessage(err, "Find Trigger Failed", false, undefined);
                                 sendResult(jsonString);
@@ -548,10 +553,10 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                                     }
                                                                     break;
                                                             }
-                                                            callback(tResult,newAssignee,newAssignee_group);
+                                                            callback(tResult, newAssignee, newAssignee_group);
                                                         });
                                                     });
-                                                    async.parallel(asyncvalidateUserAndGroupTasks, function (result,assignee,assigneeGroup) {
+                                                    async.parallel(asyncvalidateUserAndGroupTasks, function (result, assignee, assigneeGroup) {
                                                         console.log("asyncvalidateUserAndGroupTasks: ");
                                                         var vag = ValidateAssigneeAndGroup(result, triggerToExecute, assignee, assigneeGroup);
                                                         vag.on('validateUserAndGroupDone', function (updatedTicket) {
@@ -583,15 +588,15 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
                                                 }
                                                 jsonString = messageFormatter.FormatMessage(undefined, "Trigger Execute Success", true, undefined);
-                                                callbackparallel(undefined,jsonString);
+                                                callbackparallel(undefined, jsonString);
                                             } else {
                                                 jsonString = messageFormatter.FormatMessage(undefined, "No active trigger found", false, undefined);
-                                                callbackparallel(undefined,jsonString);
+                                                callbackparallel(undefined, jsonString);
                                             }
                                         }
                                         catch (ex) {
                                             jsonString = messageFormatter.FormatMessage(ex, "No active trigger found", false, undefined);
-                                            callbackparallel(ex,jsonString);
+                                            callbackparallel(ex, jsonString);
                                         }
                                     }
 
@@ -624,7 +629,10 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                             }
                                             async.parallel(conditionCollection,
                                                 function (err, results) {
-                                                    var dd = {data: trigger, result: results.length==2? (results[0] * results[1]):(results.length==0?false:results[0])};
+                                                    var dd = {
+                                                        data: trigger,
+                                                        result: results.length == 2 ? (results[0] * results[1]) : (results.length == 0 ? false : results[0])
+                                                    };
                                                     callbackparallel(undefined, dd);
                                                 });
                                         });
@@ -638,14 +646,13 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                             results.forEach(function (item) {
                                                 if (item && item.result) {
                                                     taskList.push(function (callback) {
-                                                        ExecuteCondition(item.data,callback);
+                                                        ExecuteCondition(item.data, callback);
                                                     });
                                                 }
                                             });
 
-                                            if(taskList.length>0)
-                                            {
-                                                async.series(taskList, function(err, results) {
+                                            if (taskList.length > 0) {
+                                                async.series(taskList, function (err, results) {
                                                     console.log("Process Complete")
                                                 });
 
@@ -658,7 +665,28 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                     sendResult(jsonString);
                                 }
                             }
-                        }).sort({priority: -1});
+                        }
+
+                        var query = {
+                            $and: [{company: tResult.company}, {tenant: tResult.tenant}, {triggerEvent: triggerEvent}, {Active: true}]
+                        };
+                        if (triggerConfig[tResult.company]) {
+                            if (triggerConfig[tResult.company].highPriority_match) {
+                                Trigger.find(query, function (err, trResult) {
+                                    ExecuteSelectedTrigger(err, trResult);
+                                }).sort({priority: -1,updated_at:-1}).limit(1);
+                            }
+                            else {
+                                Trigger.find(query, function (err, trResult) {
+                                    ExecuteSelectedTrigger(err, trResult);
+                                }).sort({priority: -1,updated_at:-1});
+                            }
+                        }
+                        else {
+                            Trigger.find(query, function (err, trResult) {
+                                ExecuteSelectedTrigger(err, trResult);
+                            }).sort({priority: -1,updated_at:-1});
+                        }
                     } else {
                         jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
                         sendResult(jsonString);
@@ -732,7 +760,52 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
     }
 }
 
+var triggerConfig = [];
+module.exports.LoadOrgConfig = function () {
 
+    try {
+        OrganisationConfig.find({}, function (err, config) {
+            try {
+                if (config) {
+                    config.map(function (item) {
+                        if (item) {
+                            triggerConfig[item.company] =item;
+                        }
+                    })
+                }
+
+            } catch (ex) {
+
+            }
+        });
+    }
+    catch (ex) {
+
+    }
+
+};
+
+module.exports.GetOrgConfig = function (company, tenant) {
+
+    var deferred = q.defer();
+
+    try {
+        OrganisationConfig.findOne({company: company, tenant: tenant}, function (err, config) {
+            try {
+                triggerConfig[company] = config;
+            } catch (ex) {
+
+            }
+            deferred.resolve(config);
+        });
+    }
+    catch (ex) {
+        deferred.reject(ex);
+    }
+    return deferred.promise;
+};
+
+module.exports.TriggerConfig = triggerConfig;
 module.exports.ExecuteTrigger = ExecuteTrigger;
 module.exports.ExecuteOperations = ExecuteOperations;
 module.exports.ExecuteTriggerWithSpecificOperations = ExecuteTriggerWithSpecificOperations;
