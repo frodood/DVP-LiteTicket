@@ -3690,7 +3690,11 @@ module.exports.SearchTickets = function (req, res) {
         tenant: tenant
     }, {score: {$meta: "textScore"}}).skip(skip)
         .limit(size).sort({score: {$meta: 'textScore'}})
-        .populate('submitter', 'name avatar')
+        .populate('assignee', 'name avatar firstname lastname')
+        .populate('assignee_group', 'name')
+        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
+        .populate('submitter', 'name avatar').populate('collaborators', 'name avatar')
+        .populate( {path: 'form_submission',populate : {path: 'form'}})
         .exec(function (err, tickets) {
             if (err) {
 
