@@ -3596,7 +3596,7 @@ module.exports.TicketSearch = function (req, res) {
             company: company,
             tenant: tenant
         }).skip(skip)
-            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+            .limit(size).sort({created_at: -1}).populate('submitter', 'name avatar').exec(function (err, tickets) {
                 if (err) {
 
                     jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Subject Failed", false, undefined);
