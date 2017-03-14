@@ -12,6 +12,7 @@ var timerService = require('./Services/TimerService.js');
 var slaService= require('./Services/SLAService.js');
 var triggrService = require('./Services/TicketTriggerService.js');
 var ticketViewService = require('./Services/TicketViewService');
+var triggerWorker = require('./Workers/Trigger/TriggerWorker');
 var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
@@ -329,7 +330,10 @@ server.del('/DVP/API/:version/Trigger/:id/Action/:actionid', authorization({reso
 server.put('/DVP/API/:version/Trigger/:id/Operation', authorization({resource:"triggers", action:"write"}), triggrService.AddOperations);
 server.get('/DVP/API/:version/Trigger/:id/Operations', authorization({resource:"triggers", action:"read"}), triggrService.GetOperations);
 server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
-
+server.post('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.CreateTriggerConfiguration);
+server.get('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.GetTriggerConfiguration);
+server.put('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTriggerConfiguration);
+server.del('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.DeleteTriggerConfiguration);
 
 
 /////////////////////////////////////////////////////////////matrix///////////////////////////////////////////////////////////////////////////////////
@@ -444,6 +448,7 @@ server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
     });
+    triggerWorker.LoadOrgConfig();
     logger.info("DVP-LiteTicket.main Server %s listening at %s", server.name, server.url);
 });
 

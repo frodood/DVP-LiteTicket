@@ -160,10 +160,10 @@ module.exports.CreateTicket = function (req, res) {
                         events: [tEvent],
                         assignee: req.body.assignee,
                         assignee_group: req.body.assignee_group,
-                        due_at: req.body.due_at
+                        due_at: req.body.due_at,
+                        watchers :  [user.id]
                     });
 
-                    ticket.watchers =  [user.id];
                     if (req.body.requester) {
                         ticket.requester = req.body.requester;
                         //ticket.watchers.push(req.body.requester);
@@ -233,7 +233,7 @@ module.exports.CreateTicket = function (req, res) {
                             var secondsDiff = moment().diff(dateNow, 'seconds');
                             console.log("Ticket save time --- ->"+secondsDiff);
                             //client._doc
-                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, {_id:client._doc._id,reference:client._doc.reference});
+                            jsonString = messageFormatter.FormatMessage(undefined, "Ticket saved successfully", true, client);
 
 
                             /////////////////////////////////////////recent tickets////////////////////////////////////////////////
@@ -242,9 +242,6 @@ module.exports.CreateTicket = function (req, res) {
                             if(client) {
                                 ExecuteTrigger(client.id, "change_status", "new");
                                 ExecuteCase(client);
-
-
-
                                 AddUserRecentTicket(company, tenant,user.id,client.id);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
@@ -351,64 +348,64 @@ module.exports.GetAllTickets = function (req, res) {
 module.exports.GetTicketSchema = function (req, res) {
 
     logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
-    var company = parseInt(req.user.company);
-    var tenant = parseInt(req.user.tenant);
+    //var company = parseInt(req.user.company);
+    //var tenant = parseInt(req.user.tenant);
 
-    var userList = [];
-    var groupList = [];
+    // var userList = [];
+    //var groupList = [];
     var objList = [];
 
     //////////////////////get users/////////////////////////////////////////////////////////////////////////////
-    User.find({company: company, tenant: tenant}).select({"username":1, "_id":1}).exec(function(err, users) {
+    // User.find({company: company, tenant: tenant}).select({"username":1, "_id":1}).exec(function(err, users) {
+    //
+    //
+    //     if(!err && users){
+    //         userList = users;
+    //     }
+    //
+    //     UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+    //
+    //         if (!err && groups) {
+    //             groupList = groups;
+    //         }
 
+    ///////////////////////////////////////get schema nad loop//////////////////////////////////////
+    Object.keys(Ticket.schema.paths).forEach(function(key){
+        console.log(key);
+        console.log(Ticket.schema.paths[key]);
 
-        if(!err && users){
-            userList = users;
+        var item = {
+
+            field: key,
+            type: Ticket.schema.paths[key].instance,
+        };
+
+        if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
+
+            // if(Ticket.schema.paths[key].options.ref == 'User'){
+
+            item["type"] = "ObjectID";
+            item["reference"] = Ticket.schema.paths[key].options.ref;
+
+            // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
+
+            //     item["type"] = "Select";
+            //     item["values"] = groupList;
+            //}
         }
 
-        UserGroup.find({company: company, tenant: tenant}).select({"name":1, "_id":1}).exec(function (err, groups) {
+        if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
+            item["type"] = "Select";
+            item["values"] = Ticket.schema.paths[key].enumValues;
+        }
 
-            if (!err && groups) {
-                groupList = groups;
-            }
-
-            ///////////////////////////////////////get schema nad loop//////////////////////////////////////
-            Object.keys(Ticket.schema.paths).forEach(function(key){
-                console.log(key);
-                console.log(Ticket.schema.paths[key]);
-
-                var item = {
-
-                    field: key,
-                    type: Ticket.schema.paths[key].instance,
-                };
-
-                if(Ticket.schema.paths[key].instance == 'ObjectID' && Ticket.schema.paths[key].options && Ticket.schema.paths[key].options.ref) {
-
-                    // if(Ticket.schema.paths[key].options.ref == 'User'){
-
-                    item["type"] = "ObjectID";
-                    item["reference"] = Ticket.schema.paths[key].options.ref;
-
-                    // }else if(Ticket.schema.paths[key].options.ref == 'UserGroup'){
-
-                    //     item["type"] = "Select";
-                    //     item["values"] = groupList;
-                    //}
-                }
-
-                if(Ticket.schema.paths[key].enumValues && Ticket.schema.paths[key].enumValues.length > 0){
-                    item["type"] = "Select";
-                    item["values"] = Ticket.schema.paths[key].enumValues;
-                }
-
-                objList.push(item);
-            });
-            var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
-            res.end(jsonString);
-        });
-
+        objList.push(item);
     });
+    var jsonString = messageFormatter.FormatMessage(undefined, "Get Schema worked", true, objList);
+    res.end(jsonString);
+    //     });
+    //
+    // });
 
 //////////////////////get groups////////////////////////////////////////////////////////////////////////////
 
@@ -1290,6 +1287,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail to Find Ticket", false, undefined);
+                res.end(jsonString);
             }
             else {
                 if (ticket) {
@@ -1313,6 +1311,34 @@ module.exports.GetTicketWithDetails = function (req, res) {
                                     AddUserRecentTicket(company, tenant,user.id,ticket.id);
 
 
+                                    if(ticket.comments)
+                                    {
+                                        var commentArray = ticket.comments.filter(function(comment) {
+                                            var updatedComment;
+                                            if (!(comment.public === 'private' && comment.author.id!==user.id))
+                                            {
+                                                updatedComment = comment;
+                                            }
+                                            else
+                                            {
+                                                comment.body="Content unavailable";
+                                                updatedComment =comment;
+                                            }
+                                            return updatedComment;
+                                        });
+
+                                        ticket.comments=commentArray;
+
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found", true, ticket);
+                                        res.end(jsonString); 
+                                    }
+                                    else
+                                    {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Ticket found, But no comment object found", true, ticket);
+                                        res.end(jsonString);
+                                    }
+
+
                                 }
                             }
                         });
@@ -1322,14 +1348,17 @@ module.exports.GetTicketWithDetails = function (req, res) {
                         (exe) {
 
                         logger.error(exe);
+                        jsonString = messageFormatter.FormatMessage(exe, "Error in user search", false, undefined);
+                        res.end(jsonString);
                     }
 
                 }
                 else {
                     jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                    res.end(jsonString);
                 }
             }
-            res.end(jsonString);
+
         })
 };
 
@@ -2222,8 +2251,6 @@ module.exports.RemoveSlotFromArray = function (req, res) {
 
 };
 
-
-
 module.exports.TicketAddAtachmentSlot= function(req, res){
     logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
 
@@ -2256,7 +2283,6 @@ module.exports.TicketAddAtachmentSlot= function(req, res){
     });
 
 };
-
 
 module.exports.TicketDeleteAtachmentSlot = function(req, res){
     logger.info("DVP-LiteTicket.AddSlotToArray Internal method ");
@@ -3570,7 +3596,7 @@ module.exports.TicketSearch = function (req, res) {
             company: company,
             tenant: tenant
         }).skip(skip)
-            .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+            .limit(size).sort({created_at: -1}).populate('submitter', 'name avatar').exec(function (err, tickets) {
                 if (err) {
 
                     jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Subject Failed", false, undefined);
@@ -3664,6 +3690,11 @@ module.exports.SearchTickets = function (req, res) {
         tenant: tenant
     }, {score: {$meta: "textScore"}}).skip(skip)
         .limit(size).sort({score: {$meta: 'textScore'}})
+        .populate('assignee', 'name avatar firstname lastname')
+        .populate('assignee_group', 'name')
+        .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
+        .populate('submitter', 'name avatar').populate('collaborators', 'name avatar')
+        .populate( {path: 'form_submission',populate : {path: 'form'}})
         .exec(function (err, tickets) {
             if (err) {
 
@@ -4473,6 +4504,7 @@ function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operat
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteTriggerSpecificOperationsAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4509,6 +4541,7 @@ function ExecuteSlaAsync(ticketId, previousPriority) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteSlaAsync Internal method." + ticketId, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4560,29 +4593,35 @@ function AddUserRecentTicket(company, tenant, id, tid){
 }
 
 function AddExternalUserRecentTicket(company,tenant,id, tid){
-    ExternalUserRecentTicket.findOneAndUpdate({
-        company: company,
-        tenant: tenant,
-        user: id
-    }, {
-
-        $setOnInsert: {
+    try {
+        ExternalUserRecentTicket.findOneAndUpdate({
             company: company,
-            tenant: tenant
-        },
-        $push: {
-            tickets: {$each:[tid], $slice: -10}
-        }
-    }, {upsert: true, new: true}, function (err, recentticket) {
-        if (err) {
+            tenant: tenant,
+            user: id
+        }, {
 
-            logger.error("Add to resent ticket failed ", err);
-        } else {
+            $setOnInsert: {
+                company: company,
+                tenant: tenant
+            },
+            $push: {
+                tickets: {$each:[tid], $slice: -10}
+            }
+        }, {upsert: true, new: true}, function (err, recentticket) {
+            if (err) {
 
-            logger.debug("Add to resent ticket succeeed ");
-        }
+                logger.error("Add to resent ticket failed ", err);
+            } else {
 
-    });
+                logger.debug("Add to resent ticket succeeed ");
+            }
+
+        });
+    }
+    catch (ex){
+        logger.error("Add to resent ticket failed ", ex);
+    }
+
 }
 
 function ExecuteCaseAsync(ticket) {
@@ -4597,6 +4636,7 @@ function ExecuteCaseAsync(ticket) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteCaseAsync Internal method." + ticket.tid, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -4633,6 +4673,7 @@ function ExecuteTriggerAsync(ticketId, eventType, data) {
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
         logger.error("DVP-LiteTicket.ExecuteTriggerAsync Internal method." + ticketId + " " + eventType + " " + data, jsonString, ex);
+        deferred.reject(ex);
     }
 
     /*setTimeout(function() {
@@ -5205,26 +5246,26 @@ module.exports.GetCasesWithLimit = function (req, res) {
     var jsonString;
     Case.find({company: company, tenant: tenant}).skip(tempSkip)
         .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
-        if (err) {
+            if (err) {
 
-            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
-
-        } else {
-
-            if (cases) {
-
-
-                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
 
             } else {
 
-                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+                if (cases) {
 
+
+                    jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
+
+                } else {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
+
+                }
             }
-        }
 
-        res.end(jsonString);
-    });
+            res.end(jsonString);
+        });
 };
 
 module.exports.GetCaseConfiguration = function (req, res) {
@@ -6038,7 +6079,9 @@ var GetNextAvailableStatusList = function (tenant, company, type, currentStatus,
                 if (stf) {
                     for (var i = 0; i < stf.flow_connections.length; i++) {
                         if (stf.flow_connections[i].source.status_node === currentStatus) {
-                            nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
+                            if(nextAvailableStatus.indexOf(stf.flow_connections[i].targets.status_node) === -1) {
+                                nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
+                            }
                         }
                     }
                     jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
