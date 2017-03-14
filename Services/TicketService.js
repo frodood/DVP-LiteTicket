@@ -3690,6 +3690,7 @@ module.exports.SearchTickets = function (req, res) {
         tenant: tenant
     }, {score: {$meta: "textScore"}}).skip(skip)
         .limit(size).sort({score: {$meta: 'textScore'}})
+        .populate('submitter', 'name avatar')
         .exec(function (err, tickets) {
             if (err) {
 
