@@ -6394,7 +6394,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                         .lean()
                                         .exec(function (err, tickets)
                                         {
-                                            console.log(tickets.length);
                                             if (err)
                                             {
                                                 externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
@@ -6590,7 +6589,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                 .lean()
                                 .exec(function (err, tickets)
                                 {
-                                    console.log(tickets.length);
                                     if (err)
                                     {
                                         console.log(err);
