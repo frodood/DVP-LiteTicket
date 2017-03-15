@@ -42,7 +42,7 @@ module.exports = {
     "resource": "cluster",
     "vdomain": "127.0.0.1",
     "domain": "127.0.0.1",
-    "port": "3636",
+    "port": "3637",
     "version": "1.0.0.0",
     "HashKey":"ticket"
   },

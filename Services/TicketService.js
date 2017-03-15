@@ -58,8 +58,6 @@ redisClient.on("error", function (err) {
 
 
 
-
-
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
@@ -327,13 +325,17 @@ module.exports.GetAllTickets = function (req, res) {
 
             if(user) {
 
-                var qObj = {company: company, tenant: tenant, active: true,security_level:null};
+                var qObj = {company: company, tenant: tenant, active: true,$or:[{security_level:null},{assignee:user.id},{assignee_group:user.group}]};
+
+
+
 
                 if (user.security_level) {
                     // qObj.security_level=({$or:[{security_level:{$gte: user.security_level}},{security_level:null}]});
 
                     //qObj.security_level= qObj.security_level || ;
-                    qObj = {company: company, tenant: tenant, active: true,$or:[{security_level:null},{security_level:{$gte:user.security_level}}]};
+                    //qObj = {company: company, tenant: tenant, active: true,$or:[{security_level:null},{security_level:{$gte:user.security_level}}]};
+                    qObj =  {company: company,tenant: tenant,active: true,$or:[{security_level:{$gte:user.security_level}},{security_level:null},{assignee:user.id},{assignee_group:user.group}]};
 
                 }
 
@@ -509,17 +511,7 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
 
             if(user.security_level ) {
 
-                var testCondition =
-
-                {
-                    company: company,
-                    tenant: tenant,
-                    active: true,
-                    status: req.params.status,
-                    security_level:{$gte:user.security_level}
-                }
-
-                Ticket.find(testCondition).skip(skip)
+                Ticket.find({company: company,tenant: tenant,active: true,status: req.params.status,$or:[{security_level:{$gte:user.security_level}},{security_level:null},{assignee:user.id},{assignee_group:user.group}]}).skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -541,9 +533,28 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
                     });
             }
             else{
+                Ticket.find({company: company,tenant: tenant,active: true,status: req.params.status,$or:[{security_level:null},{assignee:user.id},{assignee_group:user.group}]}).skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
-                res.end(jsonString);
+                            jsonString = messageFormatter.FormatMessage(err, "Get AllTickets With Status Failed", false, undefined);
+
+                        } else {
+
+                            if (tickets) {
+
+                                jsonString = messageFormatter.FormatMessage(undefined, "Get AllTickets With Status Successful", true, tickets);
+
+                            } else {
+
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
+
+                            }
+                        }
+                        res.end(jsonString);
+                    });
+
+
             }
         }
     });
@@ -7608,20 +7619,70 @@ module.exports.UpdateTicketSecurityLevel = function (req, res) {
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
-    var updateObj =
-    {
-        security_level:req.query.level
-    };
     var jsonString;
 
-    Ticket.findOneAndUpdate({_id: req.params.id,company:company,tenant:tenant}, updateObj, function (err, Ticket) {
 
-        if (err) {
-            jsonString = messageFormatter.FormatMessage(err, "Ticket Security level Update Failed", false, undefined);
-            res.end(jsonString);
-        } else {
-            jsonString = messageFormatter.FormatMessage(undefined, "Ticket Security level Updated  successfully", true, Ticket);
-            res.end(jsonString);
-        }
-    });
+    if(req.query.level)
+    {
+        var updateObj =
+        {
+            security_level:req.query.level
+        };
+
+        User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+            if(err)
+            {
+                jsonString = messageFormatter.FormatMessage(err, "Error in searching user", false, undefined);
+                res.end(jsonString);
+            }
+            else
+            {
+                if(user) {
+                    var qObj = {_id: req.params.id,company: company, tenant: tenant, active: true,$or:[{security_level:null},{assignee:user.id},{assignee_group:user.group}]};
+
+                    if (user.security_level) {
+                        qObj =  {_id: req.params.id,company: company,tenant: tenant,active: true,$or:[{security_level:{$gte:user.security_level}},{security_level:null},{assignee:user.id},{assignee_group:user.group}]};
+                    }
+
+
+                    Ticket.findOneAndUpdate(qObj, updateObj, function (err, Ticket) {
+
+                        if (err) {
+                            jsonString = messageFormatter.FormatMessage(err, "Ticket Security level Update Failed", false, undefined);
+                            res.end(jsonString);
+                        } else {
+                            if(Ticket)
+                            {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Ticket Security level Updated  successfully", true, Ticket);
+                                res.end(jsonString);
+                            }
+                            else
+                            {
+                                jsonString = messageFormatter.FormatMessage(new Error("Security level updation faild"), "Ticket Security level Updation failed", false, undefined);
+                                res.end(jsonString);
+                            }
+
+                        }
+                    });
+                }
+                else
+                {
+                    jsonString = messageFormatter.FormatMessage(new Error("No user found"), "No user found", false, undefined);
+                    res.end(jsonString);
+                }
+            }
+
+
+
+        });
+    }
+    else
+    {
+        jsonString = messageFormatter.FormatMessage(new Error("Invalid security level"), "Invalid security level", false, undefined);
+        res.end(jsonString);
+    }
+
+
+
+
 };
