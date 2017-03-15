@@ -2,7 +2,7 @@
  * Created by Heshan.i on 7/20/2016.
  */
 var User = require('dvp-mongomodels/model/User');
-var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
 var validator = require('validator');
 var config = require('config');
 var restClientHandler = require('./RestClient.js');
@@ -73,6 +73,26 @@ function SendNotificationToAssigneeGroup(company, tenant, internalAccessToken, g
                 var nData = {
                     Message: message
                 };
+
+
+                User.find({company: company, tenant: tenant, group: groupId},function (err, users) {
+
+                    if(Array.isArray(users) && users.length >0) {
+
+                        var users =  users.map(function(item){
+                            return  item.username
+                        });
+                        nData.clients = users;
+                        BroadcastNotification(internalAccessToken,nData);
+
+                    }else{
+                        console.log("UserGroup Data empty");
+                    }
+
+                });
+
+                /*
+
                 if(userGroup.users && userGroup.users.length >0) {
                     var count = 0;
                     var clientList = [];
@@ -94,6 +114,8 @@ function SendNotificationToAssigneeGroup(company, tenant, internalAccessToken, g
                         });
                     }
                 }
+
+                */
             }else{
                 console.log("UserGroup Data empty");
             }
