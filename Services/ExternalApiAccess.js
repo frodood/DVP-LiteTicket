@@ -53,7 +53,7 @@ var RemoteGetFileMetadata = function(reqId, filename, companyId, tenantId, callb
                 else
                 {
                     logger.error('[DVP-CDRProcessor.RemoteGetFileMetadata] - [%s] - file service call failed', reqId, error);
-                    callback(error, undefined);
+                    callback(new Error('Error accessing file service'), undefined);
                 }
             })
         }
@@ -111,7 +111,7 @@ var FileUploadReserve = function(reqId, filename, companyId, tenantId, callback)
                 else
                 {
                     logger.error('[DVP-CDRProcessor.FileUploadReserve] - [%s] - file service call failed', reqId, error);
-                    callback(error, undefined);
+                    callback(new Error('Error accessing file service'), undefined);
                 }
             });
         }
