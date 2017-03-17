@@ -4361,10 +4361,10 @@ module.exports.BulkStatusUpdate = function (req, res) {
                                     asyncTasks.push(function(callback){
 
                                         ExecuteTriggerSpecificOperationsAsync(tckt._id.toString(), "change_status", tckt.status, req.body.specificOperations).then(function (val) {
-
+                                            callback();
                                         });
 
-                                        callback();
+
                                     });
 
                                 }else {
@@ -4375,10 +4375,10 @@ module.exports.BulkStatusUpdate = function (req, res) {
                                     asyncTasks.push(function(callback){
 
                                         ExecuteTriggerAsync(tckt._id.toString(), "change_status", tckt.status).then(function (val) {
-
+                                            callback();
                                         });
 
-                                        callback();
+
                                     });
                                 }
                             }
@@ -4386,7 +4386,7 @@ module.exports.BulkStatusUpdate = function (req, res) {
                             if(asyncTasks.length > 0) {
                                 async.parallelLimit(asyncTasks, 10, function () {
                                     // All tasks are done now
-                                    console.log('Finished')
+                                    console.log('Finished');
                                     res.end(jsonString);
                                 });
                             }else{
