@@ -354,7 +354,7 @@ function AggregateCondition(obj, field, value, operator, callback) {
 
         var paths = Ticket.schema.paths;
         var ticketvalue = obj[field];
-        if (paths && paths[field]) {
+        if (paths && paths[field] && (field != 'tags')) {
             if ((typeof obj[field]) == (typeof {})) {
                 value = new global[paths[field].instance](value);
                 ticketvalue = new global[paths[field].instance](ticketvalue);
@@ -674,18 +674,18 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                             if (triggerConfig[tResult.company].highPriority_match) {
                                 Trigger.find(query, function (err, trResult) {
                                     ExecuteSelectedTrigger(err, trResult);
-                                }).sort({priority: -1,updated_at:-1}).limit(1);
+                                }).sort({priority: -1, updated_at: -1}).limit(1);
                             }
                             else {
                                 Trigger.find(query, function (err, trResult) {
                                     ExecuteSelectedTrigger(err, trResult);
-                                }).sort({priority: -1,updated_at:-1});
+                                }).sort({priority: -1, updated_at: -1});
                             }
                         }
                         else {
                             Trigger.find(query, function (err, trResult) {
                                 ExecuteSelectedTrigger(err, trResult);
-                            }).sort({priority: -1,updated_at:-1});
+                            }).sort({priority: -1, updated_at: -1});
                         }
                     } else {
                         jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
@@ -769,7 +769,7 @@ module.exports.LoadOrgConfig = function () {
                 if (config) {
                     config.map(function (item) {
                         if (item) {
-                            triggerConfig[item.company] =item;
+                            triggerConfig[item.company] = item;
                         }
                     })
                 }
