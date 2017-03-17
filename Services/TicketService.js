@@ -4327,7 +4327,7 @@ module.exports.BulkStatusUpdate = function (req, res) {
         _id: {
             $in: req.body.TicketIds
         }
-    }, function (err, tickets) {
+    }).lean().exec(function(err, tickets) {
         if (err) {
             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Related Ticket", false, undefined);
             res.end(jsonString);

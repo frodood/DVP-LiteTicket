@@ -494,7 +494,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
     if (ticketId) {
         try {
-            Ticket.findOne({_id: ticketId}).populate('requester', '-password').populate('submitter', '-password').populate('assignee', '-password').populate('assignee_group collaborators watchers attachments comments').exec(function (err, tResult) {
+            Ticket.findOne({_id: ticketId}).populate('requester', '-password').populate('submitter', '-password').populate('assignee', '-password').populate('assignee_group collaborators watchers attachments comments').lean().exec(function (err, tResult) {
                 //Ticket.findOne({_id: ticketId},function (err, tResult) {
 
 
@@ -709,7 +709,7 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
 
     if (ticketId) {
         try {
-            Ticket.findOne({_id: ticketId}).populate('requester', '-password').populate('submitter', '-password').populate('assignee', '-password').populate('assignee_group collaborators watchers attachments comments').exec(function (err, tResult) {
+            Ticket.findOne({_id: ticketId}).populate('requester', '-password').populate('submitter', '-password').populate('assignee', '-password').populate('assignee_group collaborators watchers attachments comments').lean().exec(function (err, tResult) {
                 //Ticket.findOne({_id: ticketId},function (err, tResult) {
                 if (err) {
                     jsonString = messageFormatter.FormatMessage(err, "Get Ticket Failed", false, undefined);
