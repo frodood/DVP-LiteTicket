@@ -393,7 +393,7 @@ function UpdateSLAWhenStateChange(ticket){
                 }
             });
         }else{
-            console.log(err, "No sal Found");
+            console.log("No sal Found");
         }
     }catch(ex){
         console.log("UpdateCron Failed:: "+ ex);
