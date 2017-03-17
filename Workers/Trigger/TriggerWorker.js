@@ -504,7 +504,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                 } else {
                     if (tResult) {
 
-                        var ticketCopy = deepcopy(tResult.toJSON());
+                        var ticketCopy = deepcopy(tResult);
 
                         if (triggerEvent === "change_assignee") {
                             PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
