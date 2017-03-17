@@ -4348,22 +4348,51 @@ module.exports.BulkStatusUpdate = function (req, res) {
                     }
                     else {
                         if (sticket) {
+                            var asyncTasks = [];
+
                             for(var i =0; i < tickets.length; i++){
                                 var tckt = tickets[i];
                                 if(req.body.specificOperations && req.body.specificOperations.length >0){
-                                    ExecuteTriggerSpecificOperationsAsync(tckt._id.toString(), "change_status", tckt.status, req.body.specificOperations).then(function (val) {
-                                        logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method. reply : " + val);
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                                        res.end(jsonString);
+
+                                    logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method.");
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
+
+
+                                    asyncTasks.push(function(callback){
+
+                                        ExecuteTriggerSpecificOperationsAsync(tckt._id.toString(), "change_status", tckt.status, req.body.specificOperations).then(function (val) {
+
+                                        });
+
+                                        callback();
                                     });
+
                                 }else {
-                                    ExecuteTriggerAsync(tckt._id.toString(), "change_status", tckt.status).then(function (val) {
-                                        logger.info("DVP-LiteTicket.ExecuteTrigger Internal method. reply : " + val);
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                                        res.end(jsonString);
+
+                                    logger.info("DVP-LiteTicket.ExecuteTrigger Internal method.");
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
+
+                                    asyncTasks.push(function(callback){
+
+                                        ExecuteTriggerAsync(tckt._id.toString(), "change_status", tckt.status).then(function (val) {
+
+                                        });
+
+                                        callback();
                                     });
                                 }
                             }
+
+                            if(asyncTasks.length > 0) {
+                                async.parallelLimit(asyncTasks, 100, function () {
+                                    // All tasks are done now
+                                    console.log('Finished')
+                                });
+                            }
+
+
+                            res.end(jsonString);
+
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Related Ticket ID.", false, undefined);
