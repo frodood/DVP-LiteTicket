@@ -4350,8 +4350,7 @@ module.exports.BulkStatusUpdate = function (req, res) {
                         if (sticket) {
                             var asyncTasks = [];
 
-                            for(var i =0; i < tickets.length; i++){
-                                var tckt = tickets[i];
+                            tickets.forEach(function (tckt) {
                                 if(req.body.specificOperations && req.body.specificOperations.length >0){
 
                                     logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method.");
@@ -4361,6 +4360,8 @@ module.exports.BulkStatusUpdate = function (req, res) {
                                     asyncTasks.push(function(callback){
 
                                         ExecuteTriggerSpecificOperationsAsync(tckt._id.toString(), "change_status", tckt.status, req.body.specificOperations).then(function (val) {
+                                            callback();
+                                        }).catch(function () {
                                             callback();
                                         });
 
@@ -4376,12 +4377,14 @@ module.exports.BulkStatusUpdate = function (req, res) {
 
                                         ExecuteTriggerAsync(tckt._id.toString(), "change_status", tckt.status).then(function (val) {
                                             callback();
+                                        }).catch(function () {
+                                            callback();
                                         });
 
 
                                     });
                                 }
-                            }
+                            });
 
                             if(asyncTasks.length > 0) {
                                 async.parallel(asyncTasks, function () {
@@ -4700,7 +4703,7 @@ function ExecuteTriggerAsync(ticketId, eventType, data) {
 
         triggerWorker.ExecuteTrigger(ticketId, eventType, data, function (reply) {
             deferred.resolve(reply);
-        })
+        });
     }
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
