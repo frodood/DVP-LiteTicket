@@ -631,6 +631,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                 function (err, results) {
                                                     var dd = {
                                                         data: trigger,
+
                                                         result: results.length == 2 ? (results[0] * results[1]) : (results.length == 0 ? false : results[0])
                                                     };
                                                     callbackparallel(undefined, dd);
@@ -640,25 +641,36 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                     });
 
                                     /*execution sequentially*/
-                                    async.series(asyncTasks, function (err, results) {
-                                        if (results) {
-                                            var taskList = [];
-                                            results.forEach(function (item) {
-                                                if (item && item.result) {
-                                                    taskList.push(function (callback) {
-                                                        ExecuteCondition(item.data, callback);
-                                                    });
-                                                }
-                                            });
-
-                                            if (taskList.length > 0) {
-                                                async.series(taskList, function (err, results) {
-                                                    console.log("Process Complete")
+                                    if(asyncTasks.length >0) {
+                                        async.series(asyncTasks, function (err, results) {
+                                            if (results) {
+                                                var taskList = [];
+                                                results.forEach(function (item) {
+                                                    if (item && item.result) {
+                                                        taskList.push(function (callback) {
+                                                            ExecuteCondition(item.data, callback);
+                                                        });
+                                                    }
                                                 });
 
+                                                if (taskList.length > 0) {
+                                                    async.series(taskList, function (err, results) {
+                                                        console.log("Process Complete");
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Accept trigger executions", true, undefined);
+                                                        sendResult(jsonString);
+                                                    });
+
+                                                }else{
+                                                    jsonString = messageFormatter.FormatMessage(undefined, "No matching trigger found", false, undefined);
+                                                    sendResult(jsonString);
+                                                }
                                             }
-                                        }
-                                    });
+
+                                        });
+                                    }else{
+                                        jsonString = messageFormatter.FormatMessage(undefined, "No matching trigger found", false, undefined);
+                                        sendResult(jsonString);
+                                    }
 
                                 } else {
                                     jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, Trigger object is null", false, undefined);
