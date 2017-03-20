@@ -71,31 +71,36 @@ function UpdateDashboardChangeStatus(data, tResult) {
     //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), assignee, assignee_group);
     //var param2 = util.format("user_%s#ugroup_%s", assignee, assignee_group);
 
+    var asyncPubKeys = [];
+    var asyncPubTask = [];
+
+
+
     if (tResult && tResult.status === "closed" && tResult.ticket_matrix.external_replies && tResult.ticket_matrix.external_replies === 0) {
         var pubMsgEFirstCallResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "firstCallResolution", "total", "total", "Total" + tResult.id);
-        redisHandler.Publish("events", pubMsgEFirstCallResolution, function () {
-        });
+
+        asyncPubKeys.push(pubMsgEFirstCallResolution);
     }
 
     if (tResult && tResult.status === "new") {
         //run ticket resolve time
         var pubMsgNResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "new", "total", "total", "Total" + tResult.id);
-        redisHandler.Publish("events", pubMsgNResolution, function () {
-        });
+
+        asyncPubKeys.push(pubMsgNResolution);
     }
 
     if (tResult && tResult.status === "closed") {
         //stop ticket resolve time
         var pubMsgEResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "closed", "total", "total", "Total" + tResult.id);
-        redisHandler.Publish("events", pubMsgEResolution, function () {
-        });
+
+        asyncPubKeys.push(pubMsgEResolution);
     }
 
     if (tResult && data && data === "closed" && tResult.status === "open") {
         //rerun ticket resolve time
         var pubMsgNRResolution = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "RESOLUTION", "new", "total", "total", "Total" + tResult.id);
-        redisHandler.Publish("events", pubMsgNRResolution, function () {
-        });
+
+        asyncPubKeys.push(pubMsgNRResolution);
 
         //set ticket reopn count
         var pubMsgNReopen = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "total", "total", "Total" + tResult.id);
@@ -104,16 +109,11 @@ function UpdateDashboardChangeStatus(data, tResult) {
         var pubMsgNRUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "user_" + assignee, "param2", "User" + tResult.id);
         var pubMsgNRUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "Reopen", "ugroup_" + assignee_group, "param2", "UGroup" + tResult.id);
 
-        redisHandler.Publish("events", pubMsgNReopen, function () {
-        });
-        redisHandler.Publish("events", pubMsgNRChannel, function () {
-        });
-        redisHandler.Publish("events", pubMsgNRTags, function () {
-        });
-        redisHandler.Publish("events", pubMsgNRUser, function () {
-        });
-        redisHandler.Publish("events", pubMsgNRUGroup, function () {
-        });
+        asyncPubKeys.push(pubMsgNReopen);
+        asyncPubKeys.push(pubMsgNRChannel);
+        asyncPubKeys.push(pubMsgNRTags);
+        asyncPubKeys.push(pubMsgNRUser);
+        asyncPubKeys.push(pubMsgNRUGroup);
     }
 
     if (tResult && data && tResult.status != "new") {
@@ -123,16 +123,12 @@ function UpdateDashboardChangeStatus(data, tResult) {
         var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End" + data, "user_" + assignee, "param2", "User" + tResult.id);
         var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End" + data, "ugroup_" + assignee_group, "param2", "UGroup" + tResult.id);
 
-        redisHandler.Publish("events", pubMsgETotal, function () {
-        });
-        redisHandler.Publish("events", pubMsgEChannel, function () {
-        });
-        redisHandler.Publish("events", pubMsgETags, function () {
-        });
-        redisHandler.Publish("events", pubMsgEUser, function () {
-        });
-        redisHandler.Publish("events", pubMsgEUGroup, function () {
-        });
+
+        asyncPubKeys.push(pubMsgETotal);
+        asyncPubKeys.push(pubMsgEChannel);
+        asyncPubKeys.push(pubMsgETags);
+        asyncPubKeys.push(pubMsgEUser);
+        asyncPubKeys.push(pubMsgEUGroup);
 
     }
 
@@ -143,16 +139,24 @@ function UpdateDashboardChangeStatus(data, tResult) {
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_" + assignee, "param2", "User" + tResult.id);
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_" + assignee_group, "param2", "UGroup" + tResult.id);
 
-    redisHandler.Publish("events", pubMsgNTotal, function () {
+    asyncPubKeys.push(pubMsgNTotal);
+    asyncPubKeys.push(pubMsgNChannel);
+    asyncPubKeys.push(pubMsgNTags);
+    asyncPubKeys.push(pubMsgNUser);
+    asyncPubKeys.push(pubMsgNUGroup);
+
+    asyncPubKeys.forEach(function (pubKey) {
+        asyncPubTask.push(function (callback) {
+            redisHandler.Publish("events", pubKey, function (err, result) {
+                callback(err, result);
+            });
+        });
     });
-    redisHandler.Publish("events", pubMsgNChannel, function () {
+
+    async.parallel(asyncPubTask,function(result){
+        console.log("Message Publish success")
     });
-    redisHandler.Publish("events", pubMsgNTags, function () {
-    });
-    redisHandler.Publish("events", pubMsgNUser, function () {
-    });
-    redisHandler.Publish("events", pubMsgNUGroup, function () {
-    });
+
 }
 
 function UpdateDashboardChangeAssignee(data, tResult) {
@@ -510,7 +514,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                             PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                             UpdateDashboardChangeAssignee(data, tResult);
                         } else if (triggerEvent === "change_status") {
-                            if (tResult.status === "closed") {
+                            if (tResult.assignee && tResult.status === "closed") {
                                 PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                             }
                             SlaWorker.UpdateSLAWhenStateChange(tResult);
@@ -699,6 +703,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                 ExecuteSelectedTrigger(err, trResult);
                             }).sort({priority: -1, updated_at: -1});
                         }
+
                     } else {
                         jsonString = messageFormatter.FormatMessage(undefined, "ExecuteTrigger Failed, package object is null", false, undefined);
                         sendResult(jsonString);
