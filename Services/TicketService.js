@@ -4384,7 +4384,7 @@ module.exports.BulkStatusUpdate = function (req, res) {
                             }
 
                             if(asyncTasks.length > 0) {
-                                async.parallelLimit(asyncTasks, 100, function () {
+                                async.parallel(asyncTasks, function () {
                                     // All tasks are done now
                                     console.log('Finished');
                                     res.end(jsonString);
