@@ -153,7 +153,7 @@ function UpdateDashboardChangeStatus(data, tResult) {
         });
     });
 
-    async.parallel(asyncPubTask,function(result){
+    async.parallelLimit(asyncPubTask, 2,function(result){
         console.log("Message Publish success")
     });
 
@@ -517,7 +517,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                             if (tResult.assignee && tResult.status === "closed") {
                                 PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
                             }
-                            SlaWorker.UpdateSLAWhenStateChange(tResult);
+                            //SlaWorker.UpdateSLAWhenStateChange(tResult);
                             UpdateDashboardChangeStatus(data, tResult);
                         } else if (triggerEvent === "change_assignee_groups") {
                             UpdateDashboardChangeAssigneeGroup(data, tResult);
