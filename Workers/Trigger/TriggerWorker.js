@@ -20,6 +20,7 @@ var emailHandler = require('./EmailHandler.js');
 var dvpInteraction = require('../Common/DvpInteractions');
 var async = require('async');
 var OrganisationConfig = require('dvp-mongomodels/model/OrganisationConfig');
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var q = require('q');
 
 function numSort(a, b) {
@@ -146,16 +147,16 @@ function UpdateDashboardChangeStatus(data, tResult) {
     asyncPubKeys.push(pubMsgNUGroup);
 
     asyncPubKeys.forEach(function (pubKey) {
-        asyncPubTask.push(function (callback) {
-            redisHandler.Publish("events", pubKey, function (err, result) {
-                callback(err, result);
-            });
+        //    asyncPubTask.push(function (callback) {
+        redisHandler.Publish("events", pubKey, function (err, result) {
+            //callback(err, result);
         });
+        //    });
     });
 
-    async.parallelLimit(asyncPubTask, 2,function(result){
-        console.log("Message Publish success")
-    });
+    /*async.parallelLimit(asyncPubTask, 2,function(result){
+     console.log("Message Publish success")
+     });*/
 
 }
 
@@ -510,20 +511,57 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
                         var ticketCopy = deepcopy(tResult);
 
+
+                        var preOperationsTasks = [];
+
+
                         if (triggerEvent === "change_assignee") {
-                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
-                            UpdateDashboardChangeAssignee(data, tResult);
+
+                            preOperationsTasks.concat([
+                                function (callback) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id);
+                                    callback();
+                                },
+                                function (callback) {
+                                    UpdateDashboardChangeAssignee(data, ticketCopy);
+                                    callback();
+                                }
+                            ]);
+
                         } else if (triggerEvent === "change_status") {
-                            if (tResult.assignee && tResult.status === "closed") {
-                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                            if (ticketCopy.assignee && ticketCopy.status === "closed") {
+                                preOperationsTasks.push(function (callback) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id);
+                                    callback();
+                                });
                             }
-                            //SlaWorker.UpdateSLAWhenStateChange(tResult);
-                            UpdateDashboardChangeStatus(data, tResult);
+
+                            preOperationsTasks.concat([
+                                function (callback) {
+                                    SlaWorker.UpdateSLAWhenStateChange(ticketCopy);
+                                    callback();
+                                },
+                                function (callback) {
+                                    UpdateDashboardChangeStatus(data, ticketCopy);
+                                    callback();
+                                }
+                            ]);
+
                         } else if (triggerEvent === "change_assignee_groups") {
-                            UpdateDashboardChangeAssigneeGroup(data, tResult);
+
+                            preOperationsTasks.push(function (callback) {
+                                UpdateDashboardChangeAssigneeGroup(data, ticketCopy);
+                                callback();
+                            });
+
                         } else if (triggerEvent === "add_comment") {
                             ticketCopy.last_comment = data;
                         }
+
+                        async.parallel(preOperationsTasks, function () {
+                            console.log("ExecutePreOperationsTasks Success: ");
+                        });
+
 
                         function ExecuteSelectedTrigger(err, trResult) {
                             if (err) {
@@ -776,6 +814,8 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
         callback(jsonString);
     }
 }
+
+
 
 var triggerConfig = [];
 module.exports.LoadOrgConfig = function () {

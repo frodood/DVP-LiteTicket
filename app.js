@@ -205,6 +205,10 @@ server.post('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization
 server.del('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"delete"}), ticketService.DeAttachTicket);
 server.put('/DVP/API/:version/Ticket/:id/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.AppendEngagement);
 server.get('/DVP/API/:version/Ticket/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketsByEngagementId);
+server.post('/DVP/API/:version/Ticket/BulkOperation/JobId', authorization({resource:"ticket", action:"write"}), ticketService.GetJobId);
+server.get('/DVP/API/:version/Ticket/BulkOperation/JobIds', authorization({resource:"ticket", action:"read"}), ticketService.GetAllJobs);
+server.del('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization({resource:"ticket", action:"delete"}), ticketService.RemoveJob);
+server.put('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization({resource:"ticket", action:"write"}), ticketService.StartBulkOperationJob);
 
 
 
