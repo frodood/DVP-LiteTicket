@@ -20,6 +20,7 @@ var emailHandler = require('./EmailHandler.js');
 var dvpInteraction = require('../Common/DvpInteractions');
 var async = require('async');
 var OrganisationConfig = require('dvp-mongomodels/model/OrganisationConfig');
+var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var q = require('q');
 
 function numSort(a, b) {
@@ -63,7 +64,7 @@ function GenerateFilterRegex(value) {
     }
 }
 
-function UpdateDashboardChangeStatus(data, tResult) {
+function UpdateDashboardChangeStatus(data, tResult, callback) {
     var assignee = tResult.assignee ? tResult.assignee.username : "";
     var assignee_group = tResult.assignee_group ? tResult.assignee_group.name : "";
     data = data ? data : "";
@@ -153,26 +154,34 @@ function UpdateDashboardChangeStatus(data, tResult) {
         });
     });
 
-    async.parallelLimit(asyncPubTask, 2,function(result){
-        console.log("Message Publish success")
+    async.parallelLimit(asyncPubTask, 2,function(err, result) {
+        console.log("Message Publish success");
+        callback(err, result);
     });
 
 }
 
-function UpdateDashboardChangeAssignee(data, tResult) {
+function UpdateDashboardChangeAssignee(data, tResult, callback) {
     var assignee = tResult.assignee ? tResult.assignee.username : "";
-    //var assignee_group = tResult.assignee_group? tResult.assignee_group: "";
     data = data ? data : "";
 
-    //var param1 = util.format("via_%s.tags_%s.user_%s.ugroup_%s", tResult.channel, tResult.tags.join("-"), data, assignee_group);
-    //var param2 = util.format("user_%s#ugroup_%s");
-
     var pubMsgEUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End" + tResult.status, "user_" + data, "param2", "User" + tResult.id);
-    redisHandler.Publish("events", pubMsgEUser, function () {
-    });
-
     var pubMsgNUser = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "user_" + assignee, "param2", "User" + tResult.id);
-    redisHandler.Publish("events", pubMsgNUser, function () {
+
+    var asyncPubTask = [];
+    asyncPubTask = asyncPubTask.concat([function (callback) {
+        redisHandler.Publish("events", pubMsgEUser, function (err, result) {
+            callback(err, result);
+        });
+    },function (callback) {
+        redisHandler.Publish("events", pubMsgNUser, function (err, result) {
+            callback(err, result);
+        });
+    }]);
+
+    async.parallelLimit(asyncPubTask, 2,function(err, result) {
+        console.log("Message Publish success");
+        callback(err, result);
     });
 }
 
@@ -185,11 +194,23 @@ function UpdateDashboardChangeAssigneeGroup(data, tResult) {
     //var param2 = util.format("user_%s#ugroup_%s", assignee, data);
 
     var pubMsgEUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", "End" + tResult.status, "ugroup_" + data, "param2", "UGroup" + tResult.id);
-    redisHandler.Publish("events", pubMsgEUGroup, function () {
-    });
-
     var pubMsgNUGroup = util.format("EVENT:%d:%d:%s:%s:%s:%s:%s:%s:YYYY", tResult.tenant, tResult.company, "TICKET", "STATUS", tResult.status, "ugroup_" + assignee_group, "param2", "UGroup" + tResult.id);
-    redisHandler.Publish("events", pubMsgNUGroup, function () {
+
+
+    var asyncPubTask = [];
+    asyncPubTask = asyncPubTask.concat([function (callback) {
+        redisHandler.Publish("events", pubMsgEUGroup, function (err, result) {
+            callback(err, result);
+        });
+    },function (callback) {
+        redisHandler.Publish("events", pubMsgNUGroup, function (err, result) {
+            callback(err, result);
+        });
+    }]);
+
+    async.parallelLimit(asyncPubTask, 2,function(err, result) {
+        console.log("Message Publish success");
+        callback(err, result);
     });
 }
 
@@ -271,7 +292,9 @@ function ValidateUser(obj, trigger, newAssignee, callback) {
                     }
 
 
-                    UpdateDashboardChangeAssignee(previousAssignee, obj);
+                    UpdateDashboardChangeAssignee(previousAssignee, obj, function (err, result) {
+                        
+                    });
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No User found", false, undefined);
                     console.log(jsonString);
@@ -309,7 +332,9 @@ function ValidateGroup(obj, trigger, newGroup, callback) {
                     }
 
 
-                    UpdateDashboardChangeAssigneeGroup(previousGroup, obj);
+                    UpdateDashboardChangeAssigneeGroup(previousGroup, obj, function (err, result) {
+
+                    });
                 } else {
                     jsonString = messageFormatter.FormatMessage(err, "No UserGroup found", false, undefined);
                     console.log(jsonString);
@@ -510,20 +535,68 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
                         var ticketCopy = deepcopy(tResult);
 
+
+                        var preOperationsTasks = [];
+
+
                         if (triggerEvent === "change_assignee") {
-                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
-                            UpdateDashboardChangeAssignee(data, tResult);
+
+                            preOperationsTasks = preOperationsTasks.concat([
+                                function (callback) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
+
+                                        callback(err, result);
+                                    });
+                                },
+                                function (callback) {
+                                    UpdateDashboardChangeAssignee(data, ticketCopy, function (err, result) {
+                                        callback(err, result);
+                                    });
+                                }
+                            ]);
+
                         } else if (triggerEvent === "change_status") {
-                            if (tResult.assignee && tResult.status === "closed") {
-                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                            if (ticketCopy.assignee && ticketCopy.status === "closed") {
+                                preOperationsTasks.push(function (callback) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
+
+                                        callback(err, result);
+                                    });
+                                });
                             }
-                            //SlaWorker.UpdateSLAWhenStateChange(tResult);
-                            UpdateDashboardChangeStatus(data, tResult);
+
+                            preOperationsTasks = preOperationsTasks.concat([
+                                function (callback) {
+                                    SlaWorker.UpdateSLAWhenStateChange(ticketCopy, function (result) {
+
+                                        callback(result);
+                                    });
+                                },
+                                function (callback) {
+                                    UpdateDashboardChangeStatus(data, ticketCopy, function (err, result) {
+
+                                        callback(err, result);
+                                    });
+                                }
+                            ]);
+
                         } else if (triggerEvent === "change_assignee_groups") {
-                            UpdateDashboardChangeAssigneeGroup(data, tResult);
+
+                            preOperationsTasks.push(function (callback) {
+                                UpdateDashboardChangeAssigneeGroup(data, ticketCopy, function (err, result) {
+                                    callback(err, result);
+                                });
+                            });
+
                         } else if (triggerEvent === "add_comment") {
                             ticketCopy.last_comment = data;
                         }
+
+                        async.parallel(preOperationsTasks, function (err, results) {
+                            var message = results? JSON.stringify(results): undefined;
+                            console.log("ExecutePreOperationsTasks Success: "+message);
+                        });
+
 
                         function ExecuteSelectedTrigger(err, trResult) {
                             if (err) {
@@ -553,7 +626,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                                 default :
                                                                     tResult[action.field] = action.value;
                                                                     if (action.field === "status") {
-                                                                        UpdateDashboardChangeStatus(ticketCopy.status, tResult);
+                                                                        UpdateDashboardChangeStatus(ticketCopy.status, tResult, function (err, result) {
+
+                                                                        });
                                                                     }
                                                                     break;
                                                             }
@@ -737,16 +812,26 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
                         var ticketCopy = deepcopy(tResult.toJSON());
 
                         if (triggerEvent === "change_assignee") {
-                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
-                            UpdateDashboardChangeAssignee(data, tResult);
+                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id, function (err, result) {
+
+                            });
+                            UpdateDashboardChangeAssignee(data, tResult, function (err, result) {
+                            });
                         } else if (triggerEvent === "change_status") {
                             if (tResult.status === "closed") {
-                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id);
+                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id, function (err, result) {
+
+                                });
                             }
-                            SlaWorker.UpdateSLAWhenStateChange(tResult);
-                            UpdateDashboardChangeStatus(data, tResult);
+                            SlaWorker.UpdateSLAWhenStateChange(tResult, function (result) {
+
+                            });
+                            UpdateDashboardChangeStatus(data, tResult, function (err, result) {
+
+                            });
                         } else if (triggerEvent === "change_assignee_groups") {
-                            UpdateDashboardChangeAssigneeGroup(data, tResult);
+                            UpdateDashboardChangeAssigneeGroup(data, tResult, function (err, result) {
+                            });
                         } else if (triggerEvent === "add_comment") {
                             ticketCopy.last_comment = data;
                         }
@@ -776,6 +861,8 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
         callback(jsonString);
     }
 }
+
+
 
 var triggerConfig = [];
 module.exports.LoadOrgConfig = function () {
