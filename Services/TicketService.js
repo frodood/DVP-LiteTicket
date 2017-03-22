@@ -4323,6 +4323,7 @@ module.exports.GetJobId = function(req,res){
         company: company,
         tenant: tenant,
         JobType: req.body.JobType,
+        JobReference: req.body.JobReference,
         JobStatus: 'Created',
         JobCount: 0,
         CommonData: {},
@@ -4355,7 +4356,52 @@ module.exports.GetAllJobs = function(req,res){
             res.end(jsonString);
         }
         else {
-            var jsonString = messageFormatter.FormatMessage(undefined, "Find Bulk Operation Success", true, bulkOperations);
+            var bulkOperationData = bulkOperations.map(function (bulkObj) {
+                return {
+                    company: bulkObj.company,
+                    tenant: bulkObj.tenant,
+                    JobId: bulkObj._id.toString(),
+                    JobType: bulkObj.JobType,
+                    JobStatus: bulkObj.JobStatus,
+                    JobCount: bulkObj.JobCount,
+                    OperationCount: bulkObj.OperationData.length
+                };
+            });
+            var jsonString = messageFormatter.FormatMessage(undefined, "Find Bulk Operation Success", true, bulkOperationData);
+        }
+        res.end(jsonString);
+    });
+};
+
+module.exports.GetJobsByReference = function(req,res){
+    logger.info("DVP-LiteTicket.GetAllJobs Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+
+    BulkOperation.find({
+        company: company,
+        tenant: tenant,
+        JobReference: {$in: req.query.jobReference}
+    }).exec(function(err, bulkOperations) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Bulk Operations", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            var bulkOperationData = bulkOperations.map(function (bulkObj) {
+                return {
+                    company: bulkObj.company,
+                    tenant: bulkObj.tenant,
+                    JobId: bulkObj._id.toString(),
+                    JobType: bulkObj.JobType,
+                    JobStatus: bulkObj.JobStatus,
+                    JobReference: bulkObj.JobReference,
+                    JobCount: bulkObj.JobCount,
+                    OperationCount: bulkObj.OperationData.length
+                };
+            });
+            var jsonString = messageFormatter.FormatMessage(undefined, "Find Bulk Operation Success", true, bulkOperationData);
         }
         res.end(jsonString);
     });

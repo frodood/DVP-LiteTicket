@@ -341,7 +341,7 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
     }
 }
 
-function UpdateSLAWhenStateChange(ticket){
+function UpdateSLAWhenStateChange(ticket, callback){
     try{
         var internalAccessToken = util.format("%d:%d", ticket.tenant, ticket.company);
         var cronDeleteUrl = util.format("http://%s/DVP/API/%s/Cron/Reference", config.Services.scheduleWorkerHost, config.Services.scheduleWorkerVersion);
@@ -352,6 +352,7 @@ function UpdateSLAWhenStateChange(ticket){
             SLA.findOne({_id: ticket.sla}, function (err, sla) {
                 if (err) {
                     console.log("Get SLA Failed");
+                    callback("Get SLA Failed");
                 } else {
                     var criteriaToDelete = [];
                     switch (ticket.status){
@@ -390,13 +391,16 @@ function UpdateSLAWhenStateChange(ticket){
                     }
 
                     console.log("UpdateCron Success");
+                    callback("UpdateCron Success");
                 }
             });
         }else{
             console.log("No sal Found");
+            callback("No sal Found");
         }
     }catch(ex){
         console.log("UpdateCron Failed:: "+ ex);
+        callback("UpdateCron Failed");
     }
 }
 
