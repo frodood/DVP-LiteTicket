@@ -115,10 +115,10 @@ function RejectRequest(tenant, company, sessionId, reason, callback){
     });
 }
 
-function UpdateSlotState(company, tenant, previousUserId, newUserId, ticketId, callback){
+function UpdateSlotState(company, tenant, triggerType, previousUserId, newUserId, ticketId, callback){
     var internalAccessToken = util.format("%d:%d", tenant, company);
     var slotUpdateTask = [];
-    if(previousUserId){
+    if(triggerType === "change_assignee" && previousUserId){
         slotUpdateTask.push(function (slotUpdateTaskCallback) {
             try {
                 User.findOne({_id: previousUserId, company: company, tenant: tenant}, function (err, preUser) {

@@ -543,7 +543,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
 
                             preOperationsTasks = preOperationsTasks.concat([
                                 function (callback) {
-                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, triggerEvent, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
 
                                         callback(err, result);
                                     });
@@ -558,7 +558,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                         } else if (triggerEvent === "change_status") {
                             if (ticketCopy.assignee && ticketCopy.status === "closed") {
                                 preOperationsTasks.push(function (callback) {
-                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
+                                    PickAgent.UpdateSlotState(ticketCopy.company, ticketCopy.tenant, triggerEvent, data, ticketCopy.assignee, ticketCopy.id, function (err, result) {
 
                                         callback(err, result);
                                     });
@@ -812,14 +812,14 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
                         var ticketCopy = deepcopy(tResult.toJSON());
 
                         if (triggerEvent === "change_assignee") {
-                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id, function (err, result) {
+                            PickAgent.UpdateSlotState(tResult.company, tResult.tenant, triggerEvent, data, tResult.assignee, tResult.id, function (err, result) {
 
                             });
                             UpdateDashboardChangeAssignee(data, tResult, function (err, result) {
                             });
                         } else if (triggerEvent === "change_status") {
                             if (tResult.status === "closed") {
-                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, data, tResult.assignee, tResult.id, function (err, result) {
+                                PickAgent.UpdateSlotState(tResult.company, tResult.tenant, triggerEvent, data, tResult.assignee, tResult.id, function (err, result) {
 
                                 });
                             }
