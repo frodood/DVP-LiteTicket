@@ -4721,11 +4721,16 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
                         asyncTasks.push(function(callback){
 
                             ExecuteTriggerSpecificOperationsAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus, bulkObj.CommonData).then(function (val) {
-                                BulkOperation.update({
-                                    _id: bulkOperationId
-                                }, { $pull: { OperationData: ticket} }, {multi: true}, function (err, sticket) {
-                                });
-                                callback();
+                                try {
+                                    BulkOperation.update({
+                                        _id: bulkOperationId
+                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                                        callback();
+                                    });
+                                }catch(ex){
+
+                                    callback();
+                                }
                             }).catch(function () {
                                 callback();
                             });
@@ -4743,11 +4748,16 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
                         asyncTasks.push(function(callback){
 
                             ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
-                                BulkOperation.update({
-                                    _id: bulkOperationId
-                                }, { $pull: { OperationData: ticket} }, {multi: true}, function (err, sticket) {
-                                });
-                                callback();
+                                try {
+                                    BulkOperation.update({
+                                        _id: bulkOperationId
+                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                                        callback();
+                                    });
+                                }catch(ex){
+
+                                    callback();
+                                }
                             }).catch(function () {
                                 callback();
                             });
