@@ -21,6 +21,7 @@ var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConf
 
 var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
 var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
+var Notice = require('dvp-mongomodels/model/Notice').Notice;
 
 
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
