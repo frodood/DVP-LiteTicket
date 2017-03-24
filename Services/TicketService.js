@@ -4662,6 +4662,63 @@ module.exports.setEstimatedTime = function (req, res){
     });
 };
 
+module.exports.AddCommonAttachment = function (req, res) {
+    logger.info("DVP-LiteTicket.AddCommonAttachment Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+                User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+
+                        if (user) {
+
+                            var attachment = Attachment({
+                                file: req.body.file,
+                                url: req.body.url,
+                                type: req.body.type,
+                                size: req.body.size
+                            });
+
+                            attachment.save(function (err, obj) {
+                                if (err) {
+                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Save Attachment.", false, undefined);
+                                    res.end(jsonString);
+                                }
+                                else {
+                                    if (obj.id) {
+
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Attachment saved", true, obj);
+                                        res.end(jsonString);
+                                    }
+                                    else {
+                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                }
+
+                            });
+                        } else {
+
+                            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                            res.end(jsonString);
+                        }
+                    }
+                });
+
+
+
+
+};
+
+
+
+
+
 function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operations) {
     var deferred = q.defer();
 

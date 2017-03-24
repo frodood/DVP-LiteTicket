@@ -449,6 +449,9 @@ server.put('/DVP/API/:version/TicketPrefix/:prefix/Available',authorization({res
 
 
 
+///////// Attachments/////////////////////////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommonAttachment);
+
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
