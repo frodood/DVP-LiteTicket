@@ -4826,7 +4826,7 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
                 }
 
                 if(asyncTasks.length > 0) {
-                    async.parallel(asyncTasks, function () {
+                    async.parallelLimit(asyncTasks, 10, function () {
                         console.log('Finished');
                         BulkOperation.update({
                             _id: bulkOperationId
