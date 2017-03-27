@@ -4826,11 +4826,11 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
                 }
 
                 if(asyncTasks.length > 0) {
-                    async.parallelLimit(asyncTasks, 40, function () {
+                    async.parallelLimit(asyncTasks, 50, function () {
                         console.log('Finished');
                         BulkOperation.update({
                             _id: bulkOperationId
-                        }, { $set: { JobStatus: 'done'} }, {multi: true}, function (err, sticket) {
+                        }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
                             logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
                         });
 
