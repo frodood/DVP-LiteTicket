@@ -848,23 +848,17 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                 /*
                  UserGroup.find({"users": user.id}, function (error, groups) {
                  if(!error  && groups) {
-
                  var ids = [];
-
                  groups.forEach(function (item) {
                  console.log(item.id);
                  ids.push(item._id);
                  });
-
-
                  var obj = {
                  company: company,
                  tenant: tenant,
                  assignee_group: {$in: ids},
                  active: true,
-
                  };
-
                  var paramArr;
                  if (req.query.status) {
                  if (Array.isArray(req.query.status)) {
@@ -874,7 +868,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                  }
                  obj[status] = {$in: paramArr}
                  }
-
                  */
 
 
@@ -918,7 +911,6 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     });
 
                 /* }else{
-
                  jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
                  res.end(jsonString);
                  }
@@ -3405,7 +3397,6 @@ module.exports.AssignToGroup = function (req, res) {
                                     }
                                 });
                                 /*ticket.events.push(tEvent);
-
                                  ticket.assignee_group = group.id;
                                  ticket.assignee = undefined ;*/
 
@@ -3554,19 +3545,12 @@ module.exports.GetAllTicketsBy = function (req, res) {
      Ticket.find({company: company, tenant: tenant, active: true, requester: fieldValue}).skip(skip)
      .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
      if (err) {
-
      jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee_group Failed", false, undefined);
-
      } else {
-
      if (tickets) {
-
      jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee_group Successful", true, tickets);
-
      } else {
-
      jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
      }
      }
      res.end(jsonString);
@@ -4669,46 +4653,46 @@ module.exports.AddCommonAttachment = function (req, res) {
     var tenant = parseInt(req.user.tenant);
     var jsonString;
 
-                User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+        } else {
+
+            if (user) {
+
+                var attachment = Attachment({
+                    file: req.body.file,
+                    url: req.body.url,
+                    type: req.body.type,
+                    size: req.body.size
+                });
+
+                attachment.save(function (err, obj) {
                     if (err) {
-                        jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail To Save Attachment.", false, undefined);
                         res.end(jsonString);
-                    } else {
+                    }
+                    else {
+                        if (obj.id) {
 
-                        if (user) {
-
-                            var attachment = Attachment({
-                                file: req.body.file,
-                                url: req.body.url,
-                                type: req.body.type,
-                                size: req.body.size
-                            });
-
-                            attachment.save(function (err, obj) {
-                                if (err) {
-                                    jsonString = messageFormatter.FormatMessage(err, "Fail To Save Attachment.", false, undefined);
-                                    res.end(jsonString);
-                                }
-                                else {
-                                    if (obj.id) {
-
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Attachment saved", true, obj);
-                                        res.end(jsonString);
-                                    }
-                                    else {
-                                        jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
-                                        res.end(jsonString);
-                                    }
-                                }
-
-                            });
-                        } else {
-
-                            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Attachment saved", true, obj);
+                            res.end(jsonString);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Save Attachment.", false, undefined);
                             res.end(jsonString);
                         }
                     }
+
                 });
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
 
 
 
@@ -4801,41 +4785,74 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
                     logger.info("DVP-LiteTicket.ExecuteTrigger Internal method.");
                     jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                    bulkObj.OperationData.forEach(function (ticket) {
-                        asyncTasks.push(function(callback){
+                    //bulkObj.OperationData.forEach(function (ticket) {
+                    //asyncTasks.push(function(callback){
+                    //
+                    //    ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
+                    //        try {
+                    //            BulkOperation.update({
+                    //                _id: bulkOperationId
+                    //            }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                    //                callback();
+                    //            });
+                    //        }catch(ex){
+                    //
+                    //            callback();
+                    //        }
+                    //    }).catch(function () {
+                    //        callback();
+                    //    });
+                    //
+                    //
+                    //});
+                    //});
 
-                            ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
-                                try {
-                                    BulkOperation.update({
-                                        _id: bulkOperationId
-                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                                        callback();
-                                    });
-                                }catch(ex){
+                    function BatchUploader(array){
+                        var index = 0;
 
-                                    callback();
+
+                        return new Promise(function(resolve, reject) {
+
+                            function next() {
+                                if (index < array.length) {
+                                    //BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
+                                    //    //callback();
+                                    //});
+                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, next).catch(next);
+                                } else {
+                                    resolve();
                                 }
-                            }).catch(function () {
-                                callback();
-                            });
-
-
+                            }
+                            next();
                         });
-                    });
+                    }
 
-                }
+                    BatchUploader(bulkObj.OperationData).then(function () {
 
-                if(asyncTasks.length > 0) {
-                    async.parallelLimit(asyncTasks, 10, function () {
                         console.log('Finished');
+
                         BulkOperation.update({
                             _id: bulkOperationId
                         }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
                             logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
                         });
+                    }, function (reason) {
 
                     });
+
                 }
+
+                //if(asyncTasks.length > 0) {
+                //    async.parallelLimit(asyncTasks, 10, function () {
+                //        console.log('Finished');
+                //        BulkOperation.update({
+                //            _id: bulkOperationId
+                //        }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
+                //            logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
+                //        });
+                //
+                //    });
+                //}
 
 
 
@@ -7144,22 +7161,15 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 }
 
 /*module.exports.GetTicketDetailReportDownloadNew = function(req, res){
-
  var cnt = 0;
-
-
  logger.info("DVP-LiteTicket.GetTicketDetailReportDownload Internal method ");
  var company = parseInt(req.user.company);
  var tenant = parseInt(req.user.tenant);
  var jsonString;
-
  var ticketListForCSV = [];
-
  if(req.query && req.query['from']&& req.query['to']) {
  var from = req.query['from'];
  var to = req.query['to'];
-
-
  try {
  from = new Date(from);
  to = new Date(to);
@@ -7168,36 +7178,22 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  res.end(jsonString);
  return;
  }
-
  if(from > to){
-
  jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
  res.end(jsonString);
  return;
-
  }
-
  var tempQuery = {company: company, tenant: tenant};
-
  tempQuery['created_at'] = { $gte: from, $lte: to };
-
  var fromDate = moment(from).format("YYYY-MM-DD");
  var toDate = moment(to).format("YYYY-MM-DD");
-
  var fileName = 'TICKET_' + fromDate + '_' + toDate;
-
  fileName = fileName.replace(/:/g, "-") + '.csv';
-
  var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
  var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
-
-
  if(req.body){
-
  var tz = req.body.tz;
-
  var tagCount = parseInt(req.body.tagCount);
-
  if(tagCount)
  {
  for (let j = 0; j < tagCount; j++)
@@ -7206,50 +7202,38 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  tagOrder.push('Tag' + (j + 1));
  }
  }
-
  if(req.body.tag)
  {
  tempQuery.isolated_tags = {$in: [req.body.tag]};
  }
-
-
  if(req.body.channel){
  tempQuery.channel =  req.body.channel;
  }
-
  if(req.body.priority){
  tempQuery.priority = req.body.priority;
  }
-
  if(req.body.type){
  tempQuery.type = req.body.type;
  }
-
  if(req.body.requester){
  tempQuery.requester = req.body.requester;
  }
-
  if(req.body.submitter){
  tempQuery.submitter = req.body.submitter;
  }
-
  if(req.body.assignee){
  tempQuery.assignee = req.body.assignee;
  }
-
  if(req.body.status){
  tempQuery.status = req.body.status;
  }
-
  if(req.body.type){
  tempQuery.type = req.body.type;
  }
-
  if(req.body.sla_violated){
  tempQuery.ticket_matrix.type = req.body.sla_violated;
  }
  }
-
  externalApi.RemoteGetFileMetadata(null, fileName, company, tenant, function(err, fileData)
  {
  if(err)
@@ -7281,13 +7265,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  else
  {
  var uniqueId = fileResResp;
-
  jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
  res.end(jsonString);
-
-
-
-
  co(function*()
  {
  const cursor = Ticket.find(tempQuery)
@@ -7328,9 +7307,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  type: ticketInfo.type,
  slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
  description: ticketInfo.description
-
  };
-
  if(ticketInfo.requester && ticketInfo.requester.address)
  {
  if(ticketInfo.requester.address.number)
@@ -7354,9 +7331,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
  }
  }
-
  var tempComments = '';
-
  if(ticketInfo.comments && ticketInfo.comments.length > 0)
  {
  ticketInfo.comments.forEach(function(comment){
@@ -7366,7 +7341,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tempComments = tempComments + ',' + comment.body;
  }
-
  }
  else
  {
@@ -7374,26 +7348,19 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tempComments = comment.body;
  }
-
  }
-
  })
  }
-
  ticketInfoTemp.comments = tempComments;
-
-
  for(let i=0; i < tagCount; i++)
  {
  var tagName = 'Tag' + (i + 1);
  ticketInfoTemp[tagName] = '';
-
  if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
  {
  ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
  }
  }
-
  if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
  {
  ticketInfo.form_submission.fields.forEach(function(field)
@@ -7405,31 +7372,23 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tagHeaders.push(tempFieldName);
  tagOrder.push(tempFieldName);
-
  }
-
  ticketInfoTemp[tempFieldName] = field.value;
-
  }
  })
  }
-
  ticketListForCSV.push(ticketInfoTemp);
  }
  }
-
  if(ticketListForCSV.length > 0)
  {
  var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
-
  fs.writeFile(fileName, csvFileData, function(err)
  {
  if (err)
  {
  externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
  });
-
  logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
  }
  else
@@ -7440,7 +7399,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  if(!err && uploadResp)
  {
  console.log('File Upload success');
-
  }
  else
  {
@@ -7451,19 +7409,12 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  }
  });
  }
-
  });
-
  }
  });
  }
-
-
  });
-
-
  }
-
  });
  }
  })
@@ -7480,10 +7431,8 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  else
  {
  var uniqueId = fileResResp;
-
  jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
  res.end(jsonString);
-
  var stream2 = Ticket.find(tempQuery)
  .populate('assignee', 'name avatar')
  .populate('assignee_group', 'name')
@@ -7494,7 +7443,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  .populate( {path: 'form_submission',populate : {path: 'form'}})
  .maxTime(300000)
  .cursor();
-
  stream2.on('data', function (ticketInfo)
  {
  console.log(cnt++);
@@ -7519,9 +7467,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  type: ticketInfo.type,
  slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
  description: ticketInfo.description
-
  };
-
  if(ticketInfo.requester && ticketInfo.requester.address)
  {
  if(ticketInfo.requester.address.number)
@@ -7545,9 +7491,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
  }
  }
-
  var tempComments = '';
-
  if(ticketInfo.comments && ticketInfo.comments.length > 0)
  {
  ticketInfo.comments.forEach(function(comment){
@@ -7557,7 +7501,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tempComments = tempComments + ',' + comment.body;
  }
-
  }
  else
  {
@@ -7565,28 +7508,19 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tempComments = comment.body;
  }
-
  }
-
  })
  }
-
  ticketInfoTemp.comments = tempComments;
-
  for(i=0; i < tagCount; i++)
  {
  var tagName = 'Tag' + (i + 1);
  ticketInfoTemp[tagName] = '';
-
  if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
  {
  ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
  }
  }
-
-
-
-
  if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
  {
  ticketInfo.form_submission.fields.forEach(function(field)
@@ -7598,35 +7532,25 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  {
  tagHeaders.push(tempFieldName);
  tagOrder.push(tempFieldName);
-
  }
-
  ticketInfoTemp[tempFieldName] = field.value;
-
  }
  })
  }
-
  ticketListForCSV.push(ticketInfoTemp);
-
-
  }).on('error', function(err1)
  {
  externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
  });
  }).on('close', function()
  {
  var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
-
  fs.writeFile(fileName, csvFileData, function(err)
  {
  if (err)
  {
  externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
  });
-
  logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
  }
  else
@@ -7636,7 +7560,6 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  fs.unlink(fileName);
  if(!err && uploadResp)
  {
-
  }
  else
  {
@@ -7647,35 +7570,21 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
  }
  });
  }
-
  });
-
  }
  });
  })
-
-
  }
-
  });
  }
  }
-
  });
-
-
-
  }
  else
  {
-
  jsonString = messageFormatter.FormatMessage(new Error('insufficient query parameters'), "insufficient query parameters", false, null);
  res.end(jsonString);
  }
-
-
-
-
  }*/
 
 module.exports.GetTicketDetailReportAll = function(req, res){
