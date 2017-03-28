@@ -4801,74 +4801,41 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
                     logger.info("DVP-LiteTicket.ExecuteTrigger Internal method.");
                     jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                    //bulkObj.OperationData.forEach(function (ticket) {
-                        //asyncTasks.push(function(callback){
-                        //
-                        //    ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
-                        //        try {
-                        //            BulkOperation.update({
-                        //                _id: bulkOperationId
-                        //            }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                        //                callback();
-                        //            });
-                        //        }catch(ex){
-                        //
-                        //            callback();
-                        //        }
-                        //    }).catch(function () {
-                        //        callback();
-                        //    });
-                        //
-                        //
-                        //});
-                    //});
+                    bulkObj.OperationData.forEach(function (ticket) {
+                        asyncTasks.push(function(callback){
 
-                    function BatchUploader(array){
-                        var index = 0;
-
-
-                        return new Promise(function(resolve, reject) {
-
-                            function next() {
-                                if (index < array.length) {
-                                    BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
-                                        //callback();
+                            ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
+                                try {
+                                    BulkOperation.update({
+                                        _id: bulkOperationId
+                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                                        callback();
                                     });
-                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, reject).catch(reject);
-                                } else {
-                                    resolve();
+                                }catch(ex){
+
+                                    callback();
                                 }
-                            }
-                            next();
+                            }).catch(function () {
+                                callback();
+                            });
+
+
                         });
-                    }
+                    });
 
-                    BatchUploader(bulkObj.OperationData).then(function () {
+                }
 
+                if(asyncTasks.length > 0) {
+                    async.parallelLimit(asyncTasks, 10, function () {
                         console.log('Finished');
-
                         BulkOperation.update({
                             _id: bulkOperationId
                         }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
                             logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
                         });
-                    }, function (reason) {
 
                     });
-
                 }
-
-                //if(asyncTasks.length > 0) {
-                //    async.parallelLimit(asyncTasks, 10, function () {
-                //        console.log('Finished');
-                //        BulkOperation.update({
-                //            _id: bulkOperationId
-                //        }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
-                //            logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
-                //        });
-                //
-                //    });
-                //}
 
 
 
