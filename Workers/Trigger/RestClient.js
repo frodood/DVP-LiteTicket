@@ -18,13 +18,17 @@ var DoPost = function (companyInfo, serviceurl, postData, callback) {
         },
         body: jsonStr
     };
-    request.post(options, function optionalCallback(err, httpResponse, body) {
-        if (err) {
-            console.log('upload failed:', err);
-        }
-        console.log('Server returned: %j', body);
-        callback(err, httpResponse, body);
-    });
+    try {
+        request.post(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
 };
 
 var DoPut = function (companyInfo, serviceurl, postData, callback) {
@@ -40,17 +44,21 @@ var DoPut = function (companyInfo, serviceurl, postData, callback) {
         },
         body: jsonStr
     };
-    request.put(options, function optionalCallback(err, httpResponse, body) {
-        if (err) {
-            console.log('upload failed:', err);
-        }
-        console.log('Server returned: %j', body);
-        callback(err, httpResponse, body);
-    });
+    try {
+        request.put(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
 };
 
 var DoGet = function (companyInfo, serviceurl, callback) {
-   var accessToken = util.format("bearer %s", config.Services.accessToken);
+    var accessToken = util.format("bearer %s", config.Services.accessToken);
     console.log('RouteRequest:: %s', serviceurl);
     var options = {
         url: serviceurl,
@@ -61,13 +69,17 @@ var DoGet = function (companyInfo, serviceurl, callback) {
             'companyinfo': companyInfo
         }
     };
-    request(options, function optionalCallback(err, httpResponse, body) {
-        if (err) {
-            console.log('upload failed:', err);
-        }
-        console.log('Server returned: %j', body);
-        callback(err, httpResponse, body);
-    });
+    try {
+        request(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
 };
 
 var DoDelete = function (companyInfo, serviceurl, callback) {
@@ -82,36 +94,44 @@ var DoDelete = function (companyInfo, serviceurl, callback) {
             'companyinfo': companyInfo
         }
     };
-    request.delete(options, function optionalCallback(err, httpResponse, body) {
-        if (err) {
-            console.log('upload failed:', err);
-        }
-        console.log('Server returned: %j', body);
-        callback(err, httpResponse, body);
-    });
+    try {
+        request.delete(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
 };
 
 var DoPostNotification = function (companyInfo, serviceurl, postData, callback) {
-    var jsonStr = JSON.stringify(postData);
+    //var jsonStr = JSON.stringify(postData);
     var accessToken = util.format("bearer %s", config.Services.accessToken);
     var options = {
         url: serviceurl,
         method: 'POST',
         headers: {
-            'content-type': 'application/json',
+
             'authorization': accessToken,
             'companyinfo': companyInfo,
             'eventname': 'message'
         },
-        body: jsonStr
+        json: postData
     };
-    request.post(options, function optionalCallback(err, httpResponse, body) {
-        if (err) {
-            console.log('upload failed:', err);
-        }
-        console.log('Server returned: %j', body);
-        callback(err, httpResponse, body);
-    });
+    try {
+        request.post(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
 };
 
 module.exports.DoPost = DoPost;

@@ -11,6 +11,7 @@ var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var User = require('dvp-mongomodels/model/User');
 var TriggerWorker = require('./TriggerWorker.js');
 var util = require('util');
+var async = require('async');
 
 function RegisterWithArds(callback){
     try {
@@ -114,59 +115,86 @@ function RejectRequest(tenant, company, sessionId, reason, callback){
     });
 }
 
-function UpdateSlotState(company, tenant, previousUserId, newUserId, ticketId){
+function UpdateSlotState(company, tenant, triggerType, previousUserId, newUserId, ticketId, callback){
     var internalAccessToken = util.format("%d:%d", tenant, company);
-    if(previousUserId){
-        User.findOne({_id: previousUserId, company: company, tenant: tenant}, function (err, preUser) {
-            if (err) {
-                console.log("Get preUser Failed");
-            } else {
-                if(preUser && preUser.resourceid){
-                    var preUserData = {RequestType:"TICKET", State:"Available", Reason:"", OtherInfo:""};
-                    var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
-                    if (validator.isIP(config.Services.ardsServiceHost)) {
-                        preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
+    var slotUpdateTask = [];
+    if(triggerType === "change_assignee" && previousUserId){
+        slotUpdateTask.push(function (slotUpdateTaskCallback) {
+            try {
+                User.findOne({_id: previousUserId, company: company, tenant: tenant}, function (err, preUser) {
+                    if (err) {
+                        console.log("Get preUser Failed");
+                        slotUpdateTaskCallback(err, "Get preUser Failed");
+                    } else {
+                        if (preUser && preUser.resourceid) {
+                            var preUserData = {RequestType: "TICKET", State: "Available", Reason: "", OtherInfo: ""};
+                            var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
+                            if (validator.isIP(config.Services.ardsServiceHost)) {
+                                preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, preUser.resourceid, ticketId);
+                            }
+                            restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
+                                if (err) {
+                                    console.log(err);
+                                    slotUpdateTaskCallback(err, "Update Slot State Failed");
+                                }
+                                else {
+                                    console.log("Update preUser Success");
+                                    slotUpdateTaskCallback(undefined, "Update preUser Success");
+                                }
+                            });
+                        } else {
+                            console.log("preUser Not match with resource");
+                            slotUpdateTaskCallback(undefined, "preUser Not match with resource");
+                        }
                     }
-                    restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
-                        if (err) {
-                            console.log(err);
-                        }
-                        else {
-                            console.log("Update preUser Success");
-                        }
-                    });
-                }else{
-                    console.log("preUser Not match with resource");
-                }
+                });
+            }catch(ex){
+                slotUpdateTaskCallback(ex, "Update Slot State Failed");
             }
         });
+
     }
 
     if(newUserId){
-        User.findOne({_id: newUserId, company: company, tenant: tenant}, function (err, newUser) {
-            if (err) {
-                console.log("Get preUser Failed");
-            } else {
-                if(newUser && newUser.resourceid){
-                    var preUserData = {RequestType:"TICKET", State:"Connected", Reason:"", OtherInfo:""};
-                    var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
-                    if (validator.isIP(config.Services.ardsServiceHost)) {
-                        preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
+        slotUpdateTask.push(function (slotUpdateTaskCallback) {
+            try {
+                User.findOne({_id: newUserId, company: company, tenant: tenant}, function (err, newUser) {
+                    if (err) {
+                        console.log("Get preUser Failed");
+                        slotUpdateTaskCallback(err, "Get preUser Failed");
+                    } else {
+                        if (newUser && newUser.resourceid) {
+                            var preUserData = {RequestType: "TICKET", State: "Connected", Reason: "", OtherInfo: ""};
+                            var preUserUrl = util.format("http://%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
+                            if (validator.isIP(config.Services.ardsServiceHost)) {
+                                preUserUrl = util.format("http://%s:%s/DVP/API/%s/ARDS/resource/%s/concurrencyslot/session/%s", config.Services.ardsServiceHost, config.Services.ardsServicePort, config.Services.ardsServiceVersion, newUser.resourceid, ticketId);
+                            }
+                            restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
+                                if (err) {
+                                    console.log(err);
+                                    slotUpdateTaskCallback(err, "Update Slot State Failed");
+                                }
+                                else {
+                                    console.log("Update newUser Success");
+                                    slotUpdateTaskCallback(undefined, "Update newUser Success");
+                                }
+                            });
+                        } else {
+                            console.log("newUser Not match with resource");
+                            slotUpdateTaskCallback(undefined, "newUser Not match with resource");
+                        }
                     }
-                    restClientHandler.DoPut(internalAccessToken, preUserUrl, preUserData, function (err, res1, result) {
-                        if (err) {
-                            console.log(err);
-                        }
-                        else {
-                            console.log("Update newUser Success");
-                        }
-                    });
-                }else{
-                    console.log("newUser Not match with resource");
-                }
+                });
+            }catch(ex){
+                slotUpdateTaskCallback(ex, "Update Slot State Failed");
             }
         });
+
     }
+
+    async.parallel(slotUpdateTask, function (err, result) {
+        callback(err, result);
+    });
 }
 
 function ArdsCallback(req, res){

@@ -84,13 +84,13 @@ module.exports = {
       "clusterconfigserviceHost": "clusterconfig.app.veery.cloud",
       "clusterconfigservicePort": "8831",
       "clusterconfigserviceVersion": "1.0.0.0",
-      "ardsServiceHost": "127.0.0.1",
+      "ardsServiceHost": "ardsliteservice.app.veery.cloud",
       "ardsServicePort": "8828",
       "ardsServiceVersion": "1.0.0.0",
       "notificationServiceHost": "notificationservice.app.veery.cloud",
       "notificationServicePort": "8089",
       "notificationServiceVersion": "1.0.0.0",
-      "scheduleWorkerHost": "192.168.0.67",
+      "scheduleWorkerHost": "scheduleworker.app.veery.cloud",
       "scheduleWorkerPort": "8080",
       "scheduleWorkerVersion": "1.0.0.0",
       "interactionServiceHost": "interactions.app.veery.cloud",
@@ -101,7 +101,7 @@ module.exports = {
       "fileServiceVersion":"1.0.0.0"
     },
 
-  "Token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdWtpdGhhIiwianRpIjoiMTdmZTE4M2QtM2QyNC00NjQwLTg1NTgtNWFkNGQ5YzVlMzE1Iiwic3ViIjoiNTZhOWU3NTlmYjA3MTkwN2EwMDAwMDAxMjVkOWU4MGI1YzdjNGY5ODQ2NmY5MjExNzk2ZWJmNDMiLCJleHAiOjE4OTMzMDI3NTMsInRlbmFudCI6LTEsImNvbXBhbnkiOi0xLCJzY29wZSI6W3sicmVzb3VyY2UiOiJhbGwiLCJhY3Rpb25zIjoiYWxsIn1dLCJpYXQiOjE0NjEyOTkxNTN9.YiocvxO_cVDzH5r67-ulcDdBkjjJJDir2AeSe3jGYeA"
+  "Token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdWtpdGhhIiwianRpIjoiYWEzOGRmZWYtNDFhOC00MWUyLTgwMzktOTJjZTY0YjM4ZDFmIiwic3ViIjoiNTZhOWU3NTlmYjA3MTkwN2EwMDAwMDAxMjVkOWU4MGI1YzdjNGY5ODQ2NmY5MjExNzk2ZWJmNDMiLCJleHAiOjE5MDIzODExMTgsInRlbmFudCI6LTEsImNvbXBhbnkiOi0xLCJzY29wZSI6W3sicmVzb3VyY2UiOiJhbGwiLCJhY3Rpb25zIjoiYWxsIn1dLCJpYXQiOjE0NzAzODExMTh9.Gmlu00Uj66Fzts-w6qEwNUz46XYGzE8wHUhAJOFtiRo"
 
 
 

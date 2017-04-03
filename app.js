@@ -12,6 +12,7 @@ var timerService = require('./Services/TimerService.js');
 var slaService= require('./Services/SLAService.js');
 var triggrService = require('./Services/TicketTriggerService.js');
 var ticketViewService = require('./Services/TicketViewService');
+var triggerWorker = require('./Workers/Trigger/TriggerWorker');
 var formMaster = require('./Services/FormService');
 var util = require('util');
 var port = config.Host.port || 3000;
@@ -204,6 +205,11 @@ server.post('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization
 server.del('/DVP/API/:version/Ticket/:id/RelatedTicket/:ticketid',authorization({resource:"ticket", action:"delete"}), ticketService.DeAttachTicket);
 server.put('/DVP/API/:version/Ticket/:id/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.AppendEngagement);
 server.get('/DVP/API/:version/Ticket/Engagement/:EngagementId',authorization({resource:"ticket", action:"write"}), ticketService.GetTicketsByEngagementId);
+server.post('/DVP/API/:version/Ticket/BulkOperation/JobId', authorization({resource:"ticket", action:"write"}), ticketService.GetJobId);
+server.get('/DVP/API/:version/Ticket/BulkOperation/JobIds', authorization({resource:"ticket", action:"read"}), ticketService.GetAllJobs);
+server.del('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization({resource:"ticket", action:"write"}), ticketService.RemoveJob);
+server.put('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization({resource:"ticket", action:"write"}), ticketService.StartBulkOperationJob);
+server.get('/DVP/API/:version/Ticket/BulkOperation/JobIds/jobReference', authorization({resource:"ticket", action:"read"}), ticketService.GetJobsByReference);
 
 
 
@@ -329,7 +335,10 @@ server.del('/DVP/API/:version/Trigger/:id/Action/:actionid', authorization({reso
 server.put('/DVP/API/:version/Trigger/:id/Operation', authorization({resource:"triggers", action:"write"}), triggrService.AddOperations);
 server.get('/DVP/API/:version/Trigger/:id/Operations', authorization({resource:"triggers", action:"read"}), triggrService.GetOperations);
 server.del('/DVP/API/:version/Trigger/:id/Operation/:operationid', authorization({resource:"triggers", action:"delete"}), triggrService.RemoveOperations);
-
+server.post('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.CreateTriggerConfiguration);
+server.get('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.GetTriggerConfiguration);
+server.put('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.UpdateTriggerConfiguration);
+server.del('/DVP/API/:version/Trigger/Organisation/config', authorization({resource:"triggers", action:"write"}), triggrService.DeleteTriggerConfiguration);
 
 
 /////////////////////////////////////////////////////////////matrix///////////////////////////////////////////////////////////////////////////////////
@@ -440,10 +449,14 @@ server.put('/DVP/API/:version/TicketPrefix/:prefix/Available',authorization({res
 
 
 
+///////// Attachments/////////////////////////////////////////////////////////////////////////////////////////////////////
+server.post('/DVP/API/:version/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommonAttachment);
+
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){
         logger.info("DVP-LiteTicket.RegisterWithArds:: %t", isSuccess);
     });
+    triggerWorker.LoadOrgConfig();
     logger.info("DVP-LiteTicket.main Server %s listening at %s", server.name, server.url);
 });
 
