@@ -6038,7 +6038,9 @@ var GetNextAvailableStatusList = function (tenant, company, type, currentStatus,
                 if (stf) {
                     for (var i = 0; i < stf.flow_connections.length; i++) {
                         if (stf.flow_connections[i].source.status_node === currentStatus) {
-                            nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
+                            if(nextAvailableStatus.indexOf(stf.flow_connections[i].targets.status_node) === -1) {
+                                nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
+                            }
                         }
                     }
                     jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
