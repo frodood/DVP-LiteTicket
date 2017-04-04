@@ -167,6 +167,7 @@ server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization
 server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
 server.get('/DVP/API/:version/TicketSummery/Requester/:requester', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketSummeryByRequester);
 server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyGroupTickets);
+server.get('/DVP/API/:version/MyAllGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetMyGroupTicketList);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
 server.get('/DVP/API/:version/TicketsByIds', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketByIds);
