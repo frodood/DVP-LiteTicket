@@ -269,6 +269,10 @@ function ExecuteOperations(ticketData, operationToExecute) {
 }
 
 function ValidateUser(obj, trigger, newAssignee, callback) {
+    
+    console.log(obj);
+    console.log(newAssignee);
+    
     try {
         User.findOne({_id: newAssignee}, function (err, uResult) {
             if (err) {
