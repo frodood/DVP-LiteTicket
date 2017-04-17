@@ -2,11 +2,14 @@
  * Created by Heshan.i on 7/20/2016.
  */
 var User = require('dvp-mongomodels/model/User');
-var UserGroup = require('dvp-mongomodels/model/UserGroup');
+var UserGroup = require('dvp-mongomodels/model/UserGroup').UserGroup;
 var validator = require('validator');
 var config = require('config');
 var restClientHandler = require('./RestClient.js');
 var util = require('util');
+var dust = require('dustjs-linkedin');
+var uuid =require('node-uuid');
+
 
 function InitiateNotification(internalAccessToken, notificationData){
     var initUrl = util.format("http://%s/DVP/API/%s/NotificationService/Notification/initiate", config.Services.notificationServiceHost, config.Services.notificationServiceVersion);
@@ -47,7 +50,7 @@ function SendNotificationToAssignee(company, tenant, internalAccessToken, userId
                 var nData = {
                     From: "",
                     To: user.username,
-                    Message: JSON.stringify(message),
+                    Message: message,
                     Direction: "STATELESS",
                     CallbackURL: "",
                     Ref: ""
@@ -68,8 +71,28 @@ function SendNotificationToAssigneeGroup(company, tenant, internalAccessToken, g
         } else {
             if(userGroup) {
                 var nData = {
-                    Message: JSON.stringify(message)
+                    Message: message
                 };
+
+
+                User.find({company: company, tenant: tenant, group: groupId},function (err, users) {
+
+                    if(Array.isArray(users) && users.length >0) {
+
+                        var users =  users.map(function(item){
+                            return  item.username
+                        });
+                        nData.clients = users;
+                        BroadcastNotification(internalAccessToken,nData);
+
+                    }else{
+                        console.log("UserGroup Data empty");
+                    }
+
+                });
+
+                /*
+
                 if(userGroup.users && userGroup.users.length >0) {
                     var count = 0;
                     var clientList = [];
@@ -91,6 +114,8 @@ function SendNotificationToAssigneeGroup(company, tenant, internalAccessToken, g
                         });
                     }
                 }
+
+                */
             }else{
                 console.log("UserGroup Data empty");
             }
@@ -101,7 +126,7 @@ function SendNotificationToAssigneeGroup(company, tenant, internalAccessToken, g
 
 function SendNotificationToCollaborators(company, tenant, internalAccessToken, collaboratorList, message){
     var nData = {
-        Message: JSON.stringify(message)
+        Message: message
     };
     if(collaboratorList && collaboratorList.length > 0) {
         var count = 0;
@@ -132,20 +157,34 @@ function SendNotificationToCollaborators(company, tenant, internalAccessToken, c
 function SendNotification(ticket, field, value){
     try{
         var internalAccessToken = util.format("%d:%d", ticket.tenant, ticket.company);
-        var messageObj = {TicketId: ticket.id, Data: value};
-        switch (field){
-            case "assignee":
-                SendNotificationToAssignee(ticket.company, ticket.tenant, internalAccessToken, ticket.assignee, messageObj);
-                 break;
-            case "assignee_group":
-                SendNotificationToAssigneeGroup(ticket.company, ticket.tenant, internalAccessToken, ticket.assignee_group, messageObj);
-                break;
-            case "collaborators":
-                SendNotificationToCollaborators(ticket.company, ticket.tenant, internalAccessToken, ticket.collaborators, messageObj);
-                break;
-            default :
-                break;
-        }
+        var msg = value;
+
+        var compileid = uuid.v4();
+        var compiled = dust.compile(value, compileid);
+        dust.loadSource(compiled);
+        dust.render(compileid, ticket, function(errRendered, outRendered) {
+            if (errRendered) {
+                logger.error("Error in rendering " + errRendered);
+            }
+            else {
+                msg = outRendered;
+            }
+
+            switch (field){
+                case "assignee":
+                    SendNotificationToAssignee(ticket.company, ticket.tenant, internalAccessToken, ticket.assignee, msg);
+                    break;
+                case "assignee_group":
+                    SendNotificationToAssigneeGroup(ticket.company, ticket.tenant, internalAccessToken, ticket.assignee_group, msg);
+                    break;
+                case "collaborators":
+                    SendNotificationToCollaborators(ticket.company, ticket.tenant, internalAccessToken, ticket.collaborators, msg);
+                    break;
+                default :
+                    break;
+            }
+        });
+
     }catch(ex){
         console.log("Send Notification failed::", ex);
     }
