@@ -92,9 +92,77 @@ queueConnection.on('error', function (error) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+SetRelatedSlots = function (req,ticketId,tags) {
+
+   
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    var slotArray=[];
+
+    FileSlotArray.find({
+        company: company,
+        tenant: tenant,
+        tags: {$in:tags}
+
+    }).populate('slots').exec(function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+
+        }
+        else {
+            if (respFSlot) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+
+                respFSlot.forEach(function (item) {
+                    item.slots.forEach(function (slot) {
+                        if(slotArray.indexOf(slot)==-1)
+                        {
+                            var obj=
+                            {
+                                slot: {name: slot.name,fileType: slot.fileType},
+                                attachment: null
+                            }
+
+                            slotArray.push(obj);
+                        }
+                    });
+
+
+                });
+
+                Ticket.findOneAndUpdate({_id: ticketId},{slot_attachment:slotArray} ,function (err, tResult) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket failed", false, undefined);
+
+                    } else {
+                        if (tResult) {
+                            jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket success", true, slotArray);
+                        } else {
+                            jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket failed", false, undefined);
+                        }
+                    }
+                    console.log(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+
+            }
+        }
+
+
+    });
+
+};
+
+
 module.exports.CreateTicket = function (req, res) {
 
     logger.info("DVP-LiteTicket.CreateTicket Internal method ");
+
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -230,7 +298,8 @@ module.exports.CreateTicket = function (req, res) {
                         if (err) {
                             jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         }
-                        else {
+                        else
+                        {
 
                             var secondsDiff = moment().diff(dateNow, 'seconds');
                             console.log("Ticket save time --- ->"+secondsDiff);
@@ -245,6 +314,7 @@ module.exports.CreateTicket = function (req, res) {
                                 ExecuteTrigger(client.id, "change_status", "new");
                                 ExecuteCase(client);
                                 AddUserRecentTicket(company, tenant,user.id,client.id);
+                                SetRelatedSlots(req,client.id,client.isolated_tags);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
                             }
@@ -285,6 +355,14 @@ module.exports.CreateTicket = function (req, res) {
 
                             //////////////////////////////////////////////////////////////////////////////////////////////////////
                             ExecuteSla(client.id, undefined);
+
+
+
+
+
+
+
+
                         }
                         res.end(jsonString);
                     });
