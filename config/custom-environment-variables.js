@@ -40,7 +40,10 @@ module.exports = {
 
     "Mongo":
     {
-        "ip":"SYS_MONGO_HOST",
+        "ip":{
+                "__name":"SYS_MONGO_HOST",
+                "__format":"json"
+             }
         "port":"SYS_MONGO_PORT",
         "dbname":"SYS_MONGO_DB",
         "password":"SYS_MONGO_PASSWORD",
