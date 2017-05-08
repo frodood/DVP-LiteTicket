@@ -77,11 +77,14 @@ var mongoreplicaset= config.Mongo.replicaset;
 
 var connectionstring = '';
 
+console.log(mongoip);
+
 if(isJSON(mongoip)){
 
     mongoip = JSON.parse(mongoip);
 }
 
+console.log(mongoip);
 
 if(util.isArray(mongoip)){
 
