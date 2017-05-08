@@ -19,6 +19,7 @@ var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
 var ardsService =  require('./Workers/Trigger/PickAgent.js');
 var scheduleWorker = require('./Workers/SLA/SLAWorker.js');
+var mongoose = require('mongoose');
 
 
 var server = restify.createServer({
@@ -64,7 +65,7 @@ server.use(jwt({secret: secret.Secret}));
 //
 //mongoose.connect(connectionstring);
 
-
+var isJSON = require('is-json');
 
 var util = require('util');
 var mongoip=config.Mongo.ip;
@@ -74,8 +75,14 @@ var mongouser=config.Mongo.user;
 var mongopass = config.Mongo.password;
 var mongoreplicaset= config.Mongo.replicaset;
 
-var mongoose = require('mongoose');
 var connectionstring = '';
+
+if(isJSON(mongoip)){
+
+    mongoip = JSON.parse(mongoip);
+}
+
+
 if(util.isArray(mongoip)){
 
     mongoip.forEach(function(item){
