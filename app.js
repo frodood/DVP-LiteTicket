@@ -79,10 +79,7 @@ var connectionstring = '';
 
 console.log(mongoip);
 
-if(isJSON(mongoip)){
-
-    mongoip = JSON.parse(mongoip);
-}
+mongoip = mongoip.split(',')
 
 console.log(mongoip);
 
