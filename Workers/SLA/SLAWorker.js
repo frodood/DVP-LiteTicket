@@ -451,6 +451,7 @@ function ScheduleCallback(req, res){
     var jsonString;
     try {
         if(req.body){
+            console.log('Schedule Callback Data:: '+ req.body);
             var references = req.body.Reference.split("#");
             if(references.length == 4){
                 var ticketId = references[2];
