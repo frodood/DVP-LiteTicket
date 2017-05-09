@@ -65,7 +65,7 @@ server.use(jwt({secret: secret.Secret}));
 //
 //mongoose.connect(connectionstring);
 
-var isJSON = require('is-json');
+//var isJSON = require('is-json');
 
 var util = require('util');
 var mongoip=config.Mongo.ip;

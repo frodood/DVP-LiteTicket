@@ -277,7 +277,7 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                     var ticketTargetReference = util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria);
                     var targetTime = moment().add(matrix.target, 'm');
 
-                    matrix.Reference = ticketTargetReference;
+                    matrix._doc.Reference = ticketTargetReference;
 
                     var targetScheduler = {
                         Description: "on_fail",
@@ -307,7 +307,7 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                     var ticketThresholdReference = util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria);
                     var thresholdTime = moment().add(matrix.threshold, 'm');
 
-                    matrix.Reference = ticketThresholdReference;
+                    matrix._doc.Reference = ticketThresholdReference;
 
                     var thresholdScheduler = {
                         Description: "on_threshold",
