@@ -286,6 +286,9 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                         CallbackData: JSON.stringify(matrix),
                         Reference: ticketTargetReference
                     };
+
+                    console.log('targetScheduler:: '+ JSON.stringify(targetScheduler));
+
                     RestClient.DoPost(internalAccessToken, cronUrl, targetScheduler, function (err, res1, result) {
                         if (err) {
                             console.log(err);
@@ -313,6 +316,9 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                         CallbackData: JSON.stringify(matrix),
                         Reference: ticketThresholdReference
                     };
+
+                    console.log('thresholdScheduler:: '+ JSON.stringify(thresholdScheduler));
+
                     RestClient.DoPost(internalAccessToken, cronUrl, thresholdScheduler, function (err, res1, result) {
                         if (err) {
                             console.log(err);
