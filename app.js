@@ -79,7 +79,7 @@ var connectionstring = '';
 
 console.log(mongoip);
 
-mongoip = mongoip.split(',')
+mongoip = mongoip.split(',');
 
 console.log(mongoip);
 
