@@ -185,7 +185,7 @@ function UpdateDashboardChangeAssignee(data, tResult, callback) {
     });
 }
 
-function UpdateDashboardChangeAssigneeGroup(data, tResult) {
+function UpdateDashboardChangeAssigneeGroup(data, tResult, callback) {
     //var assignee = tResult.assignee? tResult.assignee: "";
     var assignee_group = tResult.assignee_group ? tResult.assignee_group.name : "";
     data = data ? data : "";
