@@ -185,7 +185,7 @@ function UpdateDashboardChangeAssignee(data, tResult, callback) {
     });
 }
 
-function UpdateDashboardChangeAssigneeGroup(data, tResult) {
+function UpdateDashboardChangeAssigneeGroup(data, tResult, callback) {
     //var assignee = tResult.assignee? tResult.assignee: "";
     var assignee_group = tResult.assignee_group ? tResult.assignee_group.name : "";
     data = data ? data : "";
@@ -269,6 +269,10 @@ function ExecuteOperations(ticketData, operationToExecute) {
 }
 
 function ValidateUser(obj, trigger, newAssignee, callback) {
+    
+    console.log(obj);
+    console.log(newAssignee);
+    
     try {
         User.findOne({_id: newAssignee}, function (err, uResult) {
             if (err) {
@@ -276,7 +280,7 @@ function ValidateUser(obj, trigger, newAssignee, callback) {
                 console.log(jsonString);
             } else {
                 if (uResult && uResult.company === trigger.company && uResult.tenant === trigger.tenant) {
-                    var previousAssignee = deepcopy(obj.toJSON().assignee);
+                    var previousAssignee = deepcopy(obj.assignee);
                     obj.assignee = uResult._id;
 
                     var time = new Date().toISOString();
@@ -286,7 +290,7 @@ function ValidateUser(obj, trigger, newAssignee, callback) {
                         obj.ticket_matrix.last_updated = time;
 
                         if (obj.ticket_matrix.assignees)
-                            obj.ticket_matrix.assignees.$inc();
+                            obj.ticket_matrix.assignees ++;
                         else
                             obj.ticket_matrix.assignees = 1;
                     }
@@ -316,7 +320,7 @@ function ValidateGroup(obj, trigger, newGroup, callback) {
                 console.log(jsonString);
             } else {
                 if (ugResult && ugResult.company === trigger.company && ugResult.tenant === trigger.tenant) {
-                    var previousGroup = deepcopy(obj.toJSON().assignee_group);
+                    var previousGroup = deepcopy(obj.assignee_group);
                     obj.assignee_group = ugResult._id;
 
                     var time = new Date().toISOString();
@@ -326,7 +330,7 @@ function ValidateGroup(obj, trigger, newGroup, callback) {
                         obj.ticket_matrix.last_updated = time;
 
                         if (obj.ticket_matrix.assignees)
-                            obj.ticket_matrix.assignees.$inc();
+                            obj.ticket_matrix.assignees++;
                         else
                             obj.ticket_matrix.assignees = 1;
                     }
@@ -613,9 +617,9 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                     var newAssignee = "";
                                                     var newAssignee_group = "";
 
-                                                    var asyncvalidateUserAndGroupTasks = [];
+                                                    //var asyncvalidateUserAndGroupTasks = [];
                                                     triggerToExecute.actions.forEach(function (action) {
-                                                        asyncvalidateUserAndGroupTasks.push(function (callback) {
+                                                        //asyncvalidateUserAndGroupTasks.push(function (callback) {
                                                             switch (action.field) {
                                                                 case "assignee":
                                                                     newAssignee = action.value;
@@ -632,12 +636,12 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                                     }
                                                                     break;
                                                             }
-                                                            callback(tResult, newAssignee, newAssignee_group);
-                                                        });
+                                                            //callback(tResult, newAssignee, newAssignee_group);
+                                                        //});
                                                     });
-                                                    async.parallel(asyncvalidateUserAndGroupTasks, function (result, assignee, assigneeGroup) {
-                                                        console.log("asyncvalidateUserAndGroupTasks: ");
-                                                        var vag = ValidateAssigneeAndGroup(result, triggerToExecute, assignee, assigneeGroup);
+                                                    //async.parallel(asyncvalidateUserAndGroupTasks, function (result, assignee, assigneeGroup) {
+                                                        //console.log("asyncvalidateUserAndGroupTasks: ");
+                                                        var vag = ValidateAssigneeAndGroup(tResult, triggerToExecute, newAssignee, newAssignee_group);
                                                         vag.on('validateUserAndGroupDone', function (updatedTicket) {
                                                             Ticket.findOneAndUpdate({_id: ticketId}, updatedTicket, function (err, utResult) {
                                                                 if (err) {
@@ -647,7 +651,7 @@ function ExecuteTrigger(ticketId, triggerEvent, data, sendResult) {
                                                                 }
                                                             });
                                                         });
-                                                    });
+                                                    //});
 
                                                 }
 
@@ -809,7 +813,7 @@ function ExecuteTriggerWithSpecificOperations(ticketId, triggerEvent, data, oper
                 } else {
                     if (tResult) {
 
-                        var ticketCopy = deepcopy(tResult.toJSON());
+                        var ticketCopy = deepcopy(tResult);
 
                         if (triggerEvent === "change_assignee") {
                             PickAgent.UpdateSlotState(tResult.company, tResult.tenant, triggerEvent, data, tResult.assignee, tResult.id, function (err, result) {

@@ -19,6 +19,7 @@ var port = config.Host.port || 3000;
 var host = config.Host.vdomain || 'localhost';
 var ardsService =  require('./Workers/Trigger/PickAgent.js');
 var scheduleWorker = require('./Workers/SLA/SLAWorker.js');
+var mongoose = require('mongoose');
 
 
 var server = restify.createServer({
@@ -64,7 +65,7 @@ server.use(jwt({secret: secret.Secret}));
 //
 //mongoose.connect(connectionstring);
 
-
+//var isJSON = require('is-json');
 
 var util = require('util');
 var mongoip=config.Mongo.ip;
@@ -74,8 +75,14 @@ var mongouser=config.Mongo.user;
 var mongopass = config.Mongo.password;
 var mongoreplicaset= config.Mongo.replicaset;
 
-var mongoose = require('mongoose');
 var connectionstring = '';
+
+console.log(mongoip);
+
+mongoip = mongoip.split(',');
+
+console.log(mongoip);
+
 if(util.isArray(mongoip)){
 
     mongoip.forEach(function(item){
@@ -93,6 +100,7 @@ if(util.isArray(mongoip)){
     connectionstring = util.format('mongodb://%s:%s@%s:%d/%s',mongouser,mongopass,mongoip,mongoport,mongodb)
 }
 
+console.log(connectionstring);
 
 mongoose.connect(connectionstring,{server:{auto_reconnect:true}});
 
@@ -167,6 +175,7 @@ server.get('/DVP/API/:version/Tickets/Group/:GroupId/:Size/:Page', authorization
 server.get('/DVP/API/:version/MyTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTickets);
 server.get('/DVP/API/:version/TicketSummery/Requester/:requester', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketSummeryByRequester);
 server.get('/DVP/API/:version/MyGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyGroupTickets);
+server.get('/DVP/API/:version/MyAllGroupTickets/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetMyGroupTicketList);
 server.get('/DVP/API/:version/MyTickets/:status/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllMyTicketsWithStatus);
 server.get('/DVP/API/:version/Ticket/:id', authorization({resource:"ticket", action:"read"}), ticketService.GetTicket);
 server.get('/DVP/API/:version/TicketsByIds', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketByIds);

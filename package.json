@@ -31,6 +31,7 @@
     "dvp-common": "^0.5.8",
     "dvp-dbmodels": "^0.2.4",
     "dvp-mongomodels": "^4.6.3",
+    "is-json": "^2.0.1",
     "json-query": "^2.1.0",
     "json2csv": "^3.7.3",
     "moment": "^2.14.1",

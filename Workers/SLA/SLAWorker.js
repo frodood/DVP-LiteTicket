@@ -273,37 +273,52 @@ function UpdateCron(tenant, company, ticketId, priority, previousPriority, matri
                     callbackUrl = util.format("http://%s:%s/DVP/API/%s/SLA/ScheduleCallback", config.LBServer.ip, config.LBServer.port, config.Host.version);
                 }
 
-                var targetTime = moment().add(matrix.target, 'm');
-                var targetScheduler = {
-                    Description: "on_fail",
-                    CronePattern: targetTime.toDate().toString(),
-                    CallbackURL: callbackUrl,
-                    CallbackData: JSON.stringify(matrix),
-                    Reference: util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria)
-                };
-                RestClient.DoPost(internalAccessToken, cronUrl, targetScheduler, function (err, res1, result) {
-                    if (err) {
-                        console.log(err);
-                    }
-                    else {
-                        var resObj = JSON.parse(result);
-                        if (resObj.IsSuccess) {
-                            console.log("Add target CRON Success");
-                        } else {
-                            console.log(result.Message);
-                        }
-                    }
-                });
+                if (matrix.target) {
+                    var ticketTargetReference = util.format("%s#%s#%s#%s", matrix.id, "on_fail", ticketId, matrix.criteria);
+                    var targetTime = moment().add(matrix.target, 'm');
 
+                    matrix._doc.Reference = ticketTargetReference;
+
+                    var targetScheduler = {
+                        Description: "on_fail",
+                        CronePattern: targetTime.toDate().toString(),
+                        CallbackURL: callbackUrl,
+                        CallbackData: JSON.stringify(matrix),
+                        Reference: ticketTargetReference
+                    };
+
+                    console.log('targetScheduler:: '+ JSON.stringify(targetScheduler));
+
+                    RestClient.DoPost(internalAccessToken, cronUrl, targetScheduler, function (err, res1, result) {
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            var resObj = JSON.parse(result);
+                            if (resObj.IsSuccess) {
+                                console.log("Add target CRON Success");
+                            } else {
+                                console.log(result.Message);
+                            }
+                        }
+                    });
+                }
                 if (matrix.threshold) {
+                    var ticketThresholdReference = util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria);
                     var thresholdTime = moment().add(matrix.threshold, 'm');
+
+                    matrix._doc.Reference = ticketThresholdReference;
+
                     var thresholdScheduler = {
                         Description: "on_threshold",
                         CronePattern: thresholdTime.toDate().toString(),
                         CallbackURL: callbackUrl,
                         CallbackData: JSON.stringify(matrix),
-                        Reference: util.format("%s#%s#%s#%s", matrix.id, "on_threshold", ticketId, matrix.criteria)
+                        Reference: ticketThresholdReference
                     };
+
+                    console.log('thresholdScheduler:: '+ JSON.stringify(thresholdScheduler));
+
                     RestClient.DoPost(internalAccessToken, cronUrl, thresholdScheduler, function (err, res1, result) {
                         if (err) {
                             console.log(err);
@@ -451,11 +466,13 @@ function ScheduleCallback(req, res){
     var jsonString;
     try {
         if(req.body){
+            console.log('Schedule Callback Data:: '+ JSON.stringify(req.body));
             var references = req.body.Reference.split("#");
             if(references.length == 4){
                 var ticketId = references[2];
                 var operationType = references[1];
-                var matrixInfo = JSON.parse(req.body.CallbackData);
+                //var matrixInfo = JSON.parse(req.body.CallbackData);
+                var matrixInfo = req.body;
 
                 Ticket.findOne({_id:ticketId}, function(err, ticket){
                     if(err){
