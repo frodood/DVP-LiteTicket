@@ -4887,32 +4887,70 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
         } else {
             if(bulkObj){
 
+                function BatchUploader(array, executionType){
+                    var index = 0;
 
-                var asyncTasks = [];
+
+                    return new Promise(function(resolve, reject) {
+
+                        function next() {
+                            if (index < array.length) {
+                                BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
+                                    //callback();
+                                });
+                                if (executionType === 'specific') {
+                                    ExecuteTriggerSpecificOperationsAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus, array[index++].CommonData).then(next, next).catch(next);
+
+                                } else {
+                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, next).catch(next);
+
+                                }
+                            } else {
+                                resolve();
+                            }
+                        }
+                        next();
+                    });
+                }
+
+                //var asyncTasks = [];
                 if(bulkObj.CommonData && bulkObj.CommonData.length >0){
 
                     logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method.");
 
-                    bulkObj.OperationData.forEach(function (ticket) {
-                        asyncTasks.push(function(callback){
+                    //bulkObj.OperationData.forEach(function (ticket) {
+                    //    asyncTasks.push(function(callback){
+                    //
+                    //        ExecuteTriggerSpecificOperationsAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus, bulkObj.CommonData).then(function (val) {
+                    //            try {
+                    //                BulkOperation.update({
+                    //                    _id: bulkOperationId
+                    //                }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                    //                    callback();
+                    //                });
+                    //            }catch(ex){
+                    //
+                    //                callback();
+                    //            }
+                    //        }).catch(function () {
+                    //            callback();
+                    //        });
+                    //
+                    //
+                    //    });
+                    //});
 
-                            ExecuteTriggerSpecificOperationsAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus, bulkObj.CommonData).then(function (val) {
-                                try {
-                                    BulkOperation.update({
-                                        _id: bulkOperationId
-                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                                        callback();
-                                    });
-                                }catch(ex){
+                    BatchUploader(bulkObj.OperationData, 'specific').then(function () {
 
-                                    callback();
-                                }
-                            }).catch(function () {
-                                callback();
-                            });
+                        console.log('Finished');
 
-
+                        BulkOperation.update({
+                            _id: bulkOperationId
+                        }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
+                            logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
                         });
+                    }, function (reason) {
+
                     });
 
 
@@ -4920,49 +4958,10 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
                     logger.info("DVP-LiteTicket.ExecuteTrigger Internal method.");
                     jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                    //bulkObj.OperationData.forEach(function (ticket) {
-                    //asyncTasks.push(function(callback){
-                    //
-                    //    ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
-                    //        try {
-                    //            BulkOperation.update({
-                    //                _id: bulkOperationId
-                    //            }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                    //                callback();
-                    //            });
-                    //        }catch(ex){
-                    //
-                    //            callback();
-                    //        }
-                    //    }).catch(function () {
-                    //        callback();
-                    //    });
-                    //
-                    //
-                    //});
-                    //});
-
-                    function BatchUploader(array){
-                        var index = 0;
 
 
-                        return new Promise(function(resolve, reject) {
 
-                            function next() {
-                                if (index < array.length) {
-                                    //BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
-                                    //    //callback();
-                                    //});
-                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, next).catch(next);
-                                } else {
-                                    resolve();
-                                }
-                            }
-                            next();
-                        });
-                    }
-
-                    BatchUploader(bulkObj.OperationData).then(function () {
+                    BatchUploader(bulkObj.OperationData, 'trigger').then(function () {
 
                         console.log('Finished');
 
