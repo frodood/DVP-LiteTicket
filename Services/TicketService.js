@@ -4845,7 +4845,7 @@ function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operat
 
         triggerWorker.ExecuteTriggerWithSpecificOperations(ticketId, eventType, data, operations, function (reply) {
             deferred.resolve(reply);
-        })
+        });
     }
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
@@ -4895,14 +4895,15 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
                         function next() {
                             if (index < array.length) {
-                                BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
+                                index++;
+                                BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index]}}, {multi: true}, function (err, sticket) {
                                     //callback();
                                 });
                                 if (executionType === 'specific') {
-                                    ExecuteTriggerSpecificOperationsAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus, array[index++].CommonData).then(next, next).catch(next);
+                                    ExecuteTriggerSpecificOperationsAsync(array[index].TicketId, array[index].TriggerType, array[index].TicketStatus, bulkObj.CommonData).then(next, next).catch(next);
 
                                 } else {
-                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, next).catch(next);
+                                    ExecuteTriggerAsync(array[index].TicketId, array[index].TriggerType, array[index].TicketStatus).then(next, next).catch(next);
 
                                 }
                             } else {
