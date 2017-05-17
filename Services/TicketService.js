@@ -92,9 +92,77 @@ queueConnection.on('error', function (error) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+SetRelatedSlots = function (req,ticketId,tags) {
+
+   
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+    var slotArray=[];
+
+    FileSlotArray.find({
+        company: company,
+        tenant: tenant,
+        tags: {$in:tags}
+
+    }).populate('slots').exec(function (err, respFSlot) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Fail to find FileSlotArrays", false, undefined);
+
+        }
+        else {
+            if (respFSlot) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "FileSlotArrays found", true, respFSlot);
+
+                respFSlot.forEach(function (item) {
+                    item.slots.forEach(function (slot) {
+                        if(slotArray.indexOf(slot)==-1)
+                        {
+                            var obj=
+                            {
+                                slot: {name: slot.name,fileType: slot.fileType},
+                                attachment: null
+                            }
+
+                            slotArray.push(obj);
+                        }
+                    });
+
+
+                });
+
+                Ticket.findOneAndUpdate({_id: ticketId},{slot_attachment:slotArray} ,function (err, tResult) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket failed", false, undefined);
+
+                    } else {
+                        if (tResult) {
+                            jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket success", true, slotArray);
+                        } else {
+                            jsonString = messageFormatter.FormatMessage(err, "Attach slots to ticket failed", false, undefined);
+                        }
+                    }
+                    console.log(jsonString);
+                });
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find FileSlotArrays", false, undefined);
+
+            }
+        }
+
+
+    });
+
+};
+
+
 module.exports.CreateTicket = function (req, res) {
 
     logger.info("DVP-LiteTicket.CreateTicket Internal method ");
+
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
@@ -230,7 +298,8 @@ module.exports.CreateTicket = function (req, res) {
                         if (err) {
                             jsonString = messageFormatter.FormatMessage(err, "Ticket create failed", false, undefined);
                         }
-                        else {
+                        else
+                        {
 
                             var secondsDiff = moment().diff(dateNow, 'seconds');
                             console.log("Ticket save time --- ->"+secondsDiff);
@@ -245,6 +314,7 @@ module.exports.CreateTicket = function (req, res) {
                                 ExecuteTrigger(client.id, "change_status", "new");
                                 ExecuteCase(client);
                                 AddUserRecentTicket(company, tenant,user.id,client.id);
+                                SetRelatedSlots(req,client.id,client.isolated_tags);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
                             }
@@ -285,6 +355,14 @@ module.exports.CreateTicket = function (req, res) {
 
                             //////////////////////////////////////////////////////////////////////////////////////////////////////
                             ExecuteSla(client.id, undefined);
+
+
+
+
+
+
+
+
                         }
                         res.end(jsonString);
                     });
@@ -915,6 +993,63 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                  res.end(jsonString);
                  }
                  });*/
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.GetMyGroupTicketList = function (req, res) {
+    logger.info("DVP-LiteTicket.GetMyGroupTicketList Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if(user && user.group) {
+
+                var obj = {
+
+                    "company": company,
+                    "tenant": tenant,
+                    "assignee_group": user.group,
+                    "active": true
+                }
+
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                        if (err) {
+
+                            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+
+                        } else {
+
+                            if (tickets) {
+                                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+                            } else {
+
+                                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
+                            }
+                        }
+                        res.end(jsonString);
+                    });
+
+
             }else{
 
                 jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
@@ -4710,7 +4845,7 @@ function ExecuteTriggerSpecificOperationsAsync(ticketId, eventType, data, operat
 
         triggerWorker.ExecuteTriggerWithSpecificOperations(ticketId, eventType, data, operations, function (reply) {
             deferred.resolve(reply);
-        })
+        });
     }
     catch (ex) {
         var jsonString = messageFormatter.FormatMessage(ex, "EXCEPTION", false, undefined);
@@ -4752,32 +4887,71 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
         } else {
             if(bulkObj){
 
+                function BatchUploader(array, executionType){
+                    var index = 0;
 
-                var asyncTasks = [];
+
+                    return new Promise(function(resolve, reject) {
+
+                        function next() {
+                            if (index < array.length) {
+                                index++;
+                                BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index]}}, {multi: true}, function (err, sticket) {
+                                    //callback();
+                                });
+                                if (executionType === 'specific') {
+                                    ExecuteTriggerSpecificOperationsAsync(array[index].TicketId, array[index].TriggerType, array[index].TicketStatus, bulkObj.CommonData).then(next, next).catch(next);
+
+                                } else {
+                                    ExecuteTriggerAsync(array[index].TicketId, array[index].TriggerType, array[index].TicketStatus).then(next, next).catch(next);
+
+                                }
+                            } else {
+                                resolve();
+                            }
+                        }
+                        next();
+                    });
+                }
+
+                //var asyncTasks = [];
                 if(bulkObj.CommonData && bulkObj.CommonData.length >0){
 
                     logger.info("DVP-LiteTicket.ExecuteTriggerSpecificOperations Internal method.");
 
-                    bulkObj.OperationData.forEach(function (ticket) {
-                        asyncTasks.push(function(callback){
+                    //bulkObj.OperationData.forEach(function (ticket) {
+                    //    asyncTasks.push(function(callback){
+                    //
+                    //        ExecuteTriggerSpecificOperationsAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus, bulkObj.CommonData).then(function (val) {
+                    //            try {
+                    //                BulkOperation.update({
+                    //                    _id: bulkOperationId
+                    //                }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
+                    //                    callback();
+                    //                });
+                    //            }catch(ex){
+                    //
+                    //                callback();
+                    //            }
+                    //        }).catch(function () {
+                    //            callback();
+                    //        });
+                    //
+                    //
+                    //    });
+                    //});
 
-                            ExecuteTriggerSpecificOperationsAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus, bulkObj.CommonData).then(function (val) {
-                                try {
-                                    BulkOperation.update({
-                                        _id: bulkOperationId
-                                    }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                                        callback();
-                                    });
-                                }catch(ex){
+                    BatchUploader(bulkObj.OperationData, 'specific').then(function () {
 
-                                    callback();
-                                }
-                            }).catch(function () {
-                                callback();
-                            });
+                        console.log('Finished');
 
-
+                        BulkOperation.update({
+                            _id: bulkOperationId
+                        }, { $set: { JobStatus: 'done', OperationData: []} }, {multi: true}, function (err, sticket) {
+                            logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation: Remove Bulk Operation");
                         });
+                    }, function (reason) {
+
                     });
 
 
@@ -4785,49 +4959,10 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
                     logger.info("DVP-LiteTicket.ExecuteTrigger Internal method.");
                     jsonString = messageFormatter.FormatMessage(undefined, "Successfully Update.", true, undefined);
-                    //bulkObj.OperationData.forEach(function (ticket) {
-                    //asyncTasks.push(function(callback){
-                    //
-                    //    ExecuteTriggerAsync(ticket.TicketId, ticket.TriggerType, ticket.TicketStatus).then(function (val) {
-                    //        try {
-                    //            BulkOperation.update({
-                    //                _id: bulkOperationId
-                    //            }, {$pull: {OperationData: ticket}}, {multi: true}, function (err, sticket) {
-                    //                callback();
-                    //            });
-                    //        }catch(ex){
-                    //
-                    //            callback();
-                    //        }
-                    //    }).catch(function () {
-                    //        callback();
-                    //    });
-                    //
-                    //
-                    //});
-                    //});
-
-                    function BatchUploader(array){
-                        var index = 0;
 
 
-                        return new Promise(function(resolve, reject) {
 
-                            function next() {
-                                if (index < array.length) {
-                                    //BulkOperation.update({_id: bulkOperationId}, {$pull: {OperationData: array[index++]}}, {multi: true}, function (err, sticket) {
-                                    //    //callback();
-                                    //});
-                                    ExecuteTriggerAsync(array[index++].TicketId, array[index++].TriggerType, array[index++].TicketStatus).then(next, next).catch(next);
-                                } else {
-                                    resolve();
-                                }
-                            }
-                            next();
-                        });
-                    }
-
-                    BatchUploader(bulkObj.OperationData).then(function () {
+                    BatchUploader(bulkObj.OperationData, 'trigger').then(function () {
 
                         console.log('Finished');
 
