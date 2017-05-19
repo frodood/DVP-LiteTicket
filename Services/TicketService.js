@@ -3273,7 +3273,7 @@ module.exports.ChangeStatus = function (req, res) {
 
     var jsonString;
     if (req.body.status) {
-        Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+        Ticket.findOne({company: company, tenant: tenant, reference: req.params.reference}, function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
@@ -3370,7 +3370,7 @@ module.exports.ChangeStatus = function (req, res) {
                     else {
 
                         Ticket.findOneAndUpdate({
-                            _id: req.params.id,
+                            reference: req.params.reference,
                             company: company,
                             tenant: tenant
                         }, ticket, function (err, rUser) {
@@ -3405,6 +3405,148 @@ module.exports.ChangeStatus = function (req, res) {
     }
 
 };
+
+module.exports.ChangeStatusByUser = function (req, res) {
+    logger.debug("DVP-LiteTicket.ChangeStatusByUser Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    if (req.body.status && req.body.user) {
+        Ticket.findOne({company: company, tenant: tenant, reference: req.params.reference, assignee: mongoose.Types.ObjectId(req.body.user)}).populate('assignee' , '-password').exec(function (err, ticket) {
+            if (err) {
+
+                jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
+                res.end(jsonString);
+            }
+            else {
+                if (ticket) {
+                    var oldTicket = deepcopy(ticket.toJSON());
+                    var old_state = ticket.status;
+                    ticket.status = req.body.status;
+
+                    var time = new Date().toISOString();
+                    ticket.updated_at = time;
+                    var tEvent = TicketEvent({
+                        type: 'status',
+                        "author": ticket.assignee.username,
+                        "create_at": Date.now(),
+                        body: {
+                            "message": req.user.iss + " Status Update ",
+                            "time": time
+                        }
+                    });
+                    ticket.events.push(tEvent);
+
+                    ///////////////////////////////////ticket matrix////////////////////////////////
+                    if(ticket.ticket_matrix) {
+                        ticket.ticket_matrix.last_updated = time;
+
+                        if(ticket.status == 'open'){
+
+                            if(old_state != 'new'){
+
+                                ticket.ticket_matrix.reopens =  ticket.ticket_matrix.reopens+1;
+                            }
+                            else{
+                                ticket.ticket_matrix.opened_at = time;
+                                ticket.ticket_matrix.waited_time = time - ticket.ticket_matrix.created_at;
+                            }
+
+                        }else if(ticket.status == 'closed' ||ticket.status == 'solved'){
+
+                            ticket.ticket_matrix.solved_at = time;
+                            ticket.ticket_matrix.resolution_time = time - ticket.ticket_matrix.created_at;
+                        }
+
+                        ticket.ticket_matrix.last_status_changed = time;
+
+                    }
+
+                    /////////////////////////////////////////////////////////////////////////////////////////
+
+
+                    if (ticket.sub_tickets.length > 0 && req.body.status == "closed") {
+                        Ticket.find({
+                            id: {
+                                $in: ticket.sub_tickets.map(function (o) {
+                                    return ObjectId(o);
+                                })
+                            }, status: "closed"
+                        }, function (err, docs) {
+                            if (err) {
+                                jsonString = messageFormatter.FormatMessage(err, "Fail To Check Sub Ticket Status.", false, undefined);
+                                res.end(jsonString);
+                            }
+                            else {
+                                if (docs && (ticket.sub_tickets.length == docs.length)) {
+
+
+
+                                    ticket.save(function (err, rUser) {
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Fail Update Status.", false, undefined);
+                                        }
+                                        else {
+                                            if (rUser) {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                                ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                            }
+                                            else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                            }
+                                        }
+                                        res.end(jsonString);
+                                    });
+                                }
+                                else {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Sub Ticket Not Completed.", false, undefined);
+                                    res.end(jsonString);
+                                }
+                            }
+                        });
+
+                    }
+                    else {
+
+                        Ticket.findOneAndUpdate({
+                            reference: req.params.reference,
+                            company: company,
+                            tenant: tenant
+                        }, ticket, function (err, rUser) {
+                            if (err) {
+                                jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                            }
+                            else {
+                                if (rUser) {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                    ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                }
+                                else {
+                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                }
+                            }
+                            res.end(jsonString);
+                        });
+                    }
+
+                }
+                else {
+                    jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                    res.end(jsonString);
+                }
+            }
+
+        });
+    }
+    else {
+        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Status.", false, undefined);
+        res.end(jsonString);
+    }
+
+};
+
 
 module.exports.AssignToUser = function (req, res) {
     logger.info("DVP-LiteTicket.AssignToUser Internal method ");
