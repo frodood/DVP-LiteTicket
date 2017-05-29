@@ -1469,8 +1469,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
                         });
                     }
 
-                    catch
-                        (exe) {
+                    catch (exe) {
 
                         logger.error(exe);
                         jsonString = messageFormatter.FormatMessage(exe, "Error in user search", false, undefined);
@@ -4206,6 +4205,24 @@ module.exports.CreateSubTicket = function (req, res) {
 
                             ticket.ticket_matrix = matrix;
 
+                            if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
+
+
+                                var arr = [];
+                                req.body.tags.forEach(function(item){
+
+                                    var tagArr = item.split('.');
+                                    if(tagArr && tagArr.length > 0){
+
+                                        tagArr.forEach(function(myTags){
+                                            ticket.isolated_tags.push(myTags);
+                                        })
+                                    }
+
+                                })
+
+                            }
+
                             ////////////////////////////////////////////////////////////////
 
                             ticket.save(function (err, obj) {
@@ -4215,6 +4232,7 @@ module.exports.CreateSubTicket = function (req, res) {
                                     res.end(jsonString);
                                 }
                                 else {
+                                    SetRelatedSlots(req,obj.id,obj.isolated_tags);
                                     parentTicket.update({$addToSet: {sub_tickets: obj._doc._id}}
                                         , function (err, rOrg) {
                                             if (err) {
