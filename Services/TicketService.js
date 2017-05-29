@@ -6987,6 +6987,11 @@ module.exports.GetTicketReportTagBased= function(req, res){
 
         tempQuery['created_at'] = { $gte: from, $lte: to };
 
+        if(req.body && req.body.direction){
+
+            tempQuery['direction'] = req.body.direction;
+        }
+
 
         var aggregator = [
 
