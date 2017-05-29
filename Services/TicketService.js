@@ -58,10 +58,6 @@ redisClient.on("error", function (err) {
 });
 
 
-
-
-
-
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
@@ -5017,9 +5013,6 @@ function ExecuteTriggerSpecificOperations(ticketId, eventType, data, operations)
 
 }
 
-
-
-
 function ExecuteTriggerBulkOperation(bulkOperationId){
     logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation Internal method ");
 
@@ -5143,10 +5136,6 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
 
 }
-
-
-
-
 
 function ExecuteSlaAsync(ticketId, previousPriority) {
     var deferred = q.defer();
@@ -6732,8 +6721,8 @@ var ValidateStatusChangeRequest = function (tenant, company, type, currentStatus
 };
 
 module.exports.GetNextAvailableStatusList = GetNextAvailableStatusList;
-module.exports.ValidateStatusChangeRequest = ValidateStatusChangeRequest;
 
+module.exports.ValidateStatusChangeRequest = ValidateStatusChangeRequest;
 
 module.exports.GetTicketReport= function(req, res){
 
