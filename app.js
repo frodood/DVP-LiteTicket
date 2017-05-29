@@ -164,6 +164,10 @@ server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"tic
 server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketSchema);
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
 server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
+
+server.get('/DVP/API/:version/TicketReportTagBased', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReportTagBased);
+
+
 server.post('/DVP/API/:version/TicketDetailReport/data/:skip/:limit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReport);
 server.post('/DVP/API/:version/TicketDetailReport/data', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportDownload);
 server.post('/DVP/API/:version/TicketDetailReport/count', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportCount);

@@ -6941,10 +6941,86 @@ module.exports.GetTicketReport= function(req, res){
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
             } else {
-
-
                 jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+            }
+            res.end(jsonString);
+        });
 
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
+        res.end(jsonString);
+    }
+
+}
+
+module.exports.GetTicketReportTagBased= function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketReportTagBased Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
+
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        }catch(ex){
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
+        }
+
+        if(from > to){
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['created_at'] = { $gte: from, $lte: to };
+
+
+        var aggregator = [
+
+            {
+                $match: tempQuery,
+
+            }, {
+                $unwind: "$isolated_tags"
+            },{
+                $group: {
+                    _id: "$isolated_tags",
+                    count: {
+                        $sum: 1
+                    }
+                }
+            },{
+                $project: {
+                    _id: 0,
+                    tag: '$_id',
+                    count: 1
+
+                }
+            },{
+                $sort:{
+                    count: -1
+                }
+            }
+        ];
+
+        Ticket.aggregate( aggregator, function (err, tickets) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
             }
             res.end(jsonString);
         });
