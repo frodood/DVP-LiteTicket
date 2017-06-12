@@ -2711,7 +2711,7 @@ module.exports.AddComment = function (req, res) {
                                                 company: company,
                                                 tenant: tenant,
                                                 author: req.user.iss
-                                            }
+                                            };
 
                                             if (req.body.channel == 'twitter') {
                                                 queueName = 'TWEETOUT';
