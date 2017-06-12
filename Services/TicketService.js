@@ -7423,6 +7423,11 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
                                             };
 
+                                            if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+                                            {
+                                                ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+                                            }
+
                                             if(ticketInfo.requester && ticketInfo.requester.address)
                                             {
                                                 if(ticketInfo.requester.address.number)
