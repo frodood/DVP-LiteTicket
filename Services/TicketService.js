@@ -3369,7 +3369,7 @@ module.exports.ChangeStatus = function (req, res) {
                             else {
 
                                 Ticket.findOneAndUpdate({
-                                    reference: req.params.reference,
+                                    _id: req.params.id,
                                     company: company,
                                     tenant: tenant
                                 }, ticket, function (err, rUser) {
