@@ -7081,7 +7081,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
         fileName = fileName.replace(/:/g, "-") + '.csv';
 
-        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
+        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'Customer Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
         var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
 
         if(req.body){
@@ -7221,6 +7221,11 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                         description: ticketInfo.description
 
                                                     };
+
+                                                    if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+                                                    {
+                                                        ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+                                                    }
 
                                                     if(ticketInfo.requester && ticketInfo.requester.address)
                                                     {
@@ -7417,6 +7422,11 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 description: ticketInfo.description
 
                                             };
+
+                                            if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+                                            {
+                                                ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+                                            }
 
                                             if(ticketInfo.requester && ticketInfo.requester.address)
                                             {
