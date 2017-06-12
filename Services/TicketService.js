@@ -3268,7 +3268,7 @@ module.exports.ChangeStatus = function (req, res) {
 
     var jsonString;
     if (req.body.status) {
-        Ticket.findOne({company: company, tenant: tenant, reference: req.params.reference}, function (err, ticket) {
+        Ticket.findOne({company: company, tenant: tenant,  _id: req.params.id}, function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
