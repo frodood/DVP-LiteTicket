@@ -54,7 +54,6 @@ module.exports = {
 
   },
 
-
   "Mongo":
   {
     "ip":"104.236.231.11",
@@ -64,6 +63,7 @@ module.exports = {
     "user":"duo",
     "replicaset" :"104.236.231.11"
   },
+
 
 
   "RabbitMQ":

@@ -58,10 +58,6 @@ redisClient.on("error", function (err) {
 });
 
 
-
-
-
-
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
@@ -1473,8 +1469,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
                         });
                     }
 
-                    catch
-                        (exe) {
+                    catch (exe) {
 
                         logger.error(exe);
                         jsonString = messageFormatter.FormatMessage(exe, "Error in user search", false, undefined);
@@ -2716,7 +2711,7 @@ module.exports.AddComment = function (req, res) {
                                                 company: company,
                                                 tenant: tenant,
                                                 author: req.user.iss
-                                            }
+                                            };
 
                                             if (req.body.channel == 'twitter') {
                                                 queueName = 'TWEETOUT';
@@ -3273,7 +3268,7 @@ module.exports.ChangeStatus = function (req, res) {
 
     var jsonString;
     if (req.body.status) {
-        Ticket.findOne({company: company, tenant: tenant, _id: req.params.id}, function (err, ticket) {
+        Ticket.findOne({company: company, tenant: tenant,  _id: req.params.id}, function (err, ticket) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
@@ -3285,110 +3280,120 @@ module.exports.ChangeStatus = function (req, res) {
                     var old_state = ticket.status;
                     ticket.status = req.body.status;
 
-                    var time = new Date().toISOString();
-                    ticket.updated_at = time;
-                    var tEvent = TicketEvent({
-                        type: 'status',
-                        "author": req.user.iss,
-                        "create_at": Date.now(),
-                        body: {
-                            "message": req.user.iss + " Status Update ",
-                            "time": time
-                        }
-                    });
-                    ticket.events.push(tEvent);
+                    ValidateStatusChangeRequest(tenant, company, ticket.type, old_state, req.body.status, function (response) {
 
-                    ///////////////////////////////////ticket matrix////////////////////////////////
-                    if(ticket.ticket_matrix) {
-                        ticket.ticket_matrix.last_updated = time;
+                        var validatedResponse = JSON.parse(response);
+                        if(validatedResponse && validatedResponse.IsSuccess){
+                            var time = new Date().toISOString();
+                            ticket.updated_at = time;
+                            var tEvent = TicketEvent({
+                                type: 'status',
+                                "author": req.user.iss,
+                                "create_at": Date.now(),
+                                body: {
+                                    "message": req.user.iss + " Status Update ",
+                                    "time": time
+                                }
+                            });
+                            ticket.events.push(tEvent);
 
-                        if(ticket.status == 'open'){
+                            ///////////////////////////////////ticket matrix////////////////////////////////
+                            if(ticket.ticket_matrix) {
+                                ticket.ticket_matrix.last_updated = time;
 
-                            if(old_state != 'new'){
+                                if(ticket.status == 'open'){
 
-                                ticket.ticket_matrix.reopens =  ticket.ticket_matrix.reopens+1;
+                                    if(old_state != 'new'){
+
+                                        ticket.ticket_matrix.reopens =  ticket.ticket_matrix.reopens+1;
+                                    }
+                                    else{
+                                        ticket.ticket_matrix.opened_at = time;
+                                        ticket.ticket_matrix.waited_time = time - ticket.ticket_matrix.created_at;
+                                    }
+
+                                }else if(ticket.status == 'closed' ||ticket.status == 'solved'){
+
+                                    ticket.ticket_matrix.solved_at = time;
+                                    ticket.ticket_matrix.resolution_time = time - ticket.ticket_matrix.created_at;
+                                }
+
+                                ticket.ticket_matrix.last_status_changed = time;
+
                             }
-                            else{
-                                ticket.ticket_matrix.opened_at = time;
-                                ticket.ticket_matrix.waited_time = time - ticket.ticket_matrix.created_at;
-                            }
 
-                        }else if(ticket.status == 'closed' ||ticket.status == 'solved'){
-
-                            ticket.ticket_matrix.solved_at = time;
-                            ticket.ticket_matrix.resolution_time = time - ticket.ticket_matrix.created_at;
-                        }
-
-                        ticket.ticket_matrix.last_status_changed = time;
-
-                    }
-
-                    /////////////////////////////////////////////////////////////////////////////////////////
+                            /////////////////////////////////////////////////////////////////////////////////////////
 
 
-                    if (ticket.sub_tickets.length > 0 && req.body.status == "closed") {
-                        Ticket.find({
-                            id: {
-                                $in: ticket.sub_tickets.map(function (o) {
-                                    return ObjectId(o);
-                                })
-                            }, status: "closed"
-                        }, function (err, docs) {
-                            if (err) {
-                                jsonString = messageFormatter.FormatMessage(err, "Fail To Check Sub Ticket Status.", false, undefined);
-                                res.end(jsonString);
-                            }
-                            else {
-                                if (docs && (ticket.sub_tickets.length == docs.length)) {
+                            if (ticket.sub_tickets.length > 0 && req.body.status == "closed") {
+                                Ticket.find({
+                                    id: {
+                                        $in: ticket.sub_tickets.map(function (o) {
+                                            return ObjectId(o);
+                                        })
+                                    }, status: "closed"
+                                }, function (err, docs) {
+                                    if (err) {
+                                        jsonString = messageFormatter.FormatMessage(err, "Fail To Check Sub Ticket Status.", false, undefined);
+                                        res.end(jsonString);
+                                    }
+                                    else {
+                                        if (docs && (ticket.sub_tickets.length == docs.length)) {
 
 
 
-                                    ticket.save(function (err, rUser) {
-                                        if (err) {
-                                            jsonString = messageFormatter.FormatMessage(err, "Fail Update Status.", false, undefined);
+                                            ticket.save(function (err, rUser) {
+                                                if (err) {
+                                                    jsonString = messageFormatter.FormatMessage(err, "Fail Update Status.", false, undefined);
+                                                }
+                                                else {
+                                                    if (rUser) {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                                        ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                                    }
+                                                    else {
+                                                        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                                    }
+                                                }
+                                                res.end(jsonString);
+                                            });
                                         }
                                         else {
-                                            if (rUser) {
-                                                jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                                ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
-                                            }
-                                            else {
-                                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
-                                            }
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Sub Ticket Not Completed.", false, undefined);
+                                            res.end(jsonString);
                                         }
-                                        res.end(jsonString);
-                                    });
-                                }
-                                else {
-                                    jsonString = messageFormatter.FormatMessage(undefined, "Sub Ticket Not Completed.", false, undefined);
-                                    res.end(jsonString);
-                                }
-                            }
-                        });
+                                    }
+                                });
 
-                    }
-                    else {
-
-                        Ticket.findOneAndUpdate({
-                            _id: req.params.id,
-                            company: company,
-                            tenant: tenant
-                        }, ticket, function (err, rUser) {
-                            if (err) {
-                                jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
                             }
                             else {
-                                if (rUser) {
-                                    jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
-                                    ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
-                                }
-                                else {
-                                    jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
-                                }
+
+                                Ticket.findOneAndUpdate({
+                                    _id: req.params.id,
+                                    company: company,
+                                    tenant: tenant
+                                }, ticket, function (err, rUser) {
+                                    if (err) {
+                                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                                    }
+                                    else {
+                                        if (rUser) {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                            ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                        }
+                                        else {
+                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                        }
+                                    }
+                                    res.end(jsonString);
+                                });
                             }
+                        }else{
+                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Status Change Request", false, undefined);
                             res.end(jsonString);
-                        });
-                    }
+                        }
+                    });
+
 
                 }
                 else {
@@ -3405,6 +3410,183 @@ module.exports.ChangeStatus = function (req, res) {
     }
 
 };
+
+module.exports.ChangeStatusByUser = function (req, res) {
+    logger.debug("DVP-LiteTicket.ChangeStatusByUser Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    if (req.body.status && req.body.user) {
+
+        User.findOne({_id: req.body.user, company: company, tenant: tenant}, function (err, user) {
+
+
+            Ticket.findOne({
+                company: company,
+                tenant: tenant,
+                reference: req.params.reference,
+                assignee: mongoose.Types.ObjectId(req.body.user)
+            }).populate('assignee', '-password').exec(function (err, ticket) {
+                if (err) {
+
+                    jsonString = messageFormatter.FormatMessage(err, "Fail Find Ticket", false, undefined);
+                    res.end(jsonString);
+                }
+                else {
+                    if (ticket) {
+                        var oldTicket = deepcopy(ticket.toJSON());
+                        var old_state = ticket.status;
+                        ticket.status = req.body.status;
+
+                        ValidateStatusChangeRequest(tenant, company, ticket.type, old_state, req.body.status, function (response) {
+
+                            var validatedResponse = JSON.parse(response);
+                            if (validatedResponse && validatedResponse.IsSuccess) {
+                                var time = new Date().toISOString();
+                                ticket.updated_at = time;
+                                var tEvent = TicketEvent({
+                                    type: 'status',
+                                    "author": ticket.assignee.username,
+                                    "create_at": Date.now(),
+                                    body: {
+                                        "message": req.user.iss + " Status Update ",
+                                        "time": time
+                                    }
+                                });
+                                ticket.events.push(tEvent);
+
+                                ///////////////////////////////////ticket matrix////////////////////////////////
+                                if (ticket.ticket_matrix) {
+                                    ticket.ticket_matrix.last_updated = time;
+
+                                    if (ticket.status == 'open') {
+
+                                        if (old_state != 'new') {
+
+                                            ticket.ticket_matrix.reopens = ticket.ticket_matrix.reopens + 1;
+                                        }
+                                        else {
+                                            ticket.ticket_matrix.opened_at = time;
+                                            ticket.ticket_matrix.waited_time = time - ticket.ticket_matrix.created_at;
+                                        }
+
+                                    } else if (ticket.status == 'closed' || ticket.status == 'solved') {
+
+                                        ticket.ticket_matrix.solved_at = time;
+                                        ticket.ticket_matrix.resolution_time = time - ticket.ticket_matrix.created_at;
+                                    }
+
+                                    ticket.ticket_matrix.last_status_changed = time;
+
+                                }
+
+                                /////////////////////////////////////////////////////////////////////////////////////////
+
+
+                                if (ticket.sub_tickets.length > 0 && req.body.status == "closed") {
+                                    Ticket.find({
+                                        id: {
+                                            $in: ticket.sub_tickets.map(function (o) {
+                                                return ObjectId(o);
+                                            })
+                                        }, status: "closed"
+                                    }, function (err, docs) {
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Fail To Check Sub Ticket Status.", false, undefined);
+                                            res.end(jsonString);
+                                        }
+                                        else {
+                                            if (docs && (ticket.sub_tickets.length == docs.length)) {
+
+
+                                                ticket.save(function (err, rUser) {
+                                                    if (err) {
+                                                        jsonString = messageFormatter.FormatMessage(err, "Fail Update Status.", false, undefined);
+                                                    }
+                                                    else {
+                                                        if (rUser) {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                                            ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                                        }
+                                                        else {
+                                                            jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                                        }
+                                                    }
+                                                    res.end(jsonString);
+                                                });
+                                            }
+                                            else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Sub Ticket Not Completed.", false, undefined);
+                                                res.end(jsonString);
+                                            }
+                                        }
+                                    });
+
+                                }
+                                else {
+
+                                    Ticket.findOneAndUpdate({
+                                        reference: req.params.reference,
+                                        company: company,
+                                        tenant: tenant
+                                    }, ticket, function (err, rUser) {
+                                        if (err) {
+                                            jsonString = messageFormatter.FormatMessage(err, "Fail Update Ticket", false, undefined);
+                                        }
+                                        else {
+                                            if (rUser) {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
+                                                ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                            }
+                                            else {
+                                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
+                                            }
+                                        }
+                                        res.end(jsonString);
+                                    });
+                                }
+                            } else {
+
+                                var queueName = "EMAILOUT";
+                                var message = {
+                                    from: "no-reply",
+                                    to: ticket.assignee.email.contact,
+                                    subject: "Resp:"+req.params.reference+" status update request "+req.body.status,
+                                    //template: "By-User Registration Confirmation",
+                                    body: "The status is invalid",
+                                    company: 0,
+                                    tenant: 1
+                                }
+
+                                queueConnection.publish(queueName, message, {
+                                    contentType: 'application/json'
+                                });
+
+
+                                jsonString = messageFormatter.FormatMessage(undefined, "Invalid Status Change Request", false, undefined);
+                                res.end(jsonString);
+                            }
+                        });
+
+                    }
+                    else {
+                        jsonString = messageFormatter.FormatMessage(undefined, "Fail Find Ticket", false, undefined);
+                        res.end(jsonString);
+                    }
+                }
+
+            });
+        });
+    }
+    else {
+        jsonString = messageFormatter.FormatMessage(undefined, "Invalid Status.", false, undefined);
+        res.end(jsonString);
+    }
+
+};
+
 
 module.exports.AssignToUser = function (req, res) {
     logger.info("DVP-LiteTicket.AssignToUser Internal method ");
@@ -4068,6 +4250,24 @@ module.exports.CreateSubTicket = function (req, res) {
 
                             ticket.ticket_matrix = matrix;
 
+                            if(req.body.tags && util.isArray(req.body.tags) &&  req.body.tags.length > 0){
+
+
+                                var arr = [];
+                                req.body.tags.forEach(function(item){
+
+                                    var tagArr = item.split('.');
+                                    if(tagArr && tagArr.length > 0){
+
+                                        tagArr.forEach(function(myTags){
+                                            ticket.isolated_tags.push(myTags);
+                                        })
+                                    }
+
+                                })
+
+                            }
+
                             ////////////////////////////////////////////////////////////////
 
                             ticket.save(function (err, obj) {
@@ -4077,6 +4277,7 @@ module.exports.CreateSubTicket = function (req, res) {
                                     res.end(jsonString);
                                 }
                                 else {
+                                    SetRelatedSlots(req,obj.id,obj.isolated_tags);
                                     parentTicket.update({$addToSet: {sub_tickets: obj._doc._id}}
                                         , function (err, rOrg) {
                                             if (err) {
@@ -4875,9 +5076,6 @@ function ExecuteTriggerSpecificOperations(ticketId, eventType, data, operations)
 
 }
 
-
-
-
 function ExecuteTriggerBulkOperation(bulkOperationId){
     logger.info("DVP-LiteTicket.ExecuteTriggerBulkOperation Internal method ");
 
@@ -5001,10 +5199,6 @@ function ExecuteTriggerBulkOperation(bulkOperationId){
 
 
 }
-
-
-
-
 
 function ExecuteSlaAsync(ticketId, previousPriority) {
     var deferred = q.defer();
@@ -6590,8 +6784,8 @@ var ValidateStatusChangeRequest = function (tenant, company, type, currentStatus
 };
 
 module.exports.GetNextAvailableStatusList = GetNextAvailableStatusList;
-module.exports.ValidateStatusChangeRequest = ValidateStatusChangeRequest;
 
+module.exports.ValidateStatusChangeRequest = ValidateStatusChangeRequest;
 
 module.exports.GetTicketReport= function(req, res){
 
@@ -6747,10 +6941,91 @@ module.exports.GetTicketReport= function(req, res){
             if (err) {
                 jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
             } else {
-
-
                 jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
+            }
+            res.end(jsonString);
+        });
 
+    }else{
+
+        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, undefined);
+        res.end(jsonString);
+    }
+
+}
+
+module.exports.GetTicketReportTagBased= function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketReportTagBased Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    if(req.query && req.query['from']&& req.query['to']) {
+        var from = req.query['from'];
+        var to = req.query['to'];
+
+        try {
+            from = new Date(from);
+            to = new Date(to);
+        }catch(ex){
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            res.end(jsonString);
+            return;
+        }
+
+        if(from > to){
+
+            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            res.end(jsonString);
+            return;
+
+        }
+
+        var tempQuery = {company: company, tenant: tenant};
+
+        tempQuery['created_at'] = { $gte: from, $lte: to };
+
+        if(req.body && req.body.direction){
+
+            tempQuery['direction'] = req.body.direction;
+        }
+
+
+        var aggregator = [
+
+            {
+                $match: tempQuery,
+
+            }, {
+                $unwind: "$isolated_tags"
+            },{
+                $group: {
+                    _id: "$isolated_tags",
+                    count: {
+                        $sum: 1
+                    }
+                }
+            },{
+                $project: {
+                    _id: 0,
+                    tag: '$_id',
+                    count: 1
+
+                }
+            },{
+                $sort:{
+                    count: -1
+                }
+            }
+        ];
+
+        Ticket.aggregate( aggregator, function (err, tickets) {
+            if (err) {
+                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
             }
             res.end(jsonString);
         });
@@ -6806,7 +7081,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
 
         fileName = fileName.replace(/:/g, "-") + '.csv';
 
-        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'From Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
+        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'Customer Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
         var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
 
         if(req.body){
@@ -6946,6 +7221,11 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                         description: ticketInfo.description
 
                                                     };
+
+                                                    if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+                                                    {
+                                                        ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+                                                    }
 
                                                     if(ticketInfo.requester && ticketInfo.requester.address)
                                                     {
@@ -7142,6 +7422,11 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 description: ticketInfo.description
 
                                             };
+
+                                            if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+                                            {
+                                                ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+                                            }
 
                                             if(ticketInfo.requester && ticketInfo.requester.address)
                                             {

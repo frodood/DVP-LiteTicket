@@ -17,7 +17,6 @@ function CreateTicketView(req, res){
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
-
     var jsonString;
 
 
