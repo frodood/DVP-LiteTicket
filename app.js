@@ -164,6 +164,10 @@ server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"tic
 server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketSchema);
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
 server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
+
+server.get('/DVP/API/:version/TicketReportTagBased', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReportTagBased);
+
+
 server.post('/DVP/API/:version/TicketDetailReport/data/:skip/:limit', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReport);
 server.post('/DVP/API/:version/TicketDetailReport/data', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportDownload);
 server.post('/DVP/API/:version/TicketDetailReport/count', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketDetailReportCount);
@@ -202,6 +206,7 @@ server.put('/DVP/API/:version/Ticket/:id/Comment/:commentid/SubComment', authori
 server.put('/DVP/API/:version/TicketByEngagement/:engagementid/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByEngagement);
 server.put('/DVP/API/:version/TicketByReference/:reference/Comment',authorization({resource:"ticket", action:"write"}), ticketService.AddCommentByReference);
 server.put('/DVP/API/:version/Ticket/:id/Status', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatus);
+server.put('/DVP/API/:version/TicketByReference/:reference/StatusByUser', authorization({resource:"ticket", action:"write"}), ticketService.ChangeStatusByUser);
 server.put('/DVP/API/:version/Ticket/Status/Bulk', authorization({resource:"ticket", action:"write"}), ticketService.BulkStatusUpdate);
 server.put('/DVP/API/:version/Ticket/:id/AssignUser/:user', authorization({resource:"ticket", action:"write"}), ticketService.AssignToUser);
 server.put('/DVP/API/:version/Ticket/:id/AssignGroup/:group', authorization({resource:"ticket", action:"write"}), ticketService.AssignToGroup);
