@@ -5,12 +5,13 @@ var amqp = require('amqp');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 
 //var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
+var rabbitmqIP = [];
 if(config.RabbitMQ.ip) {
-    config.RabbitMQ.ip = config.RabbitMQ.ip.split(",");
+    rabbitmqIP = config.RabbitMQ.ip.split(",");
 }
 
 var queueConnection = amqp.createConnection({
-    host: config.RabbitMQ.ip,
+    host: rabbitmqIP,
     port: config.RabbitMQ.port,
     login: config.RabbitMQ.user,
     password: config.RabbitMQ.password,
