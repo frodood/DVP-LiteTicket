@@ -38,24 +38,89 @@ var q = require('q');
 var amqp = require('amqp');
 var moment = require("moment");
 var util = require('util');
-var redis=require('redis');
+var redis=require('ioredis');
 var uuid = require('node-uuid');
 
-var redisPort = config.Redis.port;
-var redisIp = config.Redis.ip;
-var redisPassword = config.Redis.password;
+var redisip = config.Redis.ip;
+var redisport = config.Redis.port;
+var redispass = config.Redis.password;
+var redismode = config.Redis.mode;
+var redisdb = config.Redis.db;
 
 
-var redisClient = redis.createClient(redisPort,redisIp);
 
-redisClient.auth(redisPassword, function (error) {
-    console.log("Redis Auth Error : "+error);
-});
-redisClient.on("error", function (err) {
-    console.log("Error " + err);
+var redisSetting =  {
+    port:redisport,
+    host:redisip,
+    family: 4,
+    password: redispass,
+    db: redisdb,
+    retryStrategy: function (times) {
+        var delay = Math.min(times * 50, 2000);
+        return delay;
+    },
+    reconnectOnError: function (err) {
+
+        return true;
+    }
+};
+
+if(redismode == 'sentinel'){
+
+    if(config.Redis.sentinels && config.Redis.sentinels.hosts && config.Redis.sentinels.port, config.Redis.sentinels.name){
+        var sentinelHosts = config.Redis.sentinels.hosts.split(',');
+        if(Array.isArray(sentinelHosts) && sentinelHosts.length > 2){
+            var sentinelConnections = [];
+
+            sentinelHosts.forEach(function(item){
+
+                sentinelConnections.push({host: item, port:config.Redis.sentinels.port})
+
+            })
+
+            redisSetting = {
+                sentinels:sentinelConnections,
+                name: config.Redis.sentinels.name,
+                password: redispass
+            }
+
+        }else{
+
+            console.log("No enough sentinel servers found .........");
+        }
+
+    }
+}
+
+var redisClient = undefined;
+
+if(redismode != "cluster") {
+    redisClient = new redis(redisSetting);
+}else{
+
+    var redisHosts = redisip.split(",");
+    if(Array.isArray(redisHosts)){
 
 
-});
+        redisSetting = [];
+        redisHosts.forEach(function(item){
+            redisSetting.push({
+                host: item,
+                port: redisport,
+                family: 4,
+                password: redispass});
+        });
+
+        var redisClient = new redis.Cluster([redisSetting]);
+
+    }else{
+
+        redisClient = new redis(redisSetting);
+    }
+
+
+}
+
 
 
 var Schema = mongoose.Schema;
@@ -69,9 +134,25 @@ var TicketPrefix = require('dvp-mongomodels/model/Ticket').TicketPrefix;
 var externalApi = require('./ExternalApiAccess.js');
 
 ////////////////////////////rabbitmq//////////////////////////////////////////////////////
-var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
+//var queueHost = format('amqp://{0}:{1}@{2}:{3}', config.RabbitMQ.user, config.RabbitMQ.password, config.RabbitMQ.ip, config.RabbitMQ.port);
+var rabbitmqHosts = [];
+if(config.RabbitMQ.ip) {
+    rabbitmqHosts = config.RabbitMQ.ip.split(",");
+}
+
 var queueConnection = amqp.createConnection({
-    url: queueHost
+    host: rabbitmqHosts,
+    port: config.RabbitMQ.port,
+    login: config.RabbitMQ.user,
+    password: config.RabbitMQ.password,
+    vhost: config.RabbitMQ.vhost,
+    noDelay: true,
+    heartbeat:10
+}, {
+    reconnect: true,
+    reconnectBackoffStrategy: 'linear',
+    reconnectExponentialLimit: 120000,
+    reconnectBackoffTime: 1000
 });
 queueConnection.on('ready', function () {
 
