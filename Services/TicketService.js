@@ -9031,7 +9031,7 @@ module.exports.GetAllTicketsCollaboratedByMe = function (req, res) {
         }
     });
 };
-module.exports.GetMySubmittionCount = function (req, res) {
+module.exports.GetMySubmittedTicketCount = function (req, res) {
     logger.debug("DVP-LiteTicket.GetMySubmittionCount Internal method ");
 
     var company = parseInt(req.user.company);
@@ -9090,7 +9090,7 @@ module.exports.GetMySubmittionCount = function (req, res) {
         }
     });
 };
-module.exports.GetMyWatchedCount = function (req, res) {
+module.exports.GetMyWatchedTicketCount = function (req, res) {
     logger.debug("DVP-LiteTicket.GetMyWatchedCount Internal method ");
 
     var company = parseInt(req.user.company);
@@ -9150,7 +9150,7 @@ module.exports.GetMyWatchedCount = function (req, res) {
     });
 };
 
-module.exports.GetMyCollaboratedCount = function (req, res) {
+module.exports.GetMyCollaboratedTicketCount = function (req, res) {
     logger.debug("DVP-LiteTicket.GetMyCollaboratedCount Internal method ");
 
     var company = parseInt(req.user.company);

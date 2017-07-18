@@ -231,11 +231,11 @@ server.del('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization(
 server.put('/DVP/API/:version/Ticket/BulkOperation/JobId/:jobId', authorization({resource:"ticket", action:"write"}), ticketService.StartBulkOperationJob);
 server.get('/DVP/API/:version/Ticket/BulkOperation/JobIds/jobReference', authorization({resource:"ticket", action:"read"}), ticketService.GetJobsByReference);
 server.get('/DVP/API/:version/TicketsSubmittedByMe/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsSubmittedByMe);
-server.get('/DVP/API/:version/TicketsSubmittedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMySubmittionCount);
+server.get('/DVP/API/:version/TicketsSubmittedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMySubmittedTicketCount);
 server.get('/DVP/API/:version/TicketsWatchedByMe/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsWatchedByMe);
-server.get('/DVP/API/:version/TicketsWatchedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyWatchedCount);
+server.get('/DVP/API/:version/TicketsWatchedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyWatchedTicketCount);
 server.get('/DVP/API/:version/TicketsCollaboratedByMe/:Size/:Page', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsCollaboratedByMe);
-server.get('/DVP/API/:version/TicketsCollaboratedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyCollaboratedCount);
+server.get('/DVP/API/:version/TicketsCollaboratedByMe/Count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyCollaboratedTicketCount);
 
 
 
