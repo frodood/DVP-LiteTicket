@@ -8838,3 +8838,374 @@ module.exports.MakePrefixAvailable= function(req, res){
 
 
 };
+
+
+
+// -------------------------------- Tickets by Me ----------------------------------------
+module.exports.GetAllTicketsSubmittedByMe = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllTicketsSubmittedByMe Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    submitter: user.id
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.find(qObj
+                ).populate('submitter', 'name firstname lastname').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Tickets submitted by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Tickets submitted by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetAllTicketsWatchedByMe = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllTicketsWatchedByMe Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    watchers:{$in:[user.id]}
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.find(qObj
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Tickets submitted by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Tickets submitted by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetAllTicketsCollaboratedByMe = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllTicketsCollaboratedByMe Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    collaborators:{$in:[user.id]}
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.find(qObj
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets Collaborated by me", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Tickets Collaborated by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Tickets Collaborated by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetMySubmittionCount = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetMySubmittionCount Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    submitter: user.id
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.count(qObj).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to get count of Tickets submitted by me ", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "Count of tickets submitted by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail to get count of Tickets submitted by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetMyWatchedCount = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetMyWatchedCount Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    watchers: {$in:[user.id]}
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.count(qObj).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to get count of Tickets watched by me ", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "Count of tickets watched by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail to get count of Tickets watched by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+module.exports.GetMyCollaboratedCount = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetMyCollaboratedCount Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    collaborators: {$in:[user.id]}
+                };
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+
+                Ticket.count(qObj).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to get count of Tickets Collaborated by me ", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "Count of tickets Collaborated by me found", true, tickets);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail to get count of Tickets Collaborated by me", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
