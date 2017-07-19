@@ -1477,7 +1477,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate({path: 'sub_tickets', populate :{path: 'assignee_group', select: 'name'}})
         .populate({path:'related_tickets',populate:{path: 'assignee' , select : 'name avatar firstname lastname'}})
         .populate({path:'related_tickets',populate:{path: 'assignee_group' , select : 'name'}})
-        .populate('assignee', 'name avatar firstname lastname')
+        .populate('assignee', 'name avatar firstname lastname group')
         .populate('assignee_group', 'name')
         .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus contacts firstname lastname')
         .populate('submitter', 'name avatar firstname lastname')
@@ -1488,6 +1488,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
         .populate( {path: 'form_submission',populate : {path: 'form'}})
         .populate({path: 'comments',populate : [{path: 'author', select:'name avatar firstname lastname'},{path: 'author_external', select:'name avatar firstname lastname'},{path: 'attachments'},{path:'engagement_session'}]})
         .populate({path:'slot_attachment.attachment',populate:'file url type'})
+
 
         .exec(function (err, ticket) {
             if (err) {
