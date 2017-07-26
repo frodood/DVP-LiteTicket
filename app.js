@@ -163,7 +163,6 @@ server.get('/DVP/API/:version/Tickets/:Size/:Page', authorization({resource:"tic
 server.get('/DVP/API/:version/TicketSchema', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketSchema);
 server.get('/DVP/API/:version/TicketsByField/:key/:value', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketsByField);
 server.post('/DVP/API/:version/TicketReport', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReport);
-
 server.get('/DVP/API/:version/TicketReportTagBased', authorization({resource:"ticket", action:"read"}), ticketService.GetTicketReportTagBased);
 
 
@@ -475,6 +474,12 @@ server.put('/DVP/API/:version/TicketPrefix/:prefix/Available',authorization({res
 
 ///////// Attachments/////////////////////////////////////////////////////////////////////////////////////////////////////
 server.post('/DVP/API/:version/Attachment', authorization({resource:"ticket", action:"write"}), ticketService.AddCommonAttachment);
+
+/////////  Ticket Count/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+server.get('/DVP/API/:version/Tickets/count', authorization({resource:"ticket", action:"read"}), ticketService.GetAllTicketsCount);
+server.get('/DVP/API/:version/MyTickets/count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyTicketsCount);
+server.get('/DVP/API/:version/MyGroupTickets/count', authorization({resource:"ticket", action:"read"}), ticketService.GetMyGroupTicketsCount);
 
 server.listen(port, function () {
     ardsService.RegisterWithArds(function(isSuccess){

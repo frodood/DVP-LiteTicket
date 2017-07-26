@@ -980,104 +980,7 @@ module.exports.GetAllGroupTickets = function (req, res) {
         });
 };
 
-module.exports.GetAllMyGroupTickets = function (req, res) {
-    logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
-    var company = parseInt(req.user.company);
-    var tenant = parseInt(req.user.tenant);
 
-    var page = parseInt(req.params.Page),
-        size = parseInt(req.params.Size),
-        skip = page > 0 ? ((page - 1) * size) : 0;
-
-    var jsonString;
-
-
-    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
-        if (err) {
-            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
-            res.end(jsonString);
-
-        } else {
-
-            if(user && user.group) {
-                /*
-                 UserGroup.find({"users": user.id}, function (error, groups) {
-                 if(!error  && groups) {
-                 var ids = [];
-                 groups.forEach(function (item) {
-                 console.log(item.id);
-                 ids.push(item._id);
-                 });
-                 var obj = {
-                 company: company,
-                 tenant: tenant,
-                 assignee_group: {$in: ids},
-                 active: true,
-                 };
-                 var paramArr;
-                 if (req.query.status) {
-                 if (Array.isArray(req.query.status)) {
-                 paramArr = req.query.status;
-                 } else {
-                 paramArr = [req.query.status];
-                 }
-                 obj[status] = {$in: paramArr}
-                 }
-                 */
-
-
-
-
-
-                var obj = {
-
-                    "company": company,
-                    "tenant": tenant,
-                    "assignee_group": user.group,
-                    "active": true,
-                    "status" :{$in: []}
-                }
-
-                if(Array.isArray(req.query.status)) {
-                    for (var i = 0; i < req.query.status.length; i++) {
-                        obj.status.$in.push(req.query.status[i]);
-                    }
-                }else{
-
-                    obj.status.$in.push(req.query.status);
-                }
-
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
-
-                            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
-
-                        } else {
-
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
-                            } else {
-
-                                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-                            }
-                        }
-                        res.end(jsonString);
-                    });
-
-                /* }else{
-                 jsonString = messageFormatter.FormatMessage(undefined, "Get Groups Failed", false, undefined);
-                 res.end(jsonString);
-                 }
-                 });*/
-            }else{
-
-                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
-                res.end(jsonString);
-            }
-        }
-    });
-};
 
 module.exports.GetMyGroupTicketList = function (req, res) {
     logger.info("DVP-LiteTicket.GetMyGroupTicketList Internal method ");
@@ -1195,6 +1098,74 @@ module.exports.GetAllMyTickets = function (req, res) {
 
             } else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetAllMyGroupTickets = function (req, res) {
+    logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if(user && user.group) {
+
+                var obj = {
+
+                    "company": company,
+                    "tenant": tenant,
+                    "assignee_group": user.group,
+                    "active": true
+                }
+
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    obj.status = {$in: paramArr}
+                }
+
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+
+                    } else {
+
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
+                        } else {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, undefined);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+
+
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
                 res.end(jsonString);
             }
         }
@@ -9150,7 +9121,6 @@ module.exports.GetMyWatchedTicketCount = function (req, res) {
         }
     });
 };
-
 module.exports.GetMyCollaboratedTicketCount = function (req, res) {
     logger.debug("DVP-LiteTicket.GetMyCollaboratedCount Internal method ");
 
@@ -9205,6 +9175,212 @@ module.exports.GetMyCollaboratedTicketCount = function (req, res) {
 
             } else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+
+
+// -------------------------------- Tickets Count ----------------------------------------
+module.exports.GetAllTicketsCount = function (req, res) {
+
+    logger.info("DVP-LiteTicket.GetAllTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+    var qObj = {company: company, tenant: tenant, active: true};
+
+    if (req.query.status) {
+        var paramArr;
+        if (Array.isArray(req.query.status)) {
+            paramArr = req.query.status;
+        } else {
+
+            paramArr = [req.query.status];
+        }
+        qObj.status = {$in: paramArr};
+    }
+
+    Ticket.count(qObj).exec(function (err,resCount) {
+        if (err) {
+
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (resCount) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, resCount);
+
+            } else {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, 0);
+
+            }
+        }
+
+        res.end(jsonString);
+    });
+
+};
+module.exports.GetMyTicketsCount = function (req, res) {
+    logger.debug("DVP-LiteTicket.GetAllMyTickets Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if (user) {
+
+                var qObj = {
+                    company: company,
+                    tenant: tenant, active: true,
+                    assignee: user.id
+                };
+
+
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    qObj.status = {$in: paramArr}
+                }
+                Ticket.count(qObj).exec(function (err, resCount) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (resCount) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, resCount);
+                        }
+                        else {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
+                        }
+                        res.end(jsonString);
+                    }
+                });
+
+
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+};
+module.exports.GetMyGroupTicketsCount = function (req, res) {
+    logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+
+    var page = parseInt(req.params.Page),
+        size = parseInt(req.params.Size),
+        skip = page > 0 ? ((page - 1) * size) : 0;
+
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+
+        } else {
+
+            if(user && user.group) {
+                /*
+                 UserGroup.find({"users": user.id}, function (error, groups) {
+                 if(!error  && groups) {
+                 var ids = [];
+                 groups.forEach(function (item) {
+                 console.log(item.id);
+                 ids.push(item._id);
+                 });
+                 var obj = {
+                 company: company,
+                 tenant: tenant,
+                 assignee_group: {$in: ids},
+                 active: true,
+                 };
+                 var paramArr;
+                 if (req.query.status) {
+                 if (Array.isArray(req.query.status)) {
+                 paramArr = req.query.status;
+                 } else {
+                 paramArr = [req.query.status];
+                 }
+                 obj[status] = {$in: paramArr}
+                 }
+                 */
+
+
+
+
+
+                var obj = {
+
+                    "company": company,
+                    "tenant": tenant,
+                    "assignee_group": user.group,
+                    "active": true
+                }
+
+                if (req.query.status) {
+                    var paramArr;
+                    if (Array.isArray(req.query.status)) {
+                        paramArr = req.query.status;
+                    } else {
+
+                        paramArr = [req.query.status];
+                    }
+
+                    obj.status = {$in: paramArr}
+                }
+
+                Ticket.count(obj).exec(function (err, resCount) {
+                    if (err) {
+
+                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+
+                    } else {
+
+                        if (resCount) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, resCount);
+                        } else {
+
+                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, undefined);
+                        }
+                    }
+                    res.end(jsonString);
+                });
+
+
+            }else{
+
+                jsonString = messageFormatter.FormatMessage(undefined, "No User Found", false, undefined);
                 res.end(jsonString);
             }
         }
