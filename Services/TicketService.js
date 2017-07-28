@@ -19,7 +19,6 @@ var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var Case = require('dvp-mongomodels/model/CaseManagement').Case;
 var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConfiguration;
-
 var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
 var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
 
@@ -30,6 +29,9 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var slaWorker = require('../Workers/SLA/SLAWorker.js');
 var caseWorker = require('../Workers/Case/CaseWorker');
+
+var SendTicketNotification = require("../Workers/Trigger/DvpNotification.js").SendTicketNotification;
+
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
 var format = require('stringformat');
@@ -1103,6 +1105,7 @@ module.exports.GetAllMyTickets = function (req, res) {
         }
     });
 };
+
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -2794,6 +2797,7 @@ module.exports.AddComment = function (req, res) {
                                             }
                                             try {
 
+                                                if(queueName)
                                                 queueConnection.publish(queueName, message, {
                                                     contentType: 'application/json'
                                                 });
@@ -2862,6 +2866,12 @@ module.exports.AddComment = function (req, res) {
                                                 if (rOrg) {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
                                                     ExecuteTrigger(req.params.id, "add_comment", comment);
+
+                                                    if(req.body.public == 'public' || req.body.public == 'internal' ) {
+                                                        SendTicketNotification(ticket, "comment", req.user.iss)
+                                                    }
+
+
 
                                                 }
                                                 else {
@@ -3403,6 +3413,8 @@ module.exports.ChangeStatus = function (req, res) {
                                                     if (rUser) {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
                                                         ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+
+                                                        SendTicketNotification(ticket, "status", req.user.iss);
                                                     }
                                                     else {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -3433,6 +3445,7 @@ module.exports.ChangeStatus = function (req, res) {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
                                             ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                            SendTicketNotification(ticket, "status", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -3639,7 +3652,6 @@ module.exports.ChangeStatusByUser = function (req, res) {
     }
 
 };
-
 
 module.exports.AssignToUser = function (req, res) {
     logger.info("DVP-LiteTicket.AssignToUser Internal method ");
