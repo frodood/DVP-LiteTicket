@@ -480,8 +480,18 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
+    var sortQuery = {};
+
+    if(req.query.sorted_by){
+
+        sortQuery[req.query.sorted_by] = -1;
+
+    }else{
+        sortQuery = {created_at: -1}
+    }
+
     Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
-        .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+        .limit(size).sort(sortQuery).exec(function (err, tickets) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
@@ -1066,6 +1076,15 @@ module.exports.GetAllMyTickets = function (req, res) {
                     assignee: user.id,
                 };
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
 
                 if (req.query.status) {
                     var paramArr;
@@ -1080,7 +1099,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                 }
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                         if (err) {
 
                             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
@@ -1147,8 +1166,18 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     obj.status = {$in: paramArr}
                 }
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
                 Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
@@ -8976,9 +9005,19 @@ module.exports.GetAllTicketsSubmittedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
                 Ticket.find(qObj
                 ).populate('submitter', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
@@ -9039,9 +9078,21 @@ module.exports.GetAllTicketsWatchedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
+
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
@@ -9102,9 +9153,20 @@ module.exports.GetAllTicketsCollaboratedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
+
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets Collaborated by me", false, undefined);
