@@ -1176,7 +1176,7 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     sortQuery = {created_at: -1}
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name').skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
