@@ -3748,7 +3748,8 @@ module.exports.AssignToUser = function (req, res) {
                                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-                                ticket.assignee = user.id;
+                                //ticket.assignee = user.id;
+                                ticket.assignee = user;
                                 ticket.updated_at= time;
                                 ticket.$addToSet={"events": tEvent};
 
@@ -3762,7 +3763,7 @@ module.exports.AssignToUser = function (req, res) {
                                             var PreAssignee = oldTicket.assignee? oldTicket.assignee.username: "";
                                             ExecuteTrigger(req.params.id, "change_assignee", PreAssignee);
 
-                                            SendTicketNotification(obj, "assignuser", req.user.iss);
+                                            SendTicketNotification(ticket, "assignuser", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
