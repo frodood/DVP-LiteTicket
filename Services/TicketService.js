@@ -3750,7 +3750,6 @@ module.exports.AssignToUser = function (req, res) {
 
                                 //ticket.assignee = user.id;
                                 ticket.assignee = user;
-                                ticket.assignee_group = undefined;
                                 ticket.updated_at= time;
                                 ticket.$addToSet={"events": tEvent};
 
