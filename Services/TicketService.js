@@ -19,7 +19,6 @@ var Comment = require('dvp-mongomodels/model/Comment').Comment;
 var TicketStatics = require('dvp-mongomodels/model/TicketMetrix').TicketStatics;
 var Case = require('dvp-mongomodels/model/CaseManagement').Case;
 var CaseConfiguration = require('dvp-mongomodels/model/CaseManagement').CaseConfiguration;
-
 var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
 var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
 
@@ -30,6 +29,9 @@ var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJ
 var triggerWorker = require('../Workers/Trigger/TriggerWorker');
 var slaWorker = require('../Workers/SLA/SLAWorker.js');
 var caseWorker = require('../Workers/Case/CaseWorker');
+
+var SendTicketNotification = require("../Workers/Trigger/DvpNotification.js").SendTicketNotification;
+
 var deepcopy = require("deepcopy");
 var diff = require('deep-diff').diff;
 var format = require('stringformat');
@@ -478,8 +480,22 @@ module.exports.GetAllTickets = function (req, res) {
         qObj.status = {$in: paramArr};
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
-        .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+    var sortQuery = {};
+
+    if(req.query.sorted_by){
+
+        sortQuery[req.query.sorted_by] = -1;
+
+    }else{
+        sortQuery = {created_at: -1}
+    }
+
+    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name')
+        .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+        .populate('submitter', 'name avatar firstname lastname')
+        .populate('collaborators', 'name avatar firstname lastname')
+        .populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
+        .limit(size).sort(sortQuery).exec(function (err, tickets) {
             if (err) {
 
                 jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
@@ -1011,7 +1027,12 @@ module.exports.GetMyGroupTicketList = function (req, res) {
                     "active": true
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee', 'name avatar')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name').populate('collaborators', 'name')
+                    .skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -1064,6 +1085,15 @@ module.exports.GetAllMyTickets = function (req, res) {
                     assignee: user.id,
                 };
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
 
                 if (req.query.status) {
                     var paramArr;
@@ -1077,8 +1107,8 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar firstname lastname').populate('collaborators', 'name avatar firstname lastname').skip(skip)
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                         if (err) {
 
                             jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
@@ -1103,6 +1133,7 @@ module.exports.GetAllMyTickets = function (req, res) {
         }
     });
 };
+
 module.exports.GetAllMyGroupTickets = function (req, res) {
     logger.info("DVP-LiteTicket.GetAllGroupTickets Internal method ");
     var company = parseInt(req.user.company);
@@ -1144,8 +1175,23 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     obj.status = {$in: paramArr}
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name avatar firstname lastname')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'avatar firstname lastname')
+                    .skip(skip)
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
@@ -1668,6 +1714,7 @@ module.exports.PickTicket = function (req, res) {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
                                             ExecuteTrigger(req.params.id, "change_assignee", "");
+                                            SendTicketNotification(rUser, "assignuser", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -2794,6 +2841,7 @@ module.exports.AddComment = function (req, res) {
                                             }
                                             try {
 
+                                                if(queueName)
                                                 queueConnection.publish(queueName, message, {
                                                     contentType: 'application/json'
                                                 });
@@ -2862,6 +2910,12 @@ module.exports.AddComment = function (req, res) {
                                                 if (rOrg) {
                                                     jsonString = messageFormatter.FormatMessage(undefined, "Comment Successfully Attach To Ticket", true, obj);
                                                     ExecuteTrigger(req.params.id, "add_comment", comment);
+
+                                                    if(req.body.public == 'public' || req.body.public == 'internal' ) {
+                                                        SendTicketNotification(ticket, "comment", req.user.iss)
+                                                    }
+
+
 
                                                 }
                                                 else {
@@ -3403,6 +3457,8 @@ module.exports.ChangeStatus = function (req, res) {
                                                     if (rUser) {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
                                                         ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+
+                                                        SendTicketNotification(ticket, "status", req.user.iss);
                                                     }
                                                     else {
                                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -3433,6 +3489,7 @@ module.exports.ChangeStatus = function (req, res) {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Status Update Successfully", true, rUser);
                                             ExecuteTrigger(req.params.id, "change_status", oldTicket.status);
+                                            SendTicketNotification(ticket, "status", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, rUser);
@@ -3640,7 +3697,6 @@ module.exports.ChangeStatusByUser = function (req, res) {
 
 };
 
-
 module.exports.AssignToUser = function (req, res) {
     logger.info("DVP-LiteTicket.AssignToUser Internal method ");
     var company = parseInt(req.user.company);
@@ -3692,7 +3748,8 @@ module.exports.AssignToUser = function (req, res) {
                                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-                                ticket.assignee = user.id;
+                                //ticket.assignee = user.id;
+                                ticket.assignee = user;
                                 ticket.updated_at= time;
                                 ticket.$addToSet={"events": tEvent};
 
@@ -3705,6 +3762,8 @@ module.exports.AssignToUser = function (req, res) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
                                             var PreAssignee = oldTicket.assignee? oldTicket.assignee.username: "";
                                             ExecuteTrigger(req.params.id, "change_assignee", PreAssignee);
+
+                                            SendTicketNotification(ticket, "assignuser", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -3800,6 +3859,7 @@ module.exports.AssignToGroup = function (req, res) {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To Group.", true, undefined);
                                         var PreAssigneeGroup = oldTicket.assignee_group? oldTicket.assignee_group.name: "";
                                         ExecuteTrigger(req.params.id, "change_assignee_groups", PreAssigneeGroup);
+                                        SendTicketNotification(obj, "assigngroup", req.user.iss);
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -4954,6 +5014,7 @@ module.exports.WatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        SendTicketNotification(recentticket, "startwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
@@ -4998,6 +5059,7 @@ module.exports.StopWatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        SendTicketNotification(recentticket, "stopwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
@@ -8987,9 +9049,24 @@ module.exports.GetAllTicketsSubmittedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
                 Ticket.find(qObj
-                ).populate('submitter', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus firstname lastname')
+                    .populate('submitter', 'name avatar firstname lastname').populate('collaborators', 'name avatar firstname lastname')
+                    .skip(skip)
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
@@ -9050,9 +9127,27 @@ module.exports.GetAllTicketsWatchedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
+
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'name avatar firstname lastname')
+                    .populate('watchers', 'name avatar firstname lastname')
+                    .skip(skip)
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets submitted by me", false, undefined);
@@ -9113,9 +9208,25 @@ module.exports.GetAllTicketsCollaboratedByMe = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
+                var sortQuery = {};
+
+                if(req.query.sorted_by){
+
+                    sortQuery[req.query.sorted_by] = -1;
+
+                }else{
+                    sortQuery = {created_at: -1}
+                }
+
+
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
-                    .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'name avatar firstname lastname')
+                    .populate('watchers', 'name avatar firstname lastname').skip(skip)
+                    .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets Collaborated by me", false, undefined);
@@ -9173,7 +9284,7 @@ module.exports.GetMySubmittedTicketCount = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
-                Ticket.count(qObj).exec(function (err, tickets) {
+                Ticket.count(qObj).exec(function (err,tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to get count of Tickets submitted by me ", false, undefined);
