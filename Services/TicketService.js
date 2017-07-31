@@ -490,7 +490,11 @@ module.exports.GetAllTickets = function (req, res) {
         sortQuery = {created_at: -1}
     }
 
-    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name avatar').populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
+    Ticket.find(qObj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name')
+        .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+        .populate('submitter', 'name avatar firstname lastname')
+        .populate('collaborators', 'name avatar firstname lastname')
+        .populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort(sortQuery).exec(function (err, tickets) {
             if (err) {
 
@@ -1023,7 +1027,12 @@ module.exports.GetMyGroupTicketList = function (req, res) {
                     "active": true
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee', 'name avatar').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee', 'name avatar')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name').populate('collaborators', 'name')
+                    .skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
                         if (err) {
 
@@ -1098,7 +1107,7 @@ module.exports.GetAllMyTickets = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar firstname lastname').populate('collaborators', 'name avatar firstname lastname').skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                         if (err) {
 
@@ -1176,7 +1185,12 @@ module.exports.GetAllMyGroupTickets = function (req, res) {
                     sortQuery = {created_at: -1}
                 }
 
-                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('collaborators', 'name').skip(skip)
+                Ticket.find(obj).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name avatar firstname lastname')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'avatar firstname lastname')
+                    .skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
@@ -9016,7 +9030,12 @@ module.exports.GetAllTicketsSubmittedByMe = function (req, res) {
                 }
 
                 Ticket.find(qObj
-                ).populate('submitter', 'name firstname lastname').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee', 'name avatar')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name').populate('collaborators', 'name')
+                    .skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
@@ -9091,7 +9110,13 @@ module.exports.GetAllTicketsWatchedByMe = function (req, res) {
 
 
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'name avatar firstname lastname')
+                    .populate('watchers', 'name avatar firstname lastname')
+                    .skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
@@ -9165,7 +9190,12 @@ module.exports.GetAllTicketsCollaboratedByMe = function (req, res) {
 
 
                 Ticket.find(qObj
-                ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name firstname lastname').populate('collaborators', 'name firstname lastname').populate('watchers', 'name firstname lastname').skip(skip)
+                ).populate('assignee', 'name avatar firstname lastname')
+                    .populate('assignee_group', 'name')
+                    .populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus')
+                    .populate('submitter', 'name avatar firstname lastname')
+                    .populate('collaborators', 'name avatar firstname lastname')
+                    .populate('watchers', 'name avatar firstname lastname').skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
 
