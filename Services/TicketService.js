@@ -1714,6 +1714,7 @@ module.exports.PickTicket = function (req, res) {
                                         if (rUser) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Pick Successfully", true, ticket);
                                             ExecuteTrigger(req.params.id, "change_assignee", "");
+                                            SendTicketNotification(rUser, "assignuser", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", true, ticket);
@@ -3760,6 +3761,8 @@ module.exports.AssignToUser = function (req, res) {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To User.", true, undefined);
                                             var PreAssignee = oldTicket.assignee? oldTicket.assignee.username: "";
                                             ExecuteTrigger(req.params.id, "change_assignee", PreAssignee);
+
+                                            SendTicketNotification(obj, "assignuser", req.user.iss);
                                         }
                                         else {
                                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -3855,6 +3858,7 @@ module.exports.AssignToGroup = function (req, res) {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Ticket Assign To Group.", true, undefined);
                                         var PreAssigneeGroup = oldTicket.assignee_group? oldTicket.assignee_group.name: "";
                                         ExecuteTrigger(req.params.id, "change_assignee_groups", PreAssigneeGroup);
+                                        SendTicketNotification(obj, "assigngroup", req.user.iss);
                                     }
                                     else {
                                         jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket Information.", false, undefined);
@@ -5009,6 +5013,7 @@ module.exports.WatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        SendTicketNotification(recentticket, "startwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
@@ -5053,6 +5058,7 @@ module.exports.StopWatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
+                        SendTicketNotification(recentticket, "stopwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
@@ -9031,10 +9037,10 @@ module.exports.GetAllTicketsSubmittedByMe = function (req, res) {
 
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar firstname lastname')
-                    .populate('assignee', 'name avatar')
+                    .populate('assignee', 'name avatar firstname lastname')
                     .populate('assignee_group', 'name')
-                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus')
-                    .populate('submitter', 'name').populate('collaborators', 'name')
+                    .populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus firstname lastname')
+                    .populate('submitter', 'name avatar firstname lastname').populate('collaborators', 'name avatar firstname lastname')
                     .skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
                     if (err) {
