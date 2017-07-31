@@ -217,7 +217,8 @@ function SendTicketNotification(ticket, action, from){
             To: room,
             Message: {
                 action: action,
-                reference: ticket.reference
+                reference: ticket.reference,
+                assignee:ticket.assignee
             },
             Direction: "STATELESS",
             CallbackURL: "",
