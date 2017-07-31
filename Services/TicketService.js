@@ -8033,26 +8033,126 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
             }
         }
 
+        var fileCheckKey = 'TICKETFILE:' + fromDate + ':' + toDate;
 
-
-        externalApi.RemoteGetFileMetadata(null, fileName, company, tenant, function(err, fileData)
+        redisClient.getset(fileCheckKey, true, function(err, redisResp)
         {
-            if(err)
+            if(redisResp)
             {
-                jsonString = messageFormatter.FormatMessage(err, "error getting file metadata", false, null);
+                jsonString = messageFormatter.FormatMessage(new Error('Another user generating same file, please try again'), "ERROR", false, null);
+                logger.debug('[DVP-LiteTicket.GetTicketDetailReportDownload] - API RESPONSE : %s', jsonString);
                 res.end(jsonString);
             }
             else
             {
-                if(fileData)
+                externalApi.RemoteGetFileMetadata(null, fileName, company, tenant, function(err, fileData)
                 {
-                    //delete file
-                    externalApi.DeleteFile(null, fileData.UniqueId, company, tenant, function(err, delResp)
+                    if(err)
                     {
-                        if(err)
+                        redisClient.del(fileCheckKey);
+                        jsonString = messageFormatter.FormatMessage(err, "error getting file metadata", false, null);
+                        res.end(jsonString);
+                    }
+                    else
+                    {
+                        if(fileData)
                         {
-                            jsonString = messageFormatter.FormatMessage(err, "error deleting file", false, null);
-                            res.end(jsonString);
+                            //delete file
+                            externalApi.DeleteFile(null, fileData.UniqueId, company, tenant, function(err, delResp)
+                            {
+                                if(err)
+                                {
+                                    redisClient.del(fileCheckKey);
+                                    jsonString = messageFormatter.FormatMessage(err, "error deleting file", false, null);
+                                    res.end(jsonString);
+                                }
+                                else
+                                {
+                                    externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
+                                    {
+                                        if(err || !fileResResp)
+                                        {
+                                            redisClient.del(fileCheckKey);
+                                            jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
+                                            res.end(jsonString);
+                                        }
+                                        else
+                                        {
+                                            var uniqueId = fileResResp;
+
+                                            jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
+                                            res.end(jsonString);
+
+                                            var offset = 0;
+                                            var limit = 5000;
+
+                                            Ticket.count(tempQuery, function (err, ticketCnt)
+                                            {
+                                                if(!err && ticketCnt)
+                                                {
+                                                    var arr = [];
+                                                    while(ticketCnt > offset)
+                                                    {
+                                                        arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
+                                                        offset = offset + limit;
+
+                                                    }
+
+                                                    async.series(arr, function(err, results)
+                                                    {
+                                                        if(err)
+                                                        {
+                                                            redisClient.del(fileCheckKey);
+                                                            externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+                                                            });
+                                                        }
+                                                        else
+                                                        {
+                                                            externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
+                                                            {
+                                                                redisClient.del(fileCheckKey);
+                                                                fs.unlink(fileName);
+                                                                if(!err && uploadResp)
+                                                                {
+
+                                                                }
+                                                                else
+                                                                {
+                                                                    externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+                                                                        if(err)
+                                                                        {
+                                                                            logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
+                                                                        }
+                                                                    });
+                                                                }
+
+                                                            });
+                                                        }
+
+                                                    })
+
+
+                                                }
+                                                else
+                                                {
+                                                    redisClient.del(fileCheckKey);
+                                                    externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+                                                    });
+
+                                                }
+                                            });
+
+
+
+
+
+                                        }
+
+                                    });
+                                }
+                            })
                         }
                         else
                         {
@@ -8060,6 +8160,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                             {
                                 if(err || !fileResResp)
                                 {
+                                    redisClient.del(fileCheckKey);
                                     jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
                                     res.end(jsonString);
                                 }
@@ -8089,6 +8190,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                             {
                                                 if(err)
                                                 {
+                                                    redisClient.del(fileCheckKey);
                                                     externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
 
                                                     });
@@ -8097,6 +8199,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                                 {
                                                     externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
                                                     {
+                                                        redisClient.del(fileCheckKey);
                                                         fs.unlink(fileName);
                                                         if(!err && uploadResp)
                                                         {
@@ -8121,6 +8224,7 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                         }
                                         else
                                         {
+                                            redisClient.del(fileCheckKey);
                                             externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
 
                                             });
@@ -8129,94 +8233,13 @@ module.exports.GetTicketDetailReportDownload = function(req, res){
                                     });
 
 
-
-
-
                                 }
 
                             });
                         }
-                    })
-                }
-                else
-                {
-                    externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
-                    {
-                        if(err || !fileResResp)
-                        {
-                            jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
-                            res.end(jsonString);
-                        }
-                        else
-                        {
-                            var uniqueId = fileResResp;
+                    }
 
-                            jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
-                            res.end(jsonString);
-
-                            var offset = 0;
-                            var limit = 5000;
-
-                            Ticket.count(tempQuery, function (err, ticketCnt)
-                            {
-                                if(!err && ticketCnt)
-                                {
-                                    var arr = [];
-                                    while(ticketCnt > offset)
-                                    {
-                                        arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
-                                        offset = offset + limit;
-
-                                    }
-
-                                    async.series(arr, function(err, results)
-                                    {
-                                        if(err)
-                                        {
-                                            externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                            });
-                                        }
-                                        else
-                                        {
-                                            externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
-                                            {
-                                                fs.unlink(fileName);
-                                                if(!err && uploadResp)
-                                                {
-
-                                                }
-                                                else
-                                                {
-                                                    externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-                                                        if(err)
-                                                        {
-                                                            logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
-                                                        }
-                                                    });
-                                                }
-
-                                            });
-                                        }
-
-                                    })
-
-
-                                }
-                                else
-                                {
-                                    externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                    });
-
-                                }
-                            });
-
-
-                        }
-
-                    });
-                }
+                });
             }
 
         });
