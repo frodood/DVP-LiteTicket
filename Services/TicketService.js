@@ -5014,7 +5014,6 @@ module.exports.WatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
-                        SendTicketNotification(recentticket, "startwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
@@ -5059,7 +5058,6 @@ module.exports.StopWatchTicket = function (req, res){
 
                         logger.debug("Add to resent ticket succeed ");
                         jsonString = messageFormatter.FormatMessage(undefined, "Add watcher successful", true, undefined);
-                        SendTicketNotification(recentticket, "stopwatch", req.user.iss);
                         res.end(jsonString);
                     }
 
