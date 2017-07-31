@@ -3829,7 +3829,7 @@ module.exports.AssignToGroup = function (req, res) {
                                  ticket.assignee_group = group.id;
                                  ticket.assignee = undefined ;*/
 
-                                ticket.assignee_group = group.id;
+                                ticket.assignee_group = group;
                                 ticket.assignee = undefined;
                                 ticket.updated_at= time;
                                 ticket.$addToSet={"events": tEvent};
