@@ -9260,7 +9260,7 @@ module.exports.GetMySubmittedTicketCount = function (req, res) {
                     qObj.status = {$in: paramArr}
                 }
 
-                Ticket.count(qObj).exec(function (err, tickets) {
+                Ticket.count(qObj).exec(function (err,tickets) {
                     if (err) {
 
                         jsonString = messageFormatter.FormatMessage(err, "Fail to get count of Tickets submitted by me ", false, undefined);
