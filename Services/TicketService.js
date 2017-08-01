@@ -1836,6 +1836,7 @@ module.exports.UpdateTicket = function (req, res) {
                     else {
                         if (rUser) {
                             jsonString = messageFormatter.FormatMessage(undefined, "Ticket Update Successfully", true, rUser);
+                            SendTicketNotification(ticket, "contentupdate", req.user.iss);
                         }
                         else {
                             jsonString = messageFormatter.FormatMessage(undefined, "Invalid Ticket ID.", false, rUser);
