@@ -4997,13 +4997,17 @@ module.exports.WatchTicket = function (req, res){
         }
         else {
             if (user) {
+
+                var time = new Date().toISOString();
+
                 Ticket.findOneAndUpdate({
                     company: company,
                     tenant: tenant,
-                    _id: req.params.id
+                    _id: req.params.id,
                 }, {
 
-                    $addToSet: {watchers:user._id}
+                    $addToSet: {watchers:user._id},
+                    updated_at:time
 
                 },function (err, recentticket) {
                     if (err) {
@@ -5041,13 +5045,15 @@ module.exports.StopWatchTicket = function (req, res){
         }
         else {
             if (user) {
+                var time = new Date().toISOString();
                 Ticket.findOneAndUpdate({
                     company: company,
                     tenant: tenant,
                     _id: req.params.id
                 }, {
 
-                    $pull: {watchers:user._id}
+                    $pull: {watchers:user._id},
+                    updated_at:time
 
                 },function (err, recentticket) {
                     if (err) {
