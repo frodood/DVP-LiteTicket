@@ -1438,6 +1438,7 @@ module.exports.MapTicketToProfile = function (req, res) {
 
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
+    var time = new Date().toISOString();
     var jsonString;
     Ticket.findOne({
         company: company,
@@ -1458,6 +1459,9 @@ module.exports.MapTicketToProfile = function (req, res) {
                 }
                 else {
                     ticket.requester = req.params.Requester;
+                    ticket.updated_at=time;
+
+
                     ticket.save( function (ex, obj) {
                         if (err) {
 
@@ -1890,6 +1894,7 @@ module.exports.UpdateFormSubmission = function (req, res) {
                     }
                 });
                 ticket.events.push(tEvent);
+                ticket.updated_at=time;
 
                 ticket.save( function (err, rUser) {
                     if (err) {
