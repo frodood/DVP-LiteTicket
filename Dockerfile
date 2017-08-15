@@ -14,4 +14,4 @@ RUN cd /usr/local/src/liteticket;
 WORKDIR /usr/local/src/liteticket
 RUN npm install
 EXPOSE 8872
-CMD [ "node", "/usr/local/src/liteticket/app.js" ]
+CMD [ "node", --expose-gc "/usr/local/src/liteticket/app.js" ]
