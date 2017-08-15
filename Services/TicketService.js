@@ -1388,12 +1388,27 @@ module.exports.GetRecentTicket = function(req, res){
         else {
             if (user) {
 
-                RecentUserTicket.find({company: company, tenant: tenant, user: user.id}).populate('ticket').sort({"updated_at": -1}).limit(5).exec(function (err, resent) {
+                RecentUserTicket.find({company: company, tenant: tenant, user: user.id}).populate('ticket').sort({"updated_at": -1}).limit(10).exec(function (err, resent) {
                     if (err) {
                         jsonString = messageFormatter.FormatMessage(err, "Get Recent Ticket Failed", false, undefined);
                         res.end(jsonString);
                     } else {
-                        jsonString = messageFormatter.FormatMessage(err, "Get Recent Ticket Success", true, resent);
+
+                        var resentTicketList = {};
+
+                        resentTicketList.tickets = [];
+
+                        if(Array.isArray(resent)){
+
+                            resent.forEach(function(obj){
+
+                                resentTicketList.tickets.push(obj.ticket);
+
+                            })
+
+                        }
+
+                        jsonString = messageFormatter.FormatMessage(err, "Get Recent Ticket Success", true, resentTicketList);
                         res.end(jsonString);
                     }
                 });
