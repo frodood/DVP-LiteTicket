@@ -4,6 +4,7 @@ var fs = require('fs');
 var logger = require('dvp-common/LogHandler/CommonLogHandler.js').logger;
 var Ticket = require('dvp-mongomodels/model/Ticket').Ticket;
 var RecentTicket = require('dvp-mongomodels/model/RecentTickets').RecentTicket;
+var RecentUserTicket = require('dvp-mongomodels/model/RecentTickets').RecentUserTickets;
 var ExternalUserRecentTicket = require('dvp-mongomodels/model/ExternalUserRecentTicket').ExternalUserRecentTicket;
 var TicketEvent = require('dvp-mongomodels/model/Ticket').TicketEvent;
 var TicketStatusFlow = require('dvp-mongomodels/model/TicketStatusFlow').TicketStatusFlow;
@@ -393,7 +394,7 @@ module.exports.CreateTicket = function (req, res) {
                             if(client) {
                                 ExecuteTrigger(client.id, "change_status", "new");
                                 ExecuteCase(client);
-                                AddUserRecentTicket(company, tenant,user.id,client.id);
+                                InsertUserRecentTicket(company, tenant,user.id,client.id, "create");
                                 SetRelatedSlots(req,client.id,client.isolated_tags);
                                 if(req.body.requester)
                                     AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
@@ -1370,7 +1371,61 @@ module.exports.GetTicketByIds = function (req, res) {
 
 };
 
+
 module.exports.GetRecentTicket = function(req, res){
+
+    logger.info("DVP-LiteTicket.GetTicketView Internal method ");
+
+    var company = parseInt(req.user.company);
+    var tenant = parseInt(req.user.tenant);
+    var jsonString;
+
+
+    User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get User Failed", false, undefined);
+            res.end(jsonString);
+        }
+        else {
+            if (user) {
+
+                RecentUserTicket.find({company: company, tenant: tenant, user: user.id}).populate('ticket').sort({"updated_at": -1}).limit(10).exec(function (err, resent) {
+                    if (err) {
+                        jsonString = messageFormatter.FormatMessage(err, "Get Recent Ticket Failed", false, undefined);
+                        res.end(jsonString);
+                    } else {
+
+                        var resentTicketList = {};
+
+                        resentTicketList.tickets = [];
+
+                        if(Array.isArray(resent)){
+
+                            resent.forEach(function(obj){
+
+                                resentTicketList.tickets.push(obj.ticket);
+
+                            })
+
+                        }
+
+                        jsonString = messageFormatter.FormatMessage(err, "Get Recent Ticket Success", true, resentTicketList);
+                        res.end(jsonString);
+                    }
+                });
+
+
+            }
+            else {
+                jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
+                res.end(jsonString);
+            }
+        }
+    });
+
+}
+
+module.exports.GetRecentTicketx = function(req, res){
 
     logger.info("DVP-LiteTicket.GetTicketView Internal method ");
 
@@ -1537,7 +1592,7 @@ module.exports.GetTicketWithDetails = function (req, res) {
                                 if (user) {
 
 
-                                    AddUserRecentTicket(company, tenant,user.id,ticket.id);
+                                    InsertUserRecentTicket(company, tenant,user.id,ticket.id, "get");
 
 
                                     if(ticket.comments)
@@ -5363,6 +5418,64 @@ function ExecuteSla(ticketId, previousPriority) {
 
 }
 
+
+function InsertUserRecentTicket(company, tenant, user, ticket, operation){
+
+
+    RecentUserTicket.findOneAndUpdate({
+
+        user: user,
+        company: company,
+        tenant: tenant,
+        ticket: ticket
+
+    }, {
+
+        $setOnInsert: {
+            company: company,
+            tenant: tenant,
+            user: user,
+            ticket: ticket,
+            created_at: Date.now(),
+        },
+        $set:{
+            updated_at: Date.now(),
+            operation: operation
+        }
+
+    }, {upsert: true, new: true}, function (err, recentticket) {
+        if (err) {
+
+            logger.error("Add to resent ticket failed ", err);
+        } else {
+
+            logger.debug("Add to resent ticket succeeed ");
+        }
+
+    });
+
+    //var resentUserTicket = RecentUserTicket({
+    //    user: user,
+    //    created_at: Date.now(),
+    //    company: company,
+    //    tenant: tenant,
+    //    tickets: ticket
+    //
+    //});
+    //
+    //resentUserTicket.save(function (err, recentticket) {
+    //    if (err) {
+    //
+    //        logger.error("Add to resent ticket failed ", err);
+    //    } else {
+    //
+    //        logger.debug("Add to resent ticket succeeed ");
+    //    }
+    //
+    //});
+}
+
+
 function AddUserRecentTicket(company, tenant, id, tid){
     RecentTicket.findOneAndUpdate({
         company: company,
@@ -6232,7 +6345,7 @@ module.exports.CreateTicketWithComment = function (req, res) {
                     }
                     else {
                         if(client) {
-                            AddUserRecentTicket(company, tenant,user.id,client.id);
+                            InsertUserRecentTicket(company, tenant,user.id,client.id, "comment");
                             if(req.body.requester)
                                 AddExternalUserRecentTicket(company, tenant,req.body.requester,client.id);
                         }
