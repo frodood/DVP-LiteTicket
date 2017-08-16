@@ -23,6 +23,7 @@ var FileSlotArray = require('dvp-mongomodels/model/Ticket').FileSlotArray;
 var FileSlot= require('dvp-mongomodels/model/Ticket').FileSlot;
 
 
+
 /*var CaseConfiguration = require('dvp-mongomodels/model/CaseConfiguration').CaseConfiguration;*/
 var EngagementSession = require('dvp-mongomodels/model/Engagement').EngagementSession;
 var messageFormatter = require('dvp-common/CommonMessageGenerator/ClientMessageJsonFormatter.js');
@@ -173,7 +174,7 @@ queueConnection.on('error', function (error) {
 
 SetRelatedSlots = function (req,ticketId,tags) {
 
-   
+
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
@@ -200,10 +201,10 @@ SetRelatedSlots = function (req,ticketId,tags) {
                         if(slotArray.indexOf(slot)==-1)
                         {
                             var obj=
-                            {
-                                slot: {name: slot.name,fileType: slot.fileType},
-                                attachment: null
-                            }
+                                {
+                                    slot: {name: slot.name,fileType: slot.fileType},
+                                    attachment: null
+                                }
 
                             slotArray.push(obj);
                         }
@@ -496,25 +497,25 @@ module.exports.GetAllTickets = function (req, res) {
         .populate('collaborators', 'name avatar firstname lastname')
         .populate( {path: 'form_submission',populate : {path: 'form'}}).skip(skip)
         .limit(size).sort(sortQuery).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 
 };
 
@@ -631,24 +632,24 @@ module.exports.GetAllTicketsWithStatus = function (req, res) {
     var jsonString;
     Ticket.find({company: company, tenant: tenant, active: true, status: req.params.status}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get AllTickets With Status Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get AllTickets With Status Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get AllTickets With Status Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get AllTickets With Status Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                }
             }
-            res.end(jsonString);
-        });
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAllTicketsWithStatusTimeRange = function (req, res) {
@@ -698,25 +699,25 @@ module.exports.GetAllTicketsWithMatrix = function (req, res) {
         match: {company: company, tenant: tenant, active: true}
     }).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 
 };
 
@@ -736,25 +737,25 @@ module.exports.GetAllTicketsInStatusWithMatrix = function (req, res) {
         match: {company: company, tenant: tenant, active: true, status: status}
     }).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAllTicketsByChannel = function (req, res) {
@@ -769,25 +770,25 @@ module.exports.GetAllTicketsByChannel = function (req, res) {
     var jsonString;
     Ticket.find({company: company, tenant: tenant, channel: req.params.Channel, active: true}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Channel Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Channel Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAllTicketsByChannelTimeRange = function (req, res) {
@@ -841,25 +842,25 @@ module.exports.GetAllTicketsByRequester = function (req, res) {
         active: true
     }).populate('requester', 'name avatar phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar').populate('assignee', 'name avatar').skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Requester Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Requester Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAllTicketsByRequesterTimeRange = function (req, res) {
@@ -908,25 +909,25 @@ module.exports.GetAllTicketsByPriority = function (req, res) {
     var jsonString;
     Ticket.find({company: company, tenant: tenant, priority: req.params.Priority, active: true}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Priority Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Priority Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAllTicketsByPriorityTimeRange = function (req, res) {
@@ -975,25 +976,25 @@ module.exports.GetAllGroupTickets = function (req, res) {
     var jsonString;
     Ticket.find({company: company, tenant: tenant, assignee_group: req.params.GroupId, active: true}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 
@@ -1034,21 +1035,21 @@ module.exports.GetMyGroupTicketList = function (req, res) {
                     .populate('submitter', 'name').populate('collaborators', 'name')
                     .skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
+                    if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
+                        jsonString = messageFormatter.FormatMessage(err, "Get All Tickets and Status Failed", false, undefined);
 
+                    } else {
+
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
                         } else {
 
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Get All Tickets By Group ID and Status Successful", true, tickets);
-                            } else {
-
-                                jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
-                            }
+                            jsonString = messageFormatter.FormatMessage(undefined, "No Tickets Found", false, tickets);
                         }
-                        res.end(jsonString);
-                    });
+                    }
+                    res.end(jsonString);
+                });
 
 
             }else{
@@ -1109,21 +1110,21 @@ module.exports.GetAllMyTickets = function (req, res) {
                 Ticket.find(qObj
                 ).populate('assignee', 'name avatar firstname lastname').populate('assignee_group', 'name').populate('requester', 'name avatar firstname lastname phone email landnumber facebook twitter linkedin googleplus').populate('submitter', 'name avatar firstname lastname').populate('collaborators', 'name avatar firstname lastname').skip(skip)
                     .limit(size).sort(sortQuery).exec(function (err, tickets) {
-                        if (err) {
+                    if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                            res.end(jsonString);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
                         }
                         else {
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
-                            }
-                            else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
-                            }
-                            res.end(jsonString);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
                         }
-                    });
+                        res.end(jsonString);
+                    }
+                });
 
 
             } else {
@@ -1280,21 +1281,21 @@ module.exports.GetAllMyTicketsWithStatus = function (req, res) {
                     status: req.params.status
                 }).skip(skip)
                     .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                        if (err) {
+                    if (err) {
 
-                            jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
-                            res.end(jsonString);
+                        jsonString = messageFormatter.FormatMessage(err, "Fail to Find Tickets", false, undefined);
+                        res.end(jsonString);
+                    }
+                    else {
+                        if (tickets) {
+                            jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
                         }
                         else {
-                            if (tickets) {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Find Tickets", true, tickets);
-                            }
-                            else {
-                                jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
-                            }
-                            res.end(jsonString);
+                            jsonString = messageFormatter.FormatMessage(undefined, "Fail To Find Ticket", false, undefined);
                         }
-                    })
+                        res.end(jsonString);
+                    }
+                })
             } else {
                 jsonString = messageFormatter.FormatMessage(undefined, "Get User Failed", false, undefined);
                 res.end(jsonString);
@@ -2848,9 +2849,9 @@ module.exports.AddComment = function (req, res) {
                                             try {
 
                                                 if(queueName)
-                                                queueConnection.publish(queueName, message, {
-                                                    contentType: 'application/json'
-                                                });
+                                                    queueConnection.publish(queueName, message, {
+                                                        contentType: 'application/json'
+                                                    });
                                             }catch(exp){
 
                                                 console.log(exp);
@@ -3909,24 +3910,24 @@ module.exports.GetAllTicketsBy = function (req, res) {
     if (FieldName == "assignee") {
         Ticket.find({company: company, tenant: tenant, active: true, assignee: fieldValue}).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     else if (FieldName == "assignee_group") {
         Ticket.find({
@@ -3936,46 +3937,46 @@ module.exports.GetAllTicketsBy = function (req, res) {
             assignee_group: fieldValue
         }).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee_group Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With assignee_group Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee_group Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With assignee_group Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     else if (FieldName == "submitter") {
         Ticket.find({company: company, tenant: tenant, active: true, submitter: fieldValue}).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Get Ticket With submitter Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Get Ticket With submitter Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With submitter Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Get Ticket With submitter Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     /*else if (FieldName == "requester") {
      Ticket.find({company: company, tenant: tenant, active: true, requester: fieldValue}).skip(skip)
@@ -4019,24 +4020,24 @@ module.exports.TicketSearch = function (req, res) {
             tenant: tenant
         }).skip(skip)
             .limit(size).sort({created_at: -1}).populate('submitter', 'name avatar').exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Subject Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Subject Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by Subject Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by Subject Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     else if (searchBy == "reference") {
         Ticket.find({
@@ -4045,24 +4046,24 @@ module.exports.TicketSearch = function (req, res) {
             tenant: tenant
         }).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Reference Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Search Tickets by Reference Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by Reference Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by Reference Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     else if (searchBy == "channel") {
         Ticket.find({
@@ -4071,24 +4072,24 @@ module.exports.TicketSearch = function (req, res) {
             tenant: tenant
         }).skip(skip)
             .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-                if (err) {
+            if (err) {
 
-                    jsonString = messageFormatter.FormatMessage(err, "Search Tickets by channel Failed", false, undefined);
+                jsonString = messageFormatter.FormatMessage(err, "Search Tickets by channel Failed", false, undefined);
+
+            } else {
+
+                if (tickets) {
+
+                    jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by channel Successful", true, tickets);
 
                 } else {
 
-                    if (tickets) {
+                    jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
 
-                        jsonString = messageFormatter.FormatMessage(undefined, "Search Tickets by channel Successful", true, tickets);
-
-                    } else {
-
-                        jsonString = messageFormatter.FormatMessage(undefined, "No Ticket Found", false, undefined);
-
-                    }
                 }
-                res.end(jsonString);
-            });
+            }
+            res.end(jsonString);
+        });
     }
     else {
         jsonString = messageFormatter.FormatMessage(err, "Search Category Not Implemented.", false, undefined);
@@ -4442,25 +4443,25 @@ module.exports.GetSubTickets = function (req, res) {
 
     Ticket.find({company: company, tenant: tenant, is_sub_ticket: true}).skip(skip)
         .limit(size).sort({created_at: -1}).exec(function (err, tickets) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get All Sub Tickets Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get All Sub Tickets Failed", false, undefined);
+
+        } else {
+
+            if (tickets) {
+
+                jsonString = messageFormatter.FormatMessage(undefined, "Get All Sub Tickets Successful", true, tickets);
 
             } else {
 
-                if (tickets) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Sub Tickets Found", false, tickets);
 
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get All Sub Tickets Successful", true, tickets);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Sub Tickets Found", false, tickets);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetAttachTickets = function (req, res) {
@@ -6042,26 +6043,26 @@ module.exports.GetCasesWithLimit = function (req, res) {
     var jsonString;
     Case.find({company: company, tenant: tenant}).skip(tempSkip)
         .limit(tempLimit).populate('caseConfiguration').exec(function (err, cases) {
-            if (err) {
+        if (err) {
 
-                jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
+            jsonString = messageFormatter.FormatMessage(err, "Get Cases Failed", false, undefined);
+
+        } else {
+
+            if (cases) {
+
+
+                jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
 
             } else {
 
-                if (cases) {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
 
-
-                    jsonString = messageFormatter.FormatMessage(err, "Get Cases Successful", true, cases);
-
-                } else {
-
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Cases Found", false, undefined);
-
-                }
             }
+        }
 
-            res.end(jsonString);
-        });
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetCaseConfiguration = function (req, res) {
@@ -6386,6 +6387,8 @@ module.exports.CreateStatusNode = function (req, res) {
     var company = parseInt(req.user.company);
     var tenant = parseInt(req.user.tenant);
     var jsonString;
+
+
     User.findOne({username: req.user.iss, company: company, tenant: tenant}, function (err, user) {
         if (err) {
 
@@ -6404,6 +6407,7 @@ module.exports.CreateStatusNode = function (req, res) {
                     name: req.body.status_node,
                     description: req.body.description,
                     node_type: 'custom',
+                    category:req.body.category,
                     created_at: Date.now(),
                     updated_at: Date.now()
                 });
@@ -6466,6 +6470,7 @@ module.exports.UpdateStatusNode = function(req,res){
                 sNode.status_node = req.body.status_node;
                 sNode.name = req.body.status_node;
                 sNode.description = req.body.description;
+                sNode.category=req.body.category;
                 sNode.updated_at = Date.now();
 
                 sNode.update(sNode, function (err, newSNode) {
@@ -6633,13 +6638,13 @@ module.exports.GetStatusFlow = function (req, res) {
 
     TicketStatusFlow.find({company: company, tenant: tenant}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
         .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
-            } else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
-            }
-            res.end(jsonString);
-        });
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetStatusFlowByType = function (req, res) {
@@ -6650,13 +6655,13 @@ module.exports.GetStatusFlowByType = function (req, res) {
 
     TicketStatusFlow.findOne({company: company, tenant: tenant, type:req.params.type}).populate({path: 'flow_nodes.node',populate : {path: 'TicketStatusNode'}})
         .populate('flow_connections.source').populate('flow_connections.targets').exec(function (err, stf) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
-            } else {
-                jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
-            }
-            res.end(jsonString);
-        });
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, undefined);
+        } else {
+            jsonString = messageFormatter.FormatMessage(undefined, "Get StatusFlow Successful", true, stf);
+        }
+        res.end(jsonString);
+    });
 };
 
 module.exports.GetStatusFlowNodesByType = function (req, res) {
@@ -6869,24 +6874,24 @@ var GetNextAvailableStatusList = function (tenant, company, type, currentStatus,
 
     TicketStatusFlow.findOne({type: type, company: company, tenant: tenant}).populate('flow_connections.source')
         .populate('flow_connections.targets').exec(function (err, stf) {
-            if (err) {
-                jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, nextAvailableStatus);
-            } else {
-                if (stf) {
-                    for (var i = 0; i < stf.flow_connections.length; i++) {
-                        if (stf.flow_connections[i].source.status_node === currentStatus) {
-                            if(nextAvailableStatus.indexOf(stf.flow_connections[i].targets.status_node) === -1) {
-                                nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
-                            }
+        if (err) {
+            jsonString = messageFormatter.FormatMessage(err, "Get StatusFlow Failed", false, nextAvailableStatus);
+        } else {
+            if (stf) {
+                for (var i = 0; i < stf.flow_connections.length; i++) {
+                    if (stf.flow_connections[i].source.status_node === currentStatus) {
+                        if(nextAvailableStatus.indexOf(stf.flow_connections[i].targets.status_node) === -1) {
+                            nextAvailableStatus.push(stf.flow_connections[i].targets.status_node);
                         }
                     }
-                    jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
-                } else {
-                    jsonString = messageFormatter.FormatMessage(undefined, "No Status Flow Found", false, nextAvailableStatus);
                 }
+                jsonString = messageFormatter.FormatMessage(undefined, "Get NextAvailableStatus Successful", true, nextAvailableStatus);
+            } else {
+                jsonString = messageFormatter.FormatMessage(undefined, "No Status Flow Found", false, nextAvailableStatus);
             }
-            callback(jsonString);
-        });
+        }
+        callback(jsonString);
+    });
 };
 
 var ValidateStatusChangeRequest = function (tenant, company, type, currentStatus, newStatus, callback) {
@@ -7166,544 +7171,544 @@ module.exports.GetTicketReportTagBased= function(req, res){
 /*module.exports.GetTicketDetailReportDownload = function(req, res){
 
 
-    logger.info("DVP-LiteTicket.GetTicketDetailReportDownload Internal method ");
-    var company = parseInt(req.user.company);
-    var tenant = parseInt(req.user.tenant);
-    var jsonString;
+ logger.info("DVP-LiteTicket.GetTicketDetailReportDownload Internal method ");
+ var company = parseInt(req.user.company);
+ var tenant = parseInt(req.user.tenant);
+ var jsonString;
 
-    var ticketListForCSV = [];
+ var ticketListForCSV = [];
 
-    if(req.query && req.query['from']&& req.query['to']) {
-        var from = req.query['from'];
-        var to = req.query['to'];
+ if(req.query && req.query['from']&& req.query['to']) {
+ var from = req.query['from'];
+ var to = req.query['to'];
 
 
-        try {
-            from = new Date(from);
-            to = new Date(to);
-        }catch(ex){
-            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
-            res.end(jsonString);
-            return;
-        }
-
-        if(from > to){
-
-            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
-            res.end(jsonString);
-            return;
-
-        }
-
-        var tempQuery = {company: company, tenant: tenant};
-
-        tempQuery['created_at'] = { $gte: from, $lte: to };
-
-        var fromDate = moment(from).format("YYYY-MM-DD");
-        var toDate = moment(to).format("YYYY-MM-DD");
-
-        var fileName = 'TICKET_' + fromDate + '_' + toDate;
-
-        fileName = fileName.replace(/:/g, "-") + '.csv';
-
-        var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'Customer Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
-        var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
-
-        if(req.body){
-
-            var tz = req.body.tz;
-
-            var tagCount = req.body.tagCount;
-
-            if(tagCount)
-            {
-                for (j = 0; j < tagCount; j++)
-                {
-                    tagHeaders.push('Tag' + (j + 1));
-                    tagOrder.push('Tag' + (j + 1));
-                }
-            }
-
-            if(req.body.tag)
-            {
-                tempQuery.isolated_tags = {$in: [req.body.tag]};
-            }
-
-
-            if(req.body.channel){
-                tempQuery.channel =  req.body.channel;
-            }
-
-            if(req.body.priority){
-                tempQuery.priority = req.body.priority;
-            }
-
-            if(req.body.type){
-                tempQuery.type = req.body.type;
-            }
-
-            if(req.body.requester){
-                tempQuery.requester = req.body.requester;
-            }
-
-            if(req.body.submitter){
-                tempQuery.submitter = req.body.submitter;
-            }
-
-            if(req.body.assignee){
-                tempQuery.assignee = req.body.assignee;
-            }
-
-            if(req.body.status){
-                tempQuery.status = req.body.status;
-            }
-
-            if(req.body.type){
-                tempQuery.type = req.body.type;
-            }
-
-            if(req.body.sla_violated){
-                tempQuery.ticket_matrix.type = req.body.sla_violated;
-            }
-        }
-
-        externalApi.RemoteGetFileMetadata(null, fileName, company, tenant, function(err, fileData)
-        {
-            if(err)
-            {
-                jsonString = messageFormatter.FormatMessage(err, "error getting file metadata", false, null);
-                res.end(jsonString);
-            }
-            else
-            {
-                if(fileData)
-                {
-                    //delete file
-                    externalApi.DeleteFile(null, fileData.UniqueId, company, tenant, function(err, delResp)
-                    {
-                        if(err)
-                        {
-                            jsonString = messageFormatter.FormatMessage(err, "error deleting file", false, null);
-                            res.end(jsonString);
-                        }
-                        else
-                        {
-                            externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
-                            {
-                                if(err || !fileResResp)
-                                {
-                                    jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
-                                    res.end(jsonString);
-                                }
-                                else
-                                {
-                                    var uniqueId = fileResResp;
-
-                                    jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
-                                    res.end(jsonString);
-
-                                    Ticket.find(tempQuery)
-                                        .populate('assignee', 'name')
-                                        .populate('assignee_group', 'name')
-                                        .populate('requester', 'name firstname lastname ssn address phone email tags')
-                                        .populate('engagement_session', 'channel_from')
-                                        .populate('submitter', 'name')
-                                        .populate('comments', 'body')
-                                        .populate( {path: 'form_submission',populate : {path: 'form'}})
-                                        .maxTime(300000)
-                                        .lean()
-                                        .exec(function (err, tickets)
-                                        {
-                                            if (err)
-                                            {
-                                                externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                                });
-                                            }
-                                            else
-                                            {
-                                                tickets.forEach(function (ticketInfo) {
-                                                    var ticketInfoTemp =
-                                                    {
-                                                        reference: ticketInfo.reference,
-                                                        subject: ticketInfo.subject,
-                                                        phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
-                                                        email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
-                                                        ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
-                                                        firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
-                                                        lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
-                                                        address: '',
-                                                        fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
-                                                        createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
-                                                        assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
-                                                        submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
-                                                        requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
-                                                        channel: ticketInfo.channel,
-                                                        status: ticketInfo.status,
-                                                        priority: ticketInfo.priority,
-                                                        type: ticketInfo.type,
-                                                        slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
-                                                        description: ticketInfo.description
-
-                                                    };
-
-                                                    if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
-                                                    {
-                                                        ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
-                                                    }
-
-                                                    if(ticketInfo.requester && ticketInfo.requester.address)
-                                                    {
-                                                        if(ticketInfo.requester.address.number)
-                                                        {
-                                                            ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.number + ', '
-                                                        }
-                                                        if(ticketInfo.requester.address.street)
-                                                        {
-                                                            ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.street + ', '
-                                                        }
-                                                        if(ticketInfo.requester.address.city)
-                                                        {
-                                                            ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.city + ', '
-                                                        }
-                                                        if(ticketInfo.requester.address.province)
-                                                        {
-                                                            ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.province + ', '
-                                                        }
-                                                        if(ticketInfo.requester.address.country)
-                                                        {
-                                                            ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
-                                                        }
-                                                    }
-
-                                                    var tempComments = '';
-
-                                                    if(ticketInfo.comments && ticketInfo.comments.length > 0)
-                                                    {
-                                                        ticketInfo.comments.forEach(function(comment){
-                                                            if(tempComments)
-                                                            {
-                                                                if(comment.body)
-                                                                {
-                                                                    tempComments = tempComments + ',' + comment.body;
-                                                                }
-
-                                                            }
-                                                            else
-                                                            {
-                                                                if(comment.body)
-                                                                {
-                                                                    tempComments = comment.body;
-                                                                }
-
-                                                            }
-
-                                                        })
-                                                    }
-
-                                                    ticketInfoTemp.comments = tempComments;
-
-
-                                                    for(i=0; i < tagCount; i++)
-                                                    {
-                                                        var tagName = 'Tag' + (i + 1);
-                                                        ticketInfoTemp[tagName] = '';
-
-                                                        if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
-                                                        {
-                                                            ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
-                                                        }
-                                                    }
-
-                                                    if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
-                                                    {
-                                                        ticketInfo.form_submission.fields.forEach(function(field)
-                                                        {
-                                                            if(field.field)
-                                                            {
-                                                                var tempFieldName = 'DYNAMICFORM_' + field.field;
-                                                                if(tagHeaders.indexOf(tempFieldName) < 0)
-                                                                {
-                                                                    tagHeaders.push(tempFieldName);
-                                                                    tagOrder.push(tempFieldName);
-
-                                                                }
-
-                                                                ticketInfoTemp[tempFieldName] = field.value;
-
-                                                            }
-                                                        })
-                                                    }
-
-                                                    ticketListForCSV.push(ticketInfoTemp);
-
-                                                });
-
-                                                var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
-
-                                                fs.writeFile(fileName, csvFileData, function(err)
-                                                {
-                                                    if (err)
-                                                    {
-                                                        externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                                        });
-
-                                                        logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
-                                                    }
-                                                    else
-                                                    {
-                                                        externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
-                                                        {
-                                                            fs.unlink(fileName);
-                                                            if(!err && uploadResp)
-                                                            {
-                                                                console.log('File Upload success');
-
-                                                            }
-                                                            else
-                                                            {
-                                                                externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-                                                                    if(err)
-                                                                    {
-                                                                        logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
-                                                                    }
-                                                                });
-                                                            }
-
-                                                        });
-
-                                                    }
-                                                });
-                                            }
-
-                                        });
-
-
-                                }
-
-                            });
-                        }
-                    })
-                }
-                else
-                {
-                    externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
-                    {
-                        if(err || !fileResResp)
-                        {
-                            jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
-                            res.end(jsonString);
-                        }
-                        else
-                        {
-                            var uniqueId = fileResResp;
-
-                            jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
-                            res.end(jsonString);
-
-                            Ticket.find(tempQuery)
-                                .populate('assignee', 'name')
-                                .populate('assignee_group', 'name')
-                                .populate('requester', 'name firstname lastname ssn address phone email tags')
-                                .populate('engagement_session', 'channel_from')
-                                .populate('submitter', 'name')
-                                .populate('comments', 'body')
-                                .populate( {path: 'form_submission',populate : {path: 'form'}})
-                                .maxTime(300000)
-                                .lean()
-                                .exec(function (err, tickets)
-                                {
-                                    if (err)
-                                    {
-                                        console.log(err);
-                                        externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                        });
-                                    }
-                                    else
-                                    {
-                                        tickets.forEach(function (ticketInfo) {
-                                            var ticketInfoTemp =
-                                            {
-                                                reference: ticketInfo.reference,
-                                                subject: ticketInfo.subject,
-                                                phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
-                                                email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
-                                                ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
-                                                firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
-                                                lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
-                                                address: '',
-                                                fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
-                                                createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
-                                                assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
-                                                submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
-                                                requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
-                                                channel: ticketInfo.channel,
-                                                status: ticketInfo.status,
-                                                priority: ticketInfo.priority,
-                                                type: ticketInfo.type,
-                                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
-                                                description: ticketInfo.description
-
-                                            };
-
-                                            if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
-                                            {
-                                                ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
-                                            }
-
-                                            if(ticketInfo.requester && ticketInfo.requester.address)
-                                            {
-                                                if(ticketInfo.requester.address.number)
-                                                {
-                                                    ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.number + ', '
-                                                }
-                                                if(ticketInfo.requester.address.street)
-                                                {
-                                                    ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.street + ', '
-                                                }
-                                                if(ticketInfo.requester.address.city)
-                                                {
-                                                    ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.city + ', '
-                                                }
-                                                if(ticketInfo.requester.address.province)
-                                                {
-                                                    ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.province + ', '
-                                                }
-                                                if(ticketInfo.requester.address.country)
-                                                {
-                                                    ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
-                                                }
-                                            }
-
-                                            var tempComments = '';
-
-                                            if(ticketInfo.comments && ticketInfo.comments.length > 0)
-                                            {
-                                                ticketInfo.comments.forEach(function(comment){
-                                                    if(tempComments)
-                                                    {
-                                                        if(comment.body)
-                                                        {
-                                                            tempComments = tempComments + ',' + comment.body;
-                                                        }
-
-                                                    }
-                                                    else
-                                                    {
-                                                        if(comment.body)
-                                                        {
-                                                            tempComments = comment.body;
-                                                        }
-
-                                                    }
-
-                                                })
-                                            }
-
-                                            ticketInfoTemp.comments = tempComments;
-
-                                            for(i=0; i < tagCount; i++)
-                                            {
-                                                var tagName = 'Tag' + (i + 1);
-                                                ticketInfoTemp[tagName] = '';
-
-                                                if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
-                                                {
-                                                    ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
-                                                }
-                                            }
-
-
-
-
-                                            if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
-                                            {
-                                                ticketInfo.form_submission.fields.forEach(function(field)
-                                                {
-                                                    if(field.field)
-                                                    {
-                                                        var tempFieldName = 'DYNAMICFORM_' + field.field;
-                                                        if(tagHeaders.indexOf(tempFieldName) < 0)
-                                                        {
-                                                            tagHeaders.push(tempFieldName);
-                                                            tagOrder.push(tempFieldName);
-
-                                                        }
-
-                                                        ticketInfoTemp[tempFieldName] = field.value;
-
-                                                    }
-                                                })
-                                            }
-
-                                            ticketListForCSV.push(ticketInfoTemp);
-
-                                        });
-
-                                        var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
-
-                                        fs.writeFile(fileName, csvFileData, function(err)
-                                        {
-                                            if (err)
-                                            {
-                                                externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-
-                                                });
-
-                                                logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
-                                            }
-                                            else
-                                            {
-                                                externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
-                                                {
-                                                    fs.unlink(fileName);
-                                                    if(!err && uploadResp)
-                                                    {
-
-                                                    }
-                                                    else
-                                                    {
-                                                        externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
-                                                            if(err)
-                                                            {
-                                                                logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
-                                                            }
-                                                        });
-                                                    }
-
-                                                });
-
-                                            }
-                                        });
-                                    }
-
-                                });
-
-
-                        }
-
-                    });
-                }
-            }
-
-        });
-
-
-
-    }
-    else
-    {
-
-        jsonString = messageFormatter.FormatMessage(new Error('insufficient query parameters'), "insufficient query parameters", false, null);
-        res.end(jsonString);
-    }
-
-
-
-
-};*/
+ try {
+ from = new Date(from);
+ to = new Date(to);
+ }catch(ex){
+ jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+ res.end(jsonString);
+ return;
+ }
+
+ if(from > to){
+
+ jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+ res.end(jsonString);
+ return;
+
+ }
+
+ var tempQuery = {company: company, tenant: tenant};
+
+ tempQuery['created_at'] = { $gte: from, $lte: to };
+
+ var fromDate = moment(from).format("YYYY-MM-DD");
+ var toDate = moment(to).format("YYYY-MM-DD");
+
+ var fileName = 'TICKET_' + fromDate + '_' + toDate;
+
+ fileName = fileName.replace(/:/g, "-") + '.csv';
+
+ var tagHeaders = ['Reference', 'Subject', 'Phone Number', 'Email', 'SSN', 'First Name', 'Last Name', 'Address', 'Customer Number', 'Created Date', 'Assignee', 'Submitter', 'Requester', 'Channel', 'Status', 'Priority', 'Type', 'SLA Violated', 'Description', 'Comments'];
+ var tagOrder = ['reference', 'subject', 'phoneNumber', 'email', 'ssn', 'firstname', 'lastname', 'address', 'fromNumber', 'createdDate', 'assignee', 'submitter', 'requester', 'channel', 'status', 'priority', 'type', 'slaViolated', 'description', 'comments'];
+
+ if(req.body){
+
+ var tz = req.body.tz;
+
+ var tagCount = req.body.tagCount;
+
+ if(tagCount)
+ {
+ for (j = 0; j < tagCount; j++)
+ {
+ tagHeaders.push('Tag' + (j + 1));
+ tagOrder.push('Tag' + (j + 1));
+ }
+ }
+
+ if(req.body.tag)
+ {
+ tempQuery.isolated_tags = {$in: [req.body.tag]};
+ }
+
+
+ if(req.body.channel){
+ tempQuery.channel =  req.body.channel;
+ }
+
+ if(req.body.priority){
+ tempQuery.priority = req.body.priority;
+ }
+
+ if(req.body.type){
+ tempQuery.type = req.body.type;
+ }
+
+ if(req.body.requester){
+ tempQuery.requester = req.body.requester;
+ }
+
+ if(req.body.submitter){
+ tempQuery.submitter = req.body.submitter;
+ }
+
+ if(req.body.assignee){
+ tempQuery.assignee = req.body.assignee;
+ }
+
+ if(req.body.status){
+ tempQuery.status = req.body.status;
+ }
+
+ if(req.body.type){
+ tempQuery.type = req.body.type;
+ }
+
+ if(req.body.sla_violated){
+ tempQuery.ticket_matrix.type = req.body.sla_violated;
+ }
+ }
+
+ externalApi.RemoteGetFileMetadata(null, fileName, company, tenant, function(err, fileData)
+ {
+ if(err)
+ {
+ jsonString = messageFormatter.FormatMessage(err, "error getting file metadata", false, null);
+ res.end(jsonString);
+ }
+ else
+ {
+ if(fileData)
+ {
+ //delete file
+ externalApi.DeleteFile(null, fileData.UniqueId, company, tenant, function(err, delResp)
+ {
+ if(err)
+ {
+ jsonString = messageFormatter.FormatMessage(err, "error deleting file", false, null);
+ res.end(jsonString);
+ }
+ else
+ {
+ externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
+ {
+ if(err || !fileResResp)
+ {
+ jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
+ res.end(jsonString);
+ }
+ else
+ {
+ var uniqueId = fileResResp;
+
+ jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
+ res.end(jsonString);
+
+ Ticket.find(tempQuery)
+ .populate('assignee', 'name')
+ .populate('assignee_group', 'name')
+ .populate('requester', 'name firstname lastname ssn address phone email tags')
+ .populate('engagement_session', 'channel_from')
+ .populate('submitter', 'name')
+ .populate('comments', 'body')
+ .populate( {path: 'form_submission',populate : {path: 'form'}})
+ .maxTime(300000)
+ .lean()
+ .exec(function (err, tickets)
+ {
+ if (err)
+ {
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+ });
+ }
+ else
+ {
+ tickets.forEach(function (ticketInfo) {
+ var ticketInfoTemp =
+ {
+ reference: ticketInfo.reference,
+ subject: ticketInfo.subject,
+ phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
+ email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
+ ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
+ firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
+ lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
+ address: '',
+ fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
+ createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
+ assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
+ submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
+ requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
+ channel: ticketInfo.channel,
+ status: ticketInfo.status,
+ priority: ticketInfo.priority,
+ type: ticketInfo.type,
+ slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+ description: ticketInfo.description
+
+ };
+
+ if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+ {
+ ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+ }
+
+ if(ticketInfo.requester && ticketInfo.requester.address)
+ {
+ if(ticketInfo.requester.address.number)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.number + ', '
+ }
+ if(ticketInfo.requester.address.street)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.street + ', '
+ }
+ if(ticketInfo.requester.address.city)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.city + ', '
+ }
+ if(ticketInfo.requester.address.province)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.province + ', '
+ }
+ if(ticketInfo.requester.address.country)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
+ }
+ }
+
+ var tempComments = '';
+
+ if(ticketInfo.comments && ticketInfo.comments.length > 0)
+ {
+ ticketInfo.comments.forEach(function(comment){
+ if(tempComments)
+ {
+ if(comment.body)
+ {
+ tempComments = tempComments + ',' + comment.body;
+ }
+
+ }
+ else
+ {
+ if(comment.body)
+ {
+ tempComments = comment.body;
+ }
+
+ }
+
+ })
+ }
+
+ ticketInfoTemp.comments = tempComments;
+
+
+ for(i=0; i < tagCount; i++)
+ {
+ var tagName = 'Tag' + (i + 1);
+ ticketInfoTemp[tagName] = '';
+
+ if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
+ {
+ ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
+ }
+ }
+
+ if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
+ {
+ ticketInfo.form_submission.fields.forEach(function(field)
+ {
+ if(field.field)
+ {
+ var tempFieldName = 'DYNAMICFORM_' + field.field;
+ if(tagHeaders.indexOf(tempFieldName) < 0)
+ {
+ tagHeaders.push(tempFieldName);
+ tagOrder.push(tempFieldName);
+
+ }
+
+ ticketInfoTemp[tempFieldName] = field.value;
+
+ }
+ })
+ }
+
+ ticketListForCSV.push(ticketInfoTemp);
+
+ });
+
+ var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
+
+ fs.writeFile(fileName, csvFileData, function(err)
+ {
+ if (err)
+ {
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+ });
+
+ logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
+ }
+ else
+ {
+ externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
+ {
+ fs.unlink(fileName);
+ if(!err && uploadResp)
+ {
+ console.log('File Upload success');
+
+ }
+ else
+ {
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+ if(err)
+ {
+ logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
+ }
+ });
+ }
+
+ });
+
+ }
+ });
+ }
+
+ });
+
+
+ }
+
+ });
+ }
+ })
+ }
+ else
+ {
+ externalApi.FileUploadReserve(null, fileName, company, tenant, function(err, fileResResp)
+ {
+ if(err || !fileResResp)
+ {
+ jsonString = messageFormatter.FormatMessage(err, "error reserving file", false, null);
+ res.end(jsonString);
+ }
+ else
+ {
+ var uniqueId = fileResResp;
+
+ jsonString = messageFormatter.FormatMessage(null, "SUCCESS", true, fileName);
+ res.end(jsonString);
+
+ Ticket.find(tempQuery)
+ .populate('assignee', 'name')
+ .populate('assignee_group', 'name')
+ .populate('requester', 'name firstname lastname ssn address phone email tags')
+ .populate('engagement_session', 'channel_from')
+ .populate('submitter', 'name')
+ .populate('comments', 'body')
+ .populate( {path: 'form_submission',populate : {path: 'form'}})
+ .maxTime(300000)
+ .lean()
+ .exec(function (err, tickets)
+ {
+ if (err)
+ {
+ console.log(err);
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+ });
+ }
+ else
+ {
+ tickets.forEach(function (ticketInfo) {
+ var ticketInfoTemp =
+ {
+ reference: ticketInfo.reference,
+ subject: ticketInfo.subject,
+ phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
+ email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
+ ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
+ firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
+ lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
+ address: '',
+ fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
+ createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
+ assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
+ submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
+ requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
+ channel: ticketInfo.channel,
+ status: ticketInfo.status,
+ priority: ticketInfo.priority,
+ type: ticketInfo.type,
+ slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+ description: ticketInfo.description
+
+ };
+
+ if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
+ {
+ ticketInfoTemp.fromNumber = ticketInfo.engagement_session.channel_to;
+ }
+
+ if(ticketInfo.requester && ticketInfo.requester.address)
+ {
+ if(ticketInfo.requester.address.number)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.number + ', '
+ }
+ if(ticketInfo.requester.address.street)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.street + ', '
+ }
+ if(ticketInfo.requester.address.city)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.city + ', '
+ }
+ if(ticketInfo.requester.address.province)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.province + ', '
+ }
+ if(ticketInfo.requester.address.country)
+ {
+ ticketInfoTemp.address = ticketInfoTemp.address + ticketInfo.requester.address.country + ', '
+ }
+ }
+
+ var tempComments = '';
+
+ if(ticketInfo.comments && ticketInfo.comments.length > 0)
+ {
+ ticketInfo.comments.forEach(function(comment){
+ if(tempComments)
+ {
+ if(comment.body)
+ {
+ tempComments = tempComments + ',' + comment.body;
+ }
+
+ }
+ else
+ {
+ if(comment.body)
+ {
+ tempComments = comment.body;
+ }
+
+ }
+
+ })
+ }
+
+ ticketInfoTemp.comments = tempComments;
+
+ for(i=0; i < tagCount; i++)
+ {
+ var tagName = 'Tag' + (i + 1);
+ ticketInfoTemp[tagName] = '';
+
+ if (ticketInfo.isolated_tags && ticketInfo.isolated_tags.length >= i)
+ {
+ ticketInfoTemp[tagName] = ticketInfo.isolated_tags[i];
+ }
+ }
+
+
+
+
+ if(ticketInfo.form_submission && ticketInfo.form_submission.fields)
+ {
+ ticketInfo.form_submission.fields.forEach(function(field)
+ {
+ if(field.field)
+ {
+ var tempFieldName = 'DYNAMICFORM_' + field.field;
+ if(tagHeaders.indexOf(tempFieldName) < 0)
+ {
+ tagHeaders.push(tempFieldName);
+ tagOrder.push(tempFieldName);
+
+ }
+
+ ticketInfoTemp[tempFieldName] = field.value;
+
+ }
+ })
+ }
+
+ ticketListForCSV.push(ticketInfoTemp);
+
+ });
+
+ var csvFileData = json2csv({ data: ticketListForCSV, fields: tagOrder, fieldNames : tagHeaders });
+
+ fs.writeFile(fileName, csvFileData, function(err)
+ {
+ if (err)
+ {
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+
+ });
+
+ logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - file service call failed', null, err);
+ }
+ else
+ {
+ externalApi.UploadFile(null, uniqueId, fileName, company, tenant, function(err, uploadResp)
+ {
+ fs.unlink(fileName);
+ if(!err && uploadResp)
+ {
+
+ }
+ else
+ {
+ externalApi.DeleteFile(null, uniqueId, company, tenant, function(err, delData){
+ if(err)
+ {
+ logger.error('[DVP-LiteTicket.GetTicketDetailReportDownload] - [%s] - Delete Failed : %s', null, err);
+ }
+ });
+ }
+
+ });
+
+ }
+ });
+ }
+
+ });
+
+
+ }
+
+ });
+ }
+ }
+
+ });
+
+
+
+ }
+ else
+ {
+
+ jsonString = messageFormatter.FormatMessage(new Error('insufficient query parameters'), "insufficient query parameters", false, null);
+ res.end(jsonString);
+ }
+
+
+
+
+ };*/
 
 
 var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz, tagCount, callback)
@@ -7742,28 +7747,28 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
                 {
                     tickets.forEach(function (ticketInfo) {
                         var ticketInfoTemp =
-                        {
-                            reference: ticketInfo.reference,
-                            subject: ticketInfo.subject,
-                            phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
-                            email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
-                            ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
-                            firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
-                            lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
-                            address: '',
-                            fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
-                            createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
-                            assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
-                            submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
-                            requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
-                            channel: ticketInfo.channel,
-                            status: ticketInfo.status,
-                            priority: ticketInfo.priority,
-                            type: ticketInfo.type,
-                            slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
-                            description: ticketInfo.description
+                            {
+                                reference: ticketInfo.reference,
+                                subject: ticketInfo.subject,
+                                phoneNumber: (ticketInfo.requester ? ticketInfo.requester.phone : ''),
+                                email: (ticketInfo.requester ? ticketInfo.requester.email : ''),
+                                ssn: (ticketInfo.requester ? ticketInfo.requester.ssn : ''),
+                                firstname: (ticketInfo.requester ? ticketInfo.requester.firstname : ''),
+                                lastname: (ticketInfo.requester ? ticketInfo.requester.lastname : ''),
+                                address: '',
+                                fromNumber: (ticketInfo.engagement_session ? ticketInfo.engagement_session.channel_from : ''),
+                                createdDate: moment(ticketInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss"),
+                                assignee: (ticketInfo.assignee ? ticketInfo.assignee.name : ''),
+                                submitter: (ticketInfo.submitter ? ticketInfo.submitter.name : ''),
+                                requester: (ticketInfo.requester ? ticketInfo.requester.name : ''),
+                                channel: ticketInfo.channel,
+                                status: ticketInfo.status,
+                                priority: ticketInfo.priority,
+                                type: ticketInfo.type,
+                                slaViolated: (ticketInfo.ticket_matrix ? ticketInfo.ticket_matrix.sla_violated : false),
+                                description: ticketInfo.description
 
-                        };
+                            };
 
                         if(ticketInfo.engagement_session && ticketInfo.engagement_session.direction === 'outbound')
                         {
@@ -9644,3 +9649,4 @@ module.exports.GetMyGroupTicketsCount = function (req, res) {
         }
     });
 };
+
