@@ -134,8 +134,37 @@ var DoPostNotification = function (companyInfo, serviceurl, postData, callback) 
     }
 };
 
+
+var DoPostTicketNotification = function (companyInfo, serviceurl, postData, callback) {
+    //var jsonStr = JSON.stringify(postData);
+    var accessToken = util.format("bearer %s", config.Services.accessToken);
+    var options = {
+        url: serviceurl,
+        method: 'POST',
+        headers: {
+
+            'authorization': accessToken,
+            'companyinfo': companyInfo,
+            'eventname': 'ticket_event'
+        },
+        json: postData
+    };
+    try {
+        request.post(options, function optionalCallback(err, httpResponse, body) {
+            if (err) {
+                console.log('upload failed:', err);
+            }
+            console.log('Server returned: %j', body);
+            callback(err, httpResponse, body);
+        });
+    }catch(ex){
+        callback(ex, undefined, undefined);
+    }
+};
+
 module.exports.DoPost = DoPost;
 module.exports.DoPut = DoPut;
 module.exports.DoGet = DoGet;
 module.exports.DoDelete = DoDelete;
 module.exports.DoPostNotification = DoPostNotification;
+module.exports.DoPostTicketNotification = DoPostTicketNotification;

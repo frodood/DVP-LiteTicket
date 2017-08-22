@@ -138,7 +138,7 @@ module.exports = {
       "ardsServiceHost": "ardsliteservice.app.veery.cloud",
       "ardsServicePort": "8828",
       "ardsServiceVersion": "1.0.0.0",
-      "notificationServiceHost": "notificationservice.app.veery.cloud",
+      "notificationServiceHost": "127.0.0.1",
       "notificationServicePort": "8089",
       "notificationServiceVersion": "1.0.0.0",
       "scheduleWorkerHost": "scheduleworker.app.veery.cloud",

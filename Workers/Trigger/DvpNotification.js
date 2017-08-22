@@ -26,6 +26,23 @@ function InitiateNotification(internalAccessToken, notificationData){
     });
 }
 
+
+function InitiateTicketNotification(internalAccessToken, notificationData){
+    var initUrl = util.format("http://%s/DVP/API/%s/NotificationService/Notification/initiate", config.Services.notificationServiceHost, config.Services.notificationServiceVersion);
+    if (validator.isIP(config.Services.notificationServiceHost)) {
+        initUrl = util.format("http://%s:%s/DVP/API/%s/NotificationService/Notification/initiate", config.Services.notificationServiceHost, config.Services.notificationServicePort, config.Services.notificationServiceVersion);
+    }
+    restClientHandler.DoPostTicketNotification(internalAccessToken, initUrl, notificationData, function (err, res1, result) {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            console.log("Send InitiateNotification Success");
+        }
+    });
+}
+
+
 function BroadcastNotification(internalAccessToken, notificationData){
     var initUrl = util.format("http://%s/DVP/API/%s/NotificationService/Notification/Broadcast", config.Services.notificationServiceHost, config.Services.notificationServiceVersion);
     if (validator.isIP(config.Services.notificationServiceHost)) {
@@ -190,4 +207,37 @@ function SendNotification(ticket, field, value){
     }
 }
 
+
+function SendTicketNotification(ticket, action, from){
+    try{
+        var internalAccessToken = util.format("%d:%d", ticket.tenant, ticket.company);
+        var room = util.format("%s:%s:subscribe:ticket:%s", ticket.tenant, ticket.company, ticket.reference);
+        var nData = {
+            From: from,
+            To: room,
+            Message: {
+                action: action,
+                reference: ticket.reference,
+                assignee:ticket.assignee
+            },
+            Direction: "STATELESS",
+            CallbackURL: "",
+            Ref: ""
+        };
+
+        if(ticket.status){
+
+            nData.Message.status = ticket.status;
+        }
+
+        InitiateTicketNotification(internalAccessToken, nData);
+
+
+    }catch(ex){
+        console.log("Send Notification failed::", ex);
+    }
+}
+
+
 module.exports.SendNotification = SendNotification;
+module.exports.SendTicketNotification = SendTicketNotification;
