@@ -266,7 +266,7 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
                                                     var arr = [];
                                                     while(smsCnt > offset)
                                                     {
-                                                        arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
+                                                        arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz));
                                                         offset = offset + limit;
 
                                                     }
@@ -354,7 +354,7 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
                                             var arr = [];
                                             while(smsCnt > offset)
                                             {
-                                                arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
+                                                arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz));
                                                 offset = offset + limit;
 
                                             }
@@ -467,6 +467,8 @@ module.exports.GetSMSDetailReport = function(req, res)
 
         tempQuery['created_at'] = { $gte: from, $lte: to };
 
+        tempQuery['channel'] = 'sms';
+
         if(req.body){
 
             if(req.body.channel_to){
@@ -543,6 +545,8 @@ module.exports.GetSMSDetailReportCount = function(req, res){
         var tempQuery = {company: company, tenant: tenant};
 
         tempQuery['created_at'] = { $gte: from, $lte: to };
+
+        tempQuery['channel'] = 'sms';
 
         if(req.body){
 
