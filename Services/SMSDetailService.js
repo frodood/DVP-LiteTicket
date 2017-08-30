@@ -8,6 +8,8 @@ var fs = require('fs');
 var moment = require('moment');
 var externalApi = require('./ExternalApiAccess.js');
 var redisClient = require('./RedisHandler.js').redisClient;
+var async = require('async');
+var json2csv = require('json2csv');
 
 var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz, callback)
 {
@@ -200,6 +202,8 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
             {
                 tempQuery.direction = req.body.direction;
             }
+
+            tempQuery.channel = 'sms';
         }
 
         var fileCheckKey = 'SMSFILE:' + fromDate + ':' + toDate;
@@ -255,12 +259,12 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
                                             var offset = 0;
                                             var limit = 5000;
 
-                                            EngagementSession.count(tempQuery, function (err, ticketCnt)
+                                            EngagementSession.count(tempQuery, function (err, smsCnt)
                                             {
-                                                if(!err && ticketCnt)
+                                                if(!err && smsCnt)
                                                 {
                                                     var arr = [];
-                                                    while(ticketCnt > offset)
+                                                    while(smsCnt > offset)
                                                     {
                                                         arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
                                                         offset = offset + limit;
@@ -343,12 +347,12 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
                                     var offset = 0;
                                     var limit = 5000;
 
-                                    Ticket.count(tempQuery, function (err, ticketCnt)
+                                    EngagementSession.count(tempQuery, function (err, smsCnt)
                                     {
-                                        if(!err && ticketCnt)
+                                        if(!err && smsCnt)
                                         {
                                             var arr = [];
-                                            while(ticketCnt > offset)
+                                            while(smsCnt > offset)
                                             {
                                                 arr.push(appendToCSVFile.bind(this, uniqueId, fileName, tempQuery, offset, limit, tz, tagCount));
                                                 offset = offset + limit;
