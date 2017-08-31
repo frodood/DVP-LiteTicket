@@ -18,7 +18,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
 
 
     var tagHeaders = ['From', 'To', 'Direction', 'Message', 'SMS Date'];
-    var tagOrder = ['channel_from', 'channel_to', 'direction', 'message', 'created_at'];
+    var tagOrder = ['channel_from', 'channel_to', 'direction', 'body', 'created_at'];
 
 
     EngagementSession.find(tempQuery)
@@ -44,7 +44,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
                             channel_from: smsInfo.channel_from,
                             channel_to: smsInfo.channel_to,
                             direction: smsInfo.direction,
-                            message: smsInfo.message,
+                            body: smsInfo.body,
                             created_at: moment(smsInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss")
 
                         };
@@ -81,7 +81,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
                         }
                         else
                         {
-                            var headerFields = tagOrder + newLine;
+                            var headerFields = tagHeaders + newLine;
 
                             fs.writeFile(fileName, headerFields, function (err, stat)
                             {
@@ -446,14 +446,14 @@ module.exports.GetSMSDetailReport = function(req, res)
             from = new Date(from);
             to = new Date(to);
         }catch(ex){
-            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are required", false, undefined);
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are required", false, null);
             res.end(jsonString);
             return;
         }
 
         if(from > to){
 
-            jsonString = messageFormatter.FormatMessage(undefined, "From date should be less than to To Date", false, undefined);
+            jsonString = messageFormatter.FormatMessage(new Error('From date should be less than to To Date'), "From date should be less than to To Date", false, null);
             res.end(jsonString);
             return;
 
@@ -525,14 +525,14 @@ module.exports.GetSMSDetailReportCount = function(req, res){
             from = new Date(from);
             to = new Date(to);
         }catch(ex){
-            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are require", false, undefined);
+            jsonString = messageFormatter.FormatMessage(ex, "From and To dates are required", false, 0);
             res.end(jsonString);
             return;
         }
 
         if(from > to){
 
-            jsonString = messageFormatter.FormatMessage(undefined, "From should less than To", false, undefined);
+            jsonString = messageFormatter.FormatMessage(new Error('From date need to be less than or equal to To date'), "From date need to be less than or equal to To date", false, 0);
             res.end(jsonString);
             return;
 
@@ -571,7 +571,7 @@ module.exports.GetSMSDetailReportCount = function(req, res){
             } else {
 
 
-                jsonString = messageFormatter.FormatMessage(undefined, "Get All SMS Successful", true, smsCount);
+                jsonString = messageFormatter.FormatMessage(null, "Get All SMS Successful", true, smsCount);
 
             }
             res.end(jsonString);
@@ -579,7 +579,7 @@ module.exports.GetSMSDetailReportCount = function(req, res){
 
     }else{
 
-        jsonString = messageFormatter.FormatMessage(undefined, "From and To dates are require", false, 0);
+        jsonString = messageFormatter.FormatMessage(null, "From and To dates are require", false, 0);
         res.end(jsonString);
     }
 
