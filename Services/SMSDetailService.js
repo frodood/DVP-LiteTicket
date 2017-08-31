@@ -164,9 +164,6 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
 
         }
 
-        var tagHeaders = ['From', 'To', 'Direction', 'Message', 'SMS Date'];
-        var tagOrder = ['channel_from', 'channel_to', 'direction', 'message', 'created_at'];
-
         var tempQuery = {company: company, tenant: tenant};
 
         tempQuery['created_at'] = { $gte: from, $lte: to };
@@ -179,7 +176,6 @@ module.exports.GetSMSDetailReportDownload = function(req, res){
         fileName = fileName.replace(/:/g, "-") + '.csv';
 
         var tz = '';
-        var tagCount = 0;
 
         if(req.body)
         {
