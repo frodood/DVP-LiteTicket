@@ -17,11 +17,12 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
     var smsListForCSV = [];
 
 
-    var tagHeaders = ['From', 'To', 'Direction', 'Message', 'SMS Date'];
-    var tagOrder = ['channel_from', 'channel_to', 'direction', 'body', 'created_at'];
+    var tagHeaders = ['From', 'To', 'Direction', 'SMS Date', 'Message'];
+    var tagOrder = ['channel_from', 'channel_to', 'direction', 'created_at', 'body'];
 
 
     EngagementSession.find(tempQuery)
+        .sort({created_at: 'desc'})
         .skip(offset)
         .limit(limit)
         .maxTime(300000)
@@ -38,6 +39,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
             {
                 if(smsList && smsList.length > 0)
                 {
+                    var decodeTz = decodeURIComponent(tz);
                     smsList.forEach(function (smsInfo) {
                         var smsInfoTemp =
                         {
@@ -45,7 +47,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
                             channel_to: smsInfo.channel_to,
                             direction: smsInfo.direction,
                             body: smsInfo.body,
-                            created_at: moment(smsInfo.created_at).utcOffset(tz).format("YYYY-MM-DD HH:mm:ss")
+                            created_at: moment(smsInfo.created_at).utcOffset(decodeTz).format("YYYY-MM-DD HH:mm:ss")
 
                         };
 
@@ -489,6 +491,7 @@ module.exports.GetSMSDetailReport = function(req, res)
         var tempSkip = parseInt(req.params.skip);
 
         EngagementSession.find(tempQuery)
+            .sort({created_at: 'desc'})
             .skip(tempSkip)
             .limit(tempLimit)
             .exec(function (err, smsList) {
