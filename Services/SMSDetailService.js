@@ -17,8 +17,8 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
     var smsListForCSV = [];
 
 
-    var tagHeaders = ['From', 'To', 'Direction', 'SMS Date', 'Message'];
-    var tagOrder = ['channel_from', 'channel_to', 'direction', 'created_at', 'body'];
+    var tagHeaders = ['From', 'To', 'Direction', 'SMS Date', 'Delivery Status', 'Message'];
+    var tagOrder = ['channel_from', 'channel_to', 'direction', 'created_at', 'delivery_status', 'body'];
 
 
     EngagementSession.find(tempQuery)
@@ -47,6 +47,7 @@ var appendToCSVFile = function(uniqueId, fileName, tempQuery, offset, limit, tz,
                             channel_to: smsInfo.channel_to,
                             direction: smsInfo.direction,
                             body: smsInfo.body,
+                            delivery_status: smsInfo.delivery_status,
                             created_at: moment(smsInfo.created_at).utcOffset(decodeTz).format("YYYY-MM-DD HH:mm:ss")
 
                         };
