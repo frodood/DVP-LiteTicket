@@ -2870,6 +2870,7 @@ module.exports.AddComment = function (req, res) {
                                                 comment: comment._id,
                                                 update_comment: true,
                                                 reply_session: req.body.reply_session,
+                                                attachments: req.body.attachments,
                                                 company: company,
                                                 tenant: tenant,
                                                 author: req.user.iss
