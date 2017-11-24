@@ -94,7 +94,7 @@ module.exports = {
     "port": "3636",
     "version": "1.0.0.0",
     "HashKey":"ticket",
-    "UseDashboardMsgQueue": 'true'
+    "UseDashboardMsgQueue": 'false'
   },
 
   "LBServer" : {
