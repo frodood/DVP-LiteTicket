@@ -1,9 +1,9 @@
 {
 	"Parameter":{
-		"Cluster": "Cluster"
-		"DesiredCount": "1"
-		"Role" :"AWSServiceRoleForECS"
-		"TargetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:811080619467:loadbalancer/app/production-app-lb/25ac0d067f04b8ee"
+		"Cluster": "Cluster",
+		"DesiredCount": "1",
+		"Role" :"AWSServiceRoleForECS",
+		"TargetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:811080619467:loadbalancer/app/production-app-lb/25ac0d067f04b8ee",
 		"Image":{
 			"Fn::GetParam":["MyAppBuild", "build.json", "Image"]
 		}
