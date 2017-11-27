@@ -9,7 +9,7 @@
 
 FROM node:5.10.0
 ARG VERSION_TAG
-RUN git clone -b $VERSION_TAG https://github.com/DuoSoftware/DVP-LiteTicket.git /usr/local/src/liteticket
+RUN git clone https://github.com/DuoSoftware/DVP-LiteTicket.git /usr/local/src/liteticket
 RUN cd /usr/local/src/liteticket;
 WORKDIR /usr/local/src/liteticket
 RUN npm install
