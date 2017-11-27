@@ -21,3 +21,5 @@ phases:
 artifacts:
   files:
     - build.json
+    - service.yml
+    - production.json
